@@ -32,12 +32,12 @@ The script generates an HTML report with a dark, modern theme. Here is a sample 
 
 ## Installation
 
-1.  **Save the script**: Save the script content to a file named `system_tests.sh`.
+1.  **Save the script**: Save the script content to a file named `hpctests.sh`.
     
 2.  **Make it executable**: Open your terminal and run the following command:
     
     ```
-    chmod +x system_tests.sh
+    chmod +x hpctests.sh
     
     ```
     
@@ -91,7 +91,7 @@ You can run the script in two modes from your terminal.
 This mode will perform all dependency checks and prompt you for decisions (like installing software or running long tests).
 
 ```
-sudo ./system_tests.sh
+sudo ./hpctests.sh
 
 ```
 
@@ -100,7 +100,7 @@ sudo ./system_tests.sh
 This mode skips all dependency checks and confirmation prompts, making it ideal for automated environments. It will immediately run all tests, including the long-running benchmarks.
 
 ```
-sudo ./system_tests.sh --nocheck
+sudo ./hpctests.sh --nocheck
 
 ```
 
