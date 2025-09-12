@@ -3,6 +3,9 @@
 
 A comprehensive bash script designed to automate the auditing and performance testing of high-performance computing (HPC) nodes. It runs a series of hardware and software checks and compiles the results into a clean, self-contained, and professional HTML report.
 
+![Web Output](interface.png)
+
+
 ## Features
 
 -   **Automated System Checks**: Gathers detailed information on the OS, CPU, RAM, NVMe storage, GPUs, Ethernet, and InfiniBand configurations.
