@@ -37,7 +37,6 @@ MIN_LINK_SPEED_MBPS=${MIN_LINK_SPEED_MBPS:-0}
 MIN_DOWNLOAD_MBPS=${MIN_DOWNLOAD_MBPS:-0}
 MIN_UPLOAD_MBPS=${MIN_UPLOAD_MBPS:-0}
 SPEEDTEST_SERVER_NEARBY=${SPEEDTEST_SERVER_NEARBY:-}
-SPEEDTEST_SERVER_US=${SPEEDTEST_SERVER_US:-}
 SPEEDTEST_SERVER_EU=${SPEEDTEST_SERVER_EU:-}
 
 # --- Color Codes for Verbose Console Output ---
@@ -229,7 +228,6 @@ initialize_html_report() {
         lines.push(['Category','Item','Status','Notes']);
         // Network
         const near = getStatusFor('Speedtest Nearby');
-        const us = getStatusFor('Speedtest US');
         const eu = getStatusFor('Speedtest Europe');
         function aggStatus(arr){
           const vals = arr.map(x=>x.status);
@@ -238,8 +236,8 @@ initialize_html_report() {
           if(vals.some(v=>v==='PASS')) return 'Pass';
           return '';
         }
-        const bwStatus = aggStatus([near,us,eu]);
-        const bwNotes = ['Nearby: '+(near.status||'N/A'),'US: '+(us.status||'N/A'),'Europe: '+(eu.status||'N/A')].join(' | ');
+        const bwStatus = aggStatus([near,eu]);
+        const bwNotes = ['Nearby: '+(near.status||'N/A'),'Europe: '+(eu.status||'N/A')].join(' | ');
         lines.push(['Network','Internet bandwidth',bwStatus,bwNotes]);
         // Software
         const osv = getStatusFor('OS Full Version (lsb_release -a)');
@@ -932,7 +930,7 @@ run_security_audit_tests() {
 run_speedtest_tests() {
     add_html_category_header "Network Speed Tests"
 
-    log_warn "Network speed tests can take 1-3 minutes. We will discover servers and run three tests (Nearby, US - server 10390, Europe). Please wait..."
+    log_warn "Network speed tests can take 1-3 minutes. We will discover servers and run two tests (Nearby, Europe). Please wait..."
 
     if ! command -v speedtest-cli &> /dev/null; then
         if $NOCHECK_MODE; then
@@ -951,7 +949,7 @@ run_speedtest_tests() {
     local list_all
     list_all=$(speedtest-cli --list 2>/dev/null)
 
-    local sid_near sid_us sid_eu label_near label_us label_eu
+    local sid_near sid_eu label_near label_eu
 
     if [[ -n "$SPEEDTEST_SERVER_NEARBY" ]]; then
         sid_near="$SPEEDTEST_SERVER_NEARBY"
@@ -962,21 +960,6 @@ run_speedtest_tests() {
         label_near=$(echo "$list_all" | grep -E "^\s*${sid_near}\)" | sed 's/^ *[0-9]\+) //')
     fi
 
-    if [[ -n "$SPEEDTEST_SERVER_US" ]]; then
-        sid_us="$SPEEDTEST_SERVER_US"
-        label_us=$(echo "$list_all" | grep -E "^\s*${sid_us}\)" | sed 's/^ *[0-9]\+) //')
-    else
-        # Prefer New York servers for US
-        sid_us=$(echo "$list_all" | grep -i "New York" | head -n 1 | grep -Eo '^[[:space:]]*[0-9]+' | tr -d ' ')
-        if [[ -z "$sid_us" ]]; then
-            sid_us=$(echo "$list_all" | grep -i "United States" | head -n 1 | grep -Eo '^[[:space:]]*[0-9]+' | tr -d ' ')
-        fi
-        label_us=$(echo "$list_all" | grep -E "^\s*${sid_us}\)" | sed 's/^ *[0-9]\+) //')
-    fi
-
-    # Force US Speedtest to fixed server ID 10390 as requested
-    sid_us="10390"
-    label_us=$(echo "$list_all" | grep -E "^\s*${sid_us}\)" | sed 's/^ *[0-9]\+) //')
 
     if [[ -n "$SPEEDTEST_SERVER_EU" ]]; then
         sid_eu="$SPEEDTEST_SERVER_EU"
@@ -1023,7 +1006,6 @@ run_speedtest_tests() {
     }
 
     run_one_speedtest "$sid_near" "$label_near" "Nearby"
-    run_one_speedtest "$sid_us" "$label_us" "US"
     run_one_speedtest "$sid_eu" "$label_eu" "Europe"
 
     close_html_category_section
