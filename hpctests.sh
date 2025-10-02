@@ -932,7 +932,7 @@ run_security_audit_tests() {
 run_speedtest_tests() {
     add_html_category_header "Network Speed Tests"
 
-    log_warn "Network speed tests can take 1-3 minutes. We will discover servers and run three tests (Nearby, US - prefers New York, Europe). Please wait..."
+    log_warn "Network speed tests can take 1-3 minutes. We will discover servers and run three tests (Nearby, US - server 10390, Europe). Please wait..."
 
     if ! command -v speedtest-cli &> /dev/null; then
         if $NOCHECK_MODE; then
@@ -973,6 +973,10 @@ run_speedtest_tests() {
         fi
         label_us=$(echo "$list_all" | grep -E "^\s*${sid_us}\)" | sed 's/^ *[0-9]\+) //')
     fi
+
+    # Force US Speedtest to fixed server ID 10390 as requested
+    sid_us="10390"
+    label_us=$(echo "$list_all" | grep -E "^\s*${sid_us}\)" | sed 's/^ *[0-9]\+) //')
 
     if [[ -n "$SPEEDTEST_SERVER_EU" ]]; then
         sid_eu="$SPEEDTEST_SERVER_EU"
