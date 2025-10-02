@@ -181,10 +181,14 @@ initialize_html_report() {
         tbody tr:nth-child(even) {
             background-color: #2e345250;
         }
-        td:nth-child(1) { width: 20%; font-weight: 600; color: #a9b1d6;}
+        thead th:nth-child(1) { width: 10%; }
+        thead th:nth-child(2) { width: 30%; }
+        thead th:nth-child(3) { width: 50%; }
+        thead th:nth-child(4) { width: 10%; }
+        td:nth-child(1) { width: 10%; font-weight: 600; color: #a9b1d6;}
         td:nth-child(2) { width: 30%; font-family: monospace; color: #e0af68; }
-        td:nth-child(3) { width: 35%; white-space: pre-wrap; word-break: break-word; font-family: monospace; font-size: 0.85rem;}
-        td:nth-child(4) { width: 15%; }
+        td:nth-child(3) { width: 50%; white-space: pre-wrap; word-break: break-word; font-family: monospace; font-size: 0.85rem;}
+        td:nth-child(4) { width: 10%; }
         .status-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 9999px; font-weight: 600; font-size: 0.8rem; }
         .status-pass { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.4); }
         .status-partial { background: rgba(250,204,21,0.15); color: var(--yellow); border: 1px solid rgba(250,204,21,0.4); }
@@ -909,6 +913,8 @@ run_security_audit_tests() {
 run_speedtest_tests() {
     add_html_category_header "Network Speed Tests"
 
+    log_warn "Network speed tests can take 1-3 minutes. We will discover servers and run three tests (Nearby, US - prefers New York, Europe). Please wait..."
+
     if ! command -v speedtest-cli &> /dev/null; then
         if $NOCHECK_MODE; then
             add_row_to_html_report "Speedtest" "speedtest-cli" "Skipped - speedtest-cli not installed" "partial" "Install 'speedtest-cli' to enable"
@@ -922,6 +928,7 @@ run_speedtest_tests() {
     fi
 
     # Helper to find server by region keyword
+    log "Discovering Speedtest servers (this may take ~15-30s)..."
     local list_all
     list_all=$(speedtest-cli --list 2>/dev/null)
 
@@ -964,6 +971,7 @@ run_speedtest_tests() {
             add_row_to_html_report "Speedtest ${tag}" "speedtest-cli --simple" "No matching server" "partial" "No server ID for ${tag}"
             return
         fi
+        log "Running Speedtest (${tag}) on server ${sid}${label:+ - ${label}} (may take up to ~60s)..."
         local out ec
         out=$(speedtest-cli --server "$sid" --simple 2>&1); ec=$?
         local status="pass"; local note="$label"
