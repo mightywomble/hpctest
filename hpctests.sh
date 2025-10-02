@@ -24,6 +24,22 @@ readonly FILENAME_TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 readonly OUTPUT_FILE="system_test_report_${FILENAME_TIMESTAMP}.html"
 NOCHECK_MODE=false # This flag will be set to true if --nocheck is passed
 
+# Host identification (best-effort)
+HOSTNAME_FQDN=$(hostname -f 2>/dev/null || hostname)
+PRIMARY_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for(i=1;i<=NF;i++) if ($i=="src"){print $(i+1); exit}}')
+if [[ -z "$PRIMARY_IP" ]]; then
+    # Fallback to first global IPv4
+    PRIMARY_IP=$(ip -o -4 addr show scope global 2>/dev/null | awk '{print $4}' | head -n1 | cut -d'/' -f1)
+fi
+
+# Thresholds and Speedtest server pins (configurable via env)
+MIN_LINK_SPEED_MBPS=${MIN_LINK_SPEED_MBPS:-0}
+MIN_DOWNLOAD_MBPS=${MIN_DOWNLOAD_MBPS:-0}
+MIN_UPLOAD_MBPS=${MIN_UPLOAD_MBPS:-0}
+SPEEDTEST_SERVER_NEARBY=${SPEEDTEST_SERVER_NEARBY:-}
+SPEEDTEST_SERVER_US=${SPEEDTEST_SERVER_US:-}
+SPEEDTEST_SERVER_EU=${SPEEDTEST_SERVER_EU:-}
+
 # --- Color Codes for Verbose Console Output ---
 readonly C_RESET='\033[0m'
 readonly C_RED='\033[0;31m'
@@ -72,6 +88,9 @@ initialize_html_report() {
             --accent-color: #00bfff; /* DeepSkyBlue/Cyan accent */
             --border-color: #414868;
             --table-header-bg: #2e3452;
+            --green: #34d399; /* pass */
+            --yellow: #facc15; /* partial */
+            --red: #f87171; /* fail */
         }
         body {
             font-family: 'Inter', sans-serif;
@@ -90,19 +109,28 @@ initialize_html_report() {
             border: 1px solid var(--border-color);
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
+        .actions { text-align:center; margin-bottom: 1.5rem; }
+        .btn { background: #2e3452; color: #c0caf5; border: 1px solid #414868; padding: 0.5rem 0.9rem; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn:hover { filter: brightness(1.1); }
         h1 {
             color: var(--header-color);
             text-align: center;
             border-bottom: 2px solid var(--accent-color);
             padding-bottom: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 0.5rem;
             font-weight: 700;
         }
         .report-meta {
             text-align: center;
-            margin-bottom: 2rem;
-            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
             color: #7a82ac;
+        }
+        .report-host {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+            color: #a9b1d6;
         }
         details {
             background: var(--bg-color);
@@ -139,6 +167,7 @@ initialize_html_report() {
             padding: 0.8rem 1rem;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
         }
         thead {
             background-color: var(--table-header-bg);
@@ -148,9 +177,17 @@ initialize_html_report() {
         tbody tr:nth-child(even) {
             background-color: #2e345250;
         }
-        td:nth-child(1) { width: 25%; font-weight: 600; color: #a9b1d6;}
-        td:nth-child(2) { width: 35%; font-family: monospace; color: #e0af68; }
-        td:nth-child(3) { width: 40%; white-space: pre-wrap; word-break: break-all; font-family: monospace; font-size: 0.85rem;}
+        td:nth-child(1) { width: 20%; font-weight: 600; color: #a9b1d6;}
+        td:nth-child(2) { width: 30%; font-family: monospace; color: #e0af68; }
+        td:nth-child(3) { width: 35%; white-space: pre-wrap; word-break: break-word; font-family: monospace; font-size: 0.85rem;}
+        td:nth-child(4) { width: 15%; }
+        .status-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 9999px; font-weight: 600; font-size: 0.8rem; }
+        .status-pass { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.4); }
+        .status-partial { background: rgba(250,204,21,0.15); color: var(--yellow); border: 1px solid rgba(250,204,21,0.4); }
+        .status-fail { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.4); }
+        .status-notes { display:block; margin-top:0.25rem; font-size: 0.8rem; color: #a9b1d6; white-space: pre-wrap; }
+        .disk-chips { margin-bottom: 0.5rem; }
+        .disk-chip { display:inline-block; margin: 0 0.25rem 0.25rem 0; padding: 0.15rem 0.5rem; border-radius: 6px; background: #2e3452; color: #e0af68; border: 1px solid #414868; font-size: 0.8rem; }
         .footer {
             text-align: center;
             margin-top: 2rem;
@@ -158,11 +195,122 @@ initialize_html_report() {
             color: #7a82ac;
         }
     </style>
+    <script>
+      function findRowByTestName(name){
+        const rows = document.querySelectorAll('table tbody tr');
+        for(const tr of rows){
+          const td = tr.querySelector('td');
+          if(!td) continue;
+          const t = td.textContent.trim();
+          if(t === name) return tr;
+        }
+        return null;
+      }
+      function getStatusFor(name){
+        const tr = findRowByTestName(name);
+        if(!tr) return {status:'', notes:''};
+        const badge = tr.querySelector('.status-badge');
+        const notesEl = tr.querySelector('.status-notes');
+        return {status: badge?badge.textContent.trim():'', notes: notesEl?notesEl.textContent.trim():''};
+      }
+      function exportChecklistCSV(){
+        const lines = [];
+        lines.push(['Category','Item','Status','Notes']);
+        // Network
+        const near = getStatusFor('Speedtest Nearby');
+        const us = getStatusFor('Speedtest US');
+        const eu = getStatusFor('Speedtest Europe');
+        function aggStatus(arr){
+          const vals = arr.map(x=>x.status);
+          if(vals.some(v=>v==='FAIL')) return 'Fail';
+          if(vals.some(v=>v==='PARTIAL')) return 'Partial';
+          if(vals.some(v=>v==='PASS')) return 'Pass';
+          return '';
+        }
+        const bwStatus = aggStatus([near,us,eu]);
+        const bwNotes = ['Nearby: '+(near.status||'N/A'),'US: '+(us.status||'N/A'),'Europe: '+(eu.status||'N/A')].join(' | ');
+        lines.push(['Network','Internet bandwidth',bwStatus,bwNotes]);
+        // Software
+        const osv = getStatusFor('OS Full Version (lsb_release -a)');
+        lines.push(['Software','OS version',osv.status||'',osv.notes||'']);
+        const nvsmi = getStatusFor('nvidia-smi Full Output');
+        const drver = getStatusFor('Driver Version');
+        const nvidiaStatus = nvsmi.status || drver.status || '';
+        const nvidiaNotes = nvsmi.notes || drver.notes || '';
+        lines.push(['Software','NVIDIA software',nvidiaStatus,nvidiaNotes]);
+        const cpuw = getStatusFor('HPL Single Node');
+        lines.push(['Software','CPU test workload',cpuw.status||'',cpuw.notes||'']);
+        const gpuw = getStatusFor('GPU Burn');
+        lines.push(['Software','GPU test workload',gpuw.status||'',gpuw.notes||'']);
+        // Hardware provider breadcrumbs
+        const motd = getStatusFor('MOTD');
+        lines.push(['Hardware provider breadcrumbs','Message of the day',motd.status||'',motd.notes||'']);
+        // Server name is derived from header; mark Pass with value
+        const hostEl = document.querySelector('.report-host');
+        const hostTxt = hostEl?hostEl.textContent.replace('Hostname: ','').trim():'';
+        lines.push(['Hardware provider breadcrumbs','Server name','Pass',hostTxt]);
+        const authkeys = getStatusFor('SSH Keys Audit');
+        lines.push(['Hardware provider breadcrumbs','authorized_keys',authkeys.status||'',authkeys.notes||'']);
+        const passwd = getStatusFor('/etc/passwd');
+        lines.push(['Hardware provider breadcrumbs','password file',passwd.status||'',passwd.notes||'See shadow row']);
+        const shadow = getStatusFor('/etc/shadow (redacted)');
+        lines.push(['Hardware provider breadcrumbs','password shadow',shadow.status||'',shadow.notes||'']);
+        const homes = getStatusFor('Home Directories');
+        lines.push(['Hardware provider breadcrumbs','home directories',homes.status||'',homes.notes||'']);
+        const pkgs = getStatusFor('Installed Packages');
+        lines.push(['Hardware provider breadcrumbs','all software',pkgs.status||'',pkgs.notes||'']);
+        // Proprietary software requires manual triage
+        lines.push(['Hardware provider breadcrumbs','proprietary software','Partial','Review manual packages/highlighted items']);
+
+        const csv = lines.map(r=>r.map(x=>`"${(x||'').replace(/"/g,'""')}` ).join(',')).join('\n');
+        const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'hpc_audit_checklist.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }
+      function exportFullCSV(){
+        const lines = [];
+        lines.push(['Test','Command','Result','Status','Notes']);
+        const tables = document.querySelectorAll('details > table');
+        tables.forEach(tbl => {
+          const firstHeader = tbl.querySelector('thead th');
+          if(!firstHeader) return;
+          if(firstHeader.textContent.trim() !== 'Test') return; // skip non-test tables (e.g., follow-up)
+          const rows = tbl.querySelectorAll('tbody tr');
+          rows.forEach(tr => {
+            const tds = tr.querySelectorAll('td');
+            if(tds.length < 3) return;
+            const test = tds[0].textContent.trim();
+            const cmd = tds[1].textContent.trim();
+            const res = tds[2].textContent.trim();
+            let status = '';
+            let notes = '';
+            const badge = tr.querySelector('.status-badge');
+            const noteEl = tr.querySelector('.status-notes');
+            if(badge) status = badge.textContent.trim();
+            if(noteEl) notes = noteEl.textContent.trim();
+            lines.push([test, cmd, res, status, notes]);
+          });
+        });
+        const csv = lines.map(r=>r.map(x=>`"${(x||'').replace(/"/g,'""')}` ).join(',')).join('\n');
+        const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'hpc_full_results.csv';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }
+    </script>
 </head>
 <body>
     <div class="container">
         <h1>System Hardware & Performance Report</h1>
         <div class="report-meta">Generated on: ${TIMESTAMP}</div>
+        <div class="report-host">Hostname: ${HOSTNAME_FQDN:-Unknown} • Primary IP: ${PRIMARY_IP:-Unknown}</div>
+        <div class="actions">
+          <button class="btn" onclick="exportChecklistCSV()">Export Checklist CSV</button>
+          <button class="btn" style="margin-left:8px" onclick="exportFullCSV()">Export Full Results CSV</button>
+        </div>
 EOF
     log_success "HTML report file initialized."
 }
@@ -178,6 +326,7 @@ add_html_category_header() {
                 <th>Test</th>
                 <th>Command</th>
                 <th>Result</th>
+                <th>Status</th>
             </tr>
         </thead>
         <tbody>
@@ -196,11 +345,133 @@ add_row_to_html_report() {
     local test_name="$1"
     local command="$2"
     local result="$3"
+    local status_raw="${4:-N/A}"
+    local notes_text="${5:-}"
+
+    local status_lower=$(echo "$status_raw" | tr '[:upper:]' '[:lower:]')
+    local status_class=""
+    local status_label=""
+    case "$status_lower" in
+        pass)
+            status_class="status-pass"; status_label="PASS";;
+        partial)
+            status_class="status-partial"; status_label="PARTIAL";;
+        fail)
+            status_class="status-fail"; status_label="FAIL";;
+        *)
+            status_class=""; status_label="";;
+    esac
+
     local sanitized_cmd
     sanitized_cmd=$(echo "$command" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
     local sanitized_result
     sanitized_result=$(echo "$result" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
-    echo "<tr><td>${test_name}</td><td>${sanitized_cmd}</td><td><pre>${sanitized_result}</pre></td></tr>" >> "${OUTPUT_FILE}"
+
+    local status_cell=""
+    if [[ -n "$status_label" ]]; then
+        if [[ -n "$notes_text" ]]; then
+            local sanitized_notes
+            sanitized_notes=$(echo "$notes_text" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+            status_cell="<span class=\"status-badge ${status_class}\">${status_label}</span><span class=\"status-notes\">${sanitized_notes}</span>"
+        else
+            status_cell="<span class=\"status-badge ${status_class}\">${status_label}</span>"
+        fi
+    else
+        status_cell=""
+    fi
+
+    echo "<tr><td>${test_name}</td><td>${sanitized_cmd}</td><td><pre>${sanitized_result}</pre></td><td>${status_cell}</td></tr>" >> "${OUTPUT_FILE}"
+}
+
+# When the result already contains safe HTML (e.g., <details> blocks), use this variant
+add_row_to_html_report_html() {
+    local test_name="$1"
+    local command="$2"
+    local result_html="$3"
+    local status_raw="${4:-N/A}"
+    local notes_text="${5:-}"
+
+    local status_lower=$(echo "$status_raw" | tr '[:upper:]' '[:lower:]')
+    local status_class=""
+    local status_label=""
+    case "$status_lower" in
+        pass)
+            status_class="status-pass"; status_label="PASS";;
+        partial)
+            status_class="status-partial"; status_label="PARTIAL";;
+        fail)
+            status_class="status-fail"; status_label="FAIL";;
+        *)
+            status_class=""; status_label="";;
+    esac
+
+    local sanitized_cmd
+    sanitized_cmd=$(echo "$command" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+
+    local status_cell=""
+    if [[ -n "$status_label" ]]; then
+        if [[ -n "$notes_text" ]]; then
+            local sanitized_notes
+            sanitized_notes=$(echo "$notes_text" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+            status_cell="<span class=\"status-badge ${status_class}\">${status_label}</span><span class=\"status-notes\">${sanitized_notes}</span>"
+        else
+            status_cell="<span class=\"status-badge ${status_class}\">${status_label}</span>"
+        fi
+    else
+        status_cell=""
+    fi
+
+    echo "<tr><td>${test_name}</td><td>${sanitized_cmd}</td><td>${result_html}</td><td>${status_cell}</td></tr>" >> "${OUTPUT_FILE}"
+}
+
+write_followup_section() {
+    cat >> "${OUTPUT_FILE}" << EOF
+<details>
+  <summary>Follow-up Manual Checks</summary>
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Suggested Command</th>
+        <th>Notes</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>CPU test workload (alternative)</td>
+        <td><pre>stress-ng --cpu 0 --timeout 300s</pre></td>
+        <td>Use if HPL is skipped or unavailable. Install: apt-get install stress-ng</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>GPU test workload (alternative)</td>
+        <td><pre>nvidia-smi dmon -s pucm -o DT -f dmon.csv</pre></td>
+        <td>Use alongside or instead of GPU-burn to observe utilization</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>authorized_keys review</td>
+        <td><pre>grep -R --line-number '' /root/.ssh/authorized_keys /home/*/.ssh/authorized_keys 2>/dev/null</pre></td>
+        <td>Manually verify keys and permissions</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>Proprietary software identification</td>
+        <td><pre>apt-mark showmanual | sort</pre></td>
+        <td>Cross-check against vendor requirements; review Installed Packages section</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>All software export</td>
+        <td><pre>dpkg -l | awk '{print $1"\t"$2"\t"$3"\t"$4}' &gt; packages.tsv</pre></td>
+        <td>Generates a TSV inventory for deeper analysis</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</details>
+EOF
 }
 
 finalize_html_report() {
@@ -220,12 +491,21 @@ run_test() {
     log "Running Test: ${C_YELLOW}${test_name}${C_RESET}..."
     log "  -> Command: ${cmd}"
     local result
-    result=$(eval "${cmd}" 2>&1)
-    if [[ -z "$result" ]]; then
-        result="No output or command not found."
+    local exit_code
+    result=$(eval "${cmd}" 2>&1); exit_code=$?
+    local status="pass"
+    local note=""
+    if [[ $exit_code -ne 0 ]]; then
+        status="fail"
+        note="Exit code ${exit_code}"
+        log_warn "  -> Command failed for '${test_name}' (exit ${exit_code})"
+    elif [[ -z "$result" ]]; then
+        status="partial"
+        note="No output"
         log_warn "  -> No output received for '${test_name}'"
+        result="No output"
     fi
-    add_row_to_html_report "$test_name" "$cmd" "$result"
+    add_row_to_html_report "$test_name" "$cmd" "$result" "$status" "$note"
     log_success "  -> Test '${test_name}' complete."
     echo
 }
@@ -239,6 +519,7 @@ check_and_install_dependencies() {
     standard_packages=(
         [lshw]="lshw" [ethtool]="ethtool" [ipmitool]="ipmitool"
         [ibstatus]="ibutils" [ibdev2netdev]="ibutils" [iblinkinfo]="ibutils"
+        [speedtest-cli]="speedtest-cli" [lsb_release]="lsb-release" [ssh-keygen]="openssh-client"
     )
     declare -A complex_commands
     complex_commands=(
@@ -310,6 +591,7 @@ run_system_info_tests() {
     add_html_category_header "System"
     run_test "System" "System Name" "cat /sys/devices/virtual/dmi/id/product_name"
     run_test "System" "OS Version" "grep PRETTY_NAME /etc/os-release | cut -d '\"' -f 2"
+    run_test "System" "OS Full Version (lsb_release -a)" "lsb_release -a"
     close_html_category_section
 }
 
@@ -318,6 +600,15 @@ run_cpu_tests() {
     run_test "CPU" "CPU Model" "lscpu | grep 'Model name:' | sed 's/Model name:[[:space:]]*//'"
     run_test "CPU" "CPU Core Count" "lscpu | grep -E '^(Socket|Core)' | tr '\n' ' ' | sed 's/  */ /g'"
     run_test "CPU" "NUMA Configuration" "lscpu | grep 'NUMA node' | tr '\n' ' ' | sed 's/  */ /g'"
+
+    # Collapsible lscpu summary
+    local lscpu_out
+    lscpu_out=$(lscpu 2>&1)
+    local lscpu_sanitized
+    lscpu_sanitized=$(echo "$lscpu_out" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+    local lscpu_html="<details><summary>Show lscpu output</summary><pre>${lscpu_sanitized}</pre></details>"
+    add_row_to_html_report_html "lscpu Summary" "lscpu" "$lscpu_html" "pass" "Basic lscpu output"
+
     close_html_category_section
 }
 
@@ -330,6 +621,31 @@ run_ram_tests() {
 run_nvme_tests() {
     add_html_category_header "NVMe Storage"
     run_test "NVMe" "Block Devices" "lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,MOUNTPOINTS"
+
+    # Collapsible lsblk with disk highlights
+    local disks_list
+    disks_list=$(lsblk -dn -o NAME,SIZE,MODEL,TYPE 2>/dev/null | awk '$4=="disk" {print $1" ("$2") "$3}')
+    local chips_html="<div class=\"disk-chips\">"
+    local disk_status="pass"
+    local disk_note="Disks highlighted above"
+    if [[ -n "$disks_list" ]]; then
+        while IFS= read -r line; do
+            chips_html+="<span class=\"disk-chip\">${line}</span>"
+        done <<< "$disks_list"
+    else
+        chips_html+="<span class=\"disk-chip\">No disks detected</span>"
+        disk_status="fail"
+        disk_note="No disks detected"
+    fi
+    chips_html+="</div>"
+
+    local lsblk_out
+    lsblk_out=$(lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,MOUNTPOINTS 2>&1)
+    local lsblk_sanitized
+    lsblk_sanitized=$(echo "$lsblk_out" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+    local lsblk_html="${chips_html}<details><summary>Show lsblk output</summary><pre>${lsblk_sanitized}</pre></details>"
+    add_row_to_html_report_html "lsblk Overview" "lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,MOUNTPOINTS" "$lsblk_html" "$disk_status" "$disk_note"
+
     run_test "NVMe" "Filesystem Usage" "df -h"
     close_html_category_section
 }
@@ -342,6 +658,18 @@ run_gpu_tests() {
     run_test "GPU" "NVLink Fabric Manager" "nv-fabricmanager --version"
     run_test "GPU" "NVLink Status" "nvidia-smi nvlink -s"
     run_test "GPU" "Driver Version" "nvidia-smi | grep -i 'Driver Version'"
+
+    if command -v nvidia-smi &> /dev/null; then
+        local nsmi
+        nsmi=$(nvidia-smi 2>&1)
+        local nsmi_s
+        nsmi_s=$(echo "$nsmi" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+        local nsmi_html="<details><summary>Show nvidia-smi output</summary><pre>${nsmi_s}</pre></details>"
+        add_row_to_html_report_html "nvidia-smi Full Output" "nvidia-smi" "$nsmi_html" "pass" ""
+    else
+        add_row_to_html_report "nvidia-smi Full Output" "nvidia-smi" "nvidia-smi not installed" "partial" "Install NVIDIA drivers"
+    fi
+
     close_html_category_section
 }
 
@@ -349,12 +677,58 @@ run_ethernet_tests() {
     add_html_category_header "Ethernet Network"
     run_test "Ethernet" "Ethernet NICs" "lshw -C network -short"
     run_test "Ethernet" "Ethernet Links" "ip -br a"
+
+    # All IP addresses
+    run_test "Ethernet" "All IP Addresses (IPv4 & IPv6)" "ip -o addr show primary scope global | awk '{print \$2, \$3, \$4}'"
+
+    # NIC type per IP (IPv4) with vendor/product
+    run_test "Ethernet" "NIC Type per IPv4" "bash -lc 'ip -o -4 addr show primary scope global | while read -r idx iface fam cidr rest; do ip=\"${cidr}\"; drv=\"$(ethtool -i \"$iface\" 2>/dev/null | awk -F: \"/driver/{gsub(/^ +| +?$/ ,\"\",\$2); print \$2}\")\"; ven=\"$(lshw -C network 2>/dev/null | awk -v IF=\"$iface\" '\''$1=="logical"&&$2=="name:"&&$3==IF{f=1} f&&$1=="vendor:"{sub(/^vendor: /,""); print; exit}'\'')\"; prod=\"$(lshw -C network 2>/dev/null | awk -v IF=\"$iface\" '\''$1=="logical"&&$2=="name:"&&$3==IF{f=1} f&&$1=="product:"{sub(/^product: /,""); print; exit}'\'')\"; echo \"$iface ${ip} driver=${drv:-unknown} vendor=${ven:-unknown} product=${prod:-unknown}\"; done'"
+
+    # Link speed assertion against MIN_LINK_SPEED_MBPS (0 disables threshold)
+    {
+        local min=${MIN_LINK_SPEED_MBPS:-0}
+        local overall_status="pass"
+        local notes=""
+        local lines=""
+        mapfile -t ifaces < <(ip -o -4 addr show primary scope global | awk '{print $2}' | sort -u)
+        if [[ ${#ifaces[@]} -eq 0 ]]; then
+            lines+="No IPv4 interfaces with global scope found"
+            overall_status="partial"
+            notes="No interfaces"
+        else
+            for iface in "${ifaces[@]}"; do
+                local raw
+                raw=$(ethtool "$iface" 2>/dev/null | awk -F': ' '/Speed/{print $2}')
+                local spd
+                spd=$(echo "$raw" | sed -E 's/[^0-9.]+//g')
+                local entry
+                if [[ -z "$spd" ]]; then
+                    entry="$iface speed=unknown"
+                    if (( min > 0 )); then overall_status="fail"; fi
+                else
+                    entry="$iface speed=${spd}Mb/s"
+                    if (( min > 0 )) && (( ${spd%.*} < min )); then
+                        overall_status="fail"
+                        entry+=" (below ${min}Mb/s)"
+                    fi
+                fi
+                lines+="$entry\n"
+            done
+            if (( min == 0 )) && [[ "$overall_status" == "pass" ]]; then
+                notes="No minimum threshold configured"
+            else
+                notes="Minimum: ${min} Mb/s"
+            fi
+        fi
+        add_row_to_html_report "Link Speed Check (>= ${MIN_LINK_SPEED_MBPS} Mb/s)" "ethtool <each iface>" "$lines" "$overall_status" "$notes"
+    }
+
     if ip link show bond0 > /dev/null 2>&1; then
         run_test "Ethernet" "Bond Speed" "ethtool bond0 | grep -i Speed"
         run_test "Ethernet" "Bond Type" "cat /proc/net/bonding/bond0 | grep 'Bonding Mode'"
     else
-        add_row_to_html_report "Bond Speed" "ethtool bond0" "Device not found"
-        add_row_to_html_report "Bond Type" "cat /proc/net/bonding/bond0" "Device not found"
+        add_row_to_html_report "Bond Speed" "ethtool bond0" "Device not found" "partial" "bond0 not present"
+        add_row_to_html_report "Bond Type" "cat /proc/net/bonding/bond0" "Device not found" "partial" "bond0 not present"
     fi
     close_html_category_section
 }
@@ -366,6 +740,211 @@ run_infiniband_tests() {
     run_test "InfiniBand" "OFED Version" "ofed_info -s"
     run_test "InfiniBand" "IBoIP Enabled" "ibdev2netdev"
     run_test "InfiniBand" "IB Fabric" "iblinkinfo --switches-only"
+    close_html_category_section
+}
+
+run_security_audit_tests() {
+    add_html_category_header "Security & Accounts"
+
+    # MOTD discovery and contents
+    {
+        local motd_files
+        motd_files=$( ( [ -f /etc/motd ] && echo /etc/motd; ls -1 /etc/update-motd.d/* 2>/dev/null ) | sed '/^$/d' )
+        local html=""
+        if [[ -n "$motd_files" ]]; then
+            html+="<details><summary>Show MOTD files and contents</summary>"
+            while IFS= read -r f; do
+                [[ -z "$f" ]] && continue
+                local content
+                content=$(cat "$f" 2>&1)
+                local safe
+                safe=$(echo "$content" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+                html+="<div><strong>${f}</strong><pre>${safe}</pre></div>"
+            done <<< "$motd_files"
+            html+="</details>"
+            add_row_to_html_report_html "MOTD" "cat /etc/motd; ls /etc/update-motd.d" "$html" "pass" "Found MOTD files"
+        else
+            add_row_to_html_report "MOTD" "cat /etc/motd" "No MOTD files found" "partial" ""
+        fi
+    }
+
+    # SSH keys audit (paths, perms, fingerprints) - content redacted by design
+    {
+        local html="<details><summary>Show SSH key metadata (paths, perms, fingerprints)</summary>"
+        local files
+        files=$(find /root/.ssh /home -maxdepth 3 \( -name 'id_*' -o -name '*.pub' -o -name 'authorized_keys' \) 2>/dev/null)
+        if [[ -z "$files" ]]; then
+            html+="<div>No SSH key-like files found</div>"
+        else
+            while IFS= read -r f; do
+                [[ -z "$f" ]] && continue
+                local perms owner fp type
+                perms=$(stat -c '%a' "$f" 2>/dev/null)
+                owner=$(stat -c '%U:%G' "$f" 2>/dev/null)
+                if [[ "$f" == *.pub || "$(basename "$f")" == authorized_keys ]]; then
+                    type="public"
+                    fp=$(ssh-keygen -lf "$f" 2>/dev/null | awk '{print $2" "$3}' )
+                else
+                    type="private"
+                    fp=$(ssh-keygen -lf "$f" 2>/dev/null | awk '{print $2" "$3}' )
+                    [[ -z "$fp" ]] && fp="(fingerprint unavailable)"
+                fi
+                local safe_f
+                safe_f=$(echo "$f" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+                html+="<div><strong>${safe_f}</strong> [${type}] perms=${perms:-N/A} owner=${owner:-N/A} fingerprint=${fp:-N/A}</div>"
+            done <<< "$files"
+            html+="<div style=\"margin-top:4px;color:#a9b1d6\">Key contents are intentionally redacted</div>"
+        fi
+        html+="</details>"
+        add_row_to_html_report_html "SSH Keys Audit" "find ~/.ssh /home/*/.ssh" "$html" "partial" "Metadata only; contents redacted"
+    }
+
+    # /etc/passwd collapsible
+    {
+        local p
+        p=$(cat /etc/passwd 2>&1)
+        local safe
+        safe=$(echo "$p" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+        local html="<details><summary>Show /etc/passwd</summary><pre>${safe}</pre></details>"
+        add_row_to_html_report_html "/etc/passwd" "cat /etc/passwd" "$html" "pass" ""
+    }
+
+    # /etc/shadow analysis (no hashes shown)
+    {
+        local html=""
+        if [[ -r /etc/shadow ]]; then
+            local users_with_pw
+            users_with_pw=$(awk -F: '($2!="!" && $2!="*" && $2!="" ){print $1}' /etc/shadow 2>/dev/null)
+            local chips="<div class=\"disk-chips\">"
+            local count=0
+            if [[ -n "$users_with_pw" ]]; then
+                while IFS= read -r u; do
+                    [[ -z "$u" ]] && continue
+                    chips+="<span class=\"disk-chip\">${u}</span>"
+                    count=$((count+1))
+                done <<< "$users_with_pw"
+            else
+                chips+="<span class=\"disk-chip\">No accounts with password set</span>"
+            fi
+            chips+="</div>"
+            html+="$chips"
+            local detail="<details><summary>Show shadow account status (redacted)</summary><pre>$(awk -F: '{printf "%s: ", $1; if($2=="!"||$2=="*") print "locked"; else if($2=="") print "no password"; else print "password set"}' /etc/shadow 2>/dev/null | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')</pre></details>"
+            html+="$detail"
+            local status="pass"
+            local note="${count} account(s) with passwords set"
+            add_row_to_html_report_html "/etc/shadow (redacted)" "analyzed" "$html" "$status" "$note"
+        else
+            add_row_to_html_report "/etc/shadow (redacted)" "N/A" "Not readable" "partial" "Requires root"
+        fi
+    }
+
+    # Home directories
+    {
+        local homes
+        homes=$(awk -F: '{print $6}' /etc/passwd | sort -u)
+        local html="<div class=\"disk-chips\">"
+        if [[ -n "$homes" ]]; then
+            while IFS= read -r h; do
+                [[ -z "$h" ]] && continue
+                local safe
+                safe=$(echo "$h" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+                html+="<span class=\"disk-chip\">${safe}</span>"
+            done <<< "$homes"
+        else
+            html+="<span class=\"disk-chip\">No home directories found</span>"
+        fi
+        html+="</div>"
+        add_row_to_html_report_html "Home Directories" "parsed from /etc/passwd" "$html" "pass" ""
+    }
+
+    close_html_category_section
+}
+
+run_speedtest_tests() {
+    add_html_category_header "Network Speed Tests"
+
+    if ! command -v speedtest-cli &> /dev/null; then
+        if $NOCHECK_MODE; then
+            add_row_to_html_report "Speedtest" "speedtest-cli" "Skipped - speedtest-cli not installed" "partial" "Install 'speedtest-cli' to enable"
+            close_html_category_section
+            return
+        else
+            add_row_to_html_report "Speedtest" "speedtest-cli" "speedtest-cli not installed" "fail" "Install via apt: speedtest-cli"
+            close_html_category_section
+            return
+        fi
+    fi
+
+    # Helper to find server by region keyword
+    local list_all
+    list_all=$(speedtest-cli --list 2>/dev/null)
+
+    local sid_near sid_us sid_eu label_near label_us label_eu
+
+    if [[ -n "$SPEEDTEST_SERVER_NEARBY" ]]; then
+        sid_near="$SPEEDTEST_SERVER_NEARBY"
+        label_near=$(echo "$list_all" | grep -E "^\s*${sid_near}\)" | sed 's/^ *[0-9]\+) //')
+    else
+        # Assume top of list is nearest
+        sid_near=$(echo "$list_all" | grep -Eo '^[[:space:]]*[0-9]+' | head -n 1 | tr -d ' ')
+        label_near=$(echo "$list_all" | grep -E "^\s*${sid_near}\)" | sed 's/^ *[0-9]\+) //')
+    fi
+
+    if [[ -n "$SPEEDTEST_SERVER_US" ]]; then
+        sid_us="$SPEEDTEST_SERVER_US"
+        label_us=$(echo "$list_all" | grep -E "^\s*${sid_us}\)" | sed 's/^ *[0-9]\+) //')
+    else
+        sid_us=$(echo "$list_all" | grep -i "United States" | head -n 1 | grep -Eo '^[[:space:]]*[0-9]+' | tr -d ' ')
+        label_us=$(echo "$list_all" | grep -E "^\s*${sid_us}\)" | sed 's/^ *[0-9]\+) //')
+    fi
+
+    if [[ -n "$SPEEDTEST_SERVER_EU" ]]; then
+        sid_eu="$SPEEDTEST_SERVER_EU"
+        label_eu=$(echo "$list_all" | grep -E "^\s*${sid_eu}\)" | sed 's/^ *[0-9]\+) //')
+    else
+        local EU_PATTERN="Germany|France|Netherlands|United Kingdom|UK|Sweden|Spain|Italy|Switzerland|Norway|Denmark|Finland|Poland|Ireland|Belgium|Austria|Czech|Portugal|Hungary|Romania|Greece|Iceland|Luxembourg|Slovakia|Slovenia|Lithuania|Latvia|Estonia|Bulgaria|Croatia|Serbia"
+        sid_eu=$(echo "$list_all" | grep -E "$EU_PATTERN" | head -n 1 | grep -Eo '^[[:space:]]*[0-9]+' | tr -d ' ')
+        label_eu=$(echo "$list_all" | grep -E "^\s*${sid_eu}\)" | sed 's/^ *[0-9]\+) //')
+    fi
+
+    # Function to run and evaluate a single server against thresholds
+    run_one_speedtest() {
+        local sid="$1"; local label="$2"; local tag="$3"
+        if [[ -z "$sid" ]]; then
+            add_row_to_html_report "Speedtest ${tag}" "speedtest-cli --simple" "No matching server" "partial" "No server ID for ${tag}"
+            return
+        fi
+        local out ec
+        out=$(speedtest-cli --server "$sid" --simple 2>&1); ec=$?
+        local status="pass"; local note="$label"
+        if [[ $ec -ne 0 ]]; then
+            status="fail"; note="${label:+${label} - }Exit code $ec"
+        else
+            # Parse speeds (Mbit/s)
+            local dl ul
+            dl=$(echo "$out" | awk '/Download:/ {print $2}')
+            ul=$(echo "$out" | awk '/Upload:/ {print $2}')
+            local dl_ok=1 ul_ok=1
+            if (( ${MIN_DOWNLOAD_MBPS:-0} > 0 )) && [[ -n "$dl" ]] && (( ${dl%.*} < MIN_DOWNLOAD_MBPS )); then dl_ok=0; fi
+            if (( ${MIN_UPLOAD_MBPS:-0} > 0 )) && [[ -n "$ul" ]] && (( ${ul%.*} < MIN_UPLOAD_MBPS )); then ul_ok=0; fi
+            if (( ${MIN_DOWNLOAD_MBPS:-0} > 0 || ${MIN_UPLOAD_MBPS:-0} > 0 )); then
+                if (( dl_ok==0 || ul_ok==0 )); then
+                    status="fail"
+                    note="${label:+${label} - }Thresholds DL>=${MIN_DOWNLOAD_MBPS} UL>=${MIN_UPLOAD_MBPS} (got DL=${dl:-N/A}, UL=${ul:-N/A})"
+                else
+                    note="${label:+${label} - }DL=${dl:-N/A} UL=${ul:-N/A} (thresholds DL>=${MIN_DOWNLOAD_MBPS} UL>=${MIN_UPLOAD_MBPS})"
+                fi
+            else
+                note="${label:+${label} - }DL=${dl:-N/A} UL=${ul:-N/A}"
+            fi
+        fi
+        add_row_to_html_report "Speedtest ${tag}" "speedtest-cli --server ${sid} --simple" "$out" "$status" "$note"
+    }
+
+    run_one_speedtest "$sid_near" "$label_near" "Nearby"
+    run_one_speedtest "$sid_us" "$label_us" "US"
+    run_one_speedtest "$sid_eu" "$label_eu" "Europe"
+
     close_html_category_section
 }
 
@@ -393,13 +972,13 @@ run_benchmark_tests() {
         log_warn "Docker is not installed, but it is required for benchmark tests."
         # In --nocheck mode, we can't ask, so we must assume Docker is present or fail.
         if $NOCHECK_MODE; then
-             add_row_to_html_report "Benchmarks" "N/A" "Skipped - Docker not installed and running in --nocheck mode"; close_html_category_section; return
+             add_row_to_html_report "Benchmarks" "N/A" "Skipped - Docker not installed and running in --nocheck mode" "partial" "Install Docker to enable benchmarks"; close_html_category_section; return
         fi
         read -p "Do you want to install Docker CE now? (y/N): " docker_choice
         if [[ "$docker_choice" =~ ^[Yy]$ ]]; then
-            install_docker_ce || { add_row_to_html_report "Benchmarks" "N/A" "Skipped due to failed Docker installation"; close_html_category_section; return; }
+            install_docker_ce || { add_row_to_html_report "Benchmarks" "N/A" "Skipped due to failed Docker installation" "fail" "Docker installation failed"; close_html_category_section; return; }
         else
-            add_row_to_html_report "Benchmarks" "N/A" "Skipped - Docker not installed"; close_html_category_section; return;
+            add_row_to_html_report "Benchmarks" "N/A" "Skipped - Docker not installed" "partial" "User skipped installation"; close_html_category_section; return;
         fi
     fi
     
@@ -415,8 +994,8 @@ run_benchmark_tests() {
         run_test "Benchmark" "HPL Single Node" "docker run --gpus all --rm --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 nvcr.io/nvidia/hpc-benchmarks:24.05 mpirun -np 8 --bind-to none --map-by ppr:8:node /hpl.sh --dat /hpl-linux-x86_64/sample-dat/HPL-dgx-h100-1N.dat"
         run_test "Benchmark" "GPU Burn" "docker run --rm --gpus all oguzpastirmaci/gpu-burn:latest"
     else
-        add_row_to_html_report "HPL Single Node" "N/A" "Skipped by user"
-        add_row_to_html_report "GPU Burn" "N/A" "Skipped by user"
+        add_row_to_html_report "HPL Single Node" "N/A" "Skipped by user" "partial" "Benchmarks not executed"
+        add_row_to_html_report "GPU Burn" "N/A" "Skipped by user" "partial" "Benchmarks not executed"
     fi
     close_html_category_section
 }
@@ -426,6 +1005,45 @@ run_misc_tests() {
     run_test "Services" "SSH Access" "systemctl status sshd | grep 'Active:' | sed 's/^[ \t]*//'"
     run_test "Services" "IPMI Access" "ipmitool lan print"
     run_test "Mounts" "NFS Mounts" "mount | grep nfs"
+    close_html_category_section
+}
+
+run_software_tests() {
+    add_html_category_header "Software & Packages"
+
+    # Process list (collapsible)
+    {
+        local psout
+        psout=$(ps axfcu 2>&1)
+        local safe
+        safe=$(echo "$psout" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+        local html="<details><summary>Show process list (ps axfcu)</summary><pre>${safe}</pre></details>"
+        add_row_to_html_report_html "Process List" "ps axfcu" "$html" "pass" ""
+    }
+
+    # dpkg -l collapsible with highlights for manually installed packages
+    {
+        local manual chips html dpkgout
+        manual=$(apt-mark showmanual 2>/dev/null | sort -u)
+        chips="<div class=\"disk-chips\">"
+        if [[ -n "$manual" ]]; then
+            while IFS= read -r pkg; do
+                [[ -z "$pkg" ]] && continue
+                case "$pkg" in ubuntu-minimal|ubuntu-standard|ubuntu-desktop|base-files|debconf|*) ;;
+                esac
+                chips+="<span class=\"disk-chip\">${pkg}</span>"
+            done <<< "$manual"
+        else
+            chips+="<span class=\"disk-chip\">No manual packages detected</span>"
+        fi
+        chips+="</div>"
+        dpkgout=$(dpkg -l 2>&1)
+        local safe
+        safe=$(echo "$dpkgout" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+        html="${chips}<details><summary>Show dpkg -l output</summary><pre>${safe}</pre></details>"
+        add_row_to_html_report_html "Installed Packages" "dpkg -l" "$html" "pass" "Manual packages highlighted above"
+    }
+
     close_html_category_section
 }
 
@@ -470,8 +1088,14 @@ main() {
     run_gpu_tests
     run_ethernet_tests
     run_infiniband_tests
+    run_security_audit_tests
+    run_speedtest_tests
+    run_software_tests
     run_misc_tests
     run_benchmark_tests
+
+    # Write follow-up/checklist section then finalize
+    write_followup_section
     
     finalize_html_report
     
