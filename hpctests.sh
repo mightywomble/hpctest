@@ -112,6 +112,7 @@ initialize_html_report() {
         .actions { text-align:center; margin-bottom: 1.5rem; }
         .btn { background: #2e3452; color: #c0caf5; border: 1px solid #414868; padding: 0.5rem 0.9rem; border-radius: 8px; cursor: pointer; font-weight: 600; }
         .btn:hover { filter: brightness(1.1); }
+        .search { width: 100%; padding: 0.5rem 0.75rem; margin: 0.5rem 0 0.75rem 0; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); }
         h1 {
             color: var(--header-color);
             text-align: center;
@@ -203,6 +204,7 @@ initialize_html_report() {
             color: #7a82ac;
         }
         .banner { padding: 0.6rem 0.9rem; border: 1px dashed var(--yellow); background: rgba(250,204,21,0.08); color: var(--yellow); border-radius: 8px; margin-bottom: 0.6rem; font-weight: 600; }
+        .box { border: 1px solid var(--border-color); border-radius: 8px; padding: 0.75rem; background: var(--bg-color); margin: 0.5rem 0; }
     </style>
     <script>
       function findRowByTestName(name){
@@ -271,12 +273,23 @@ initialize_html_report() {
         // Proprietary software requires manual triage
         lines.push(['Hardware provider breadcrumbs','proprietary software','Partial','Review manual packages/highlighted items']);
 
-        const csv = lines.map(r=>r.map(x=>`"${(x||'').replace(/"/g,'""')}` ).join(',')).join('\n');
+        const csv = lines.map(r=>r.map(x => '"' + String((x||'')).replace(/"/g,'""') + '"').join(',')).join('\\n');
         const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = 'hpc_audit_checklist.csv';
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      }
+      function filterTable(inputId, tableId){
+        const input = document.getElementById(inputId);
+        const table = document.getElementById(tableId);
+        if(!input || !table) return;
+        const q = input.value.toLowerCase();
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(tr => {
+          const txt = tr.textContent.toLowerCase();
+          tr.style.display = txt.includes(q) ? '' : 'none';
+        });
       }
       function exportFullCSV(){
         const lines = [];
@@ -302,7 +315,7 @@ initialize_html_report() {
             lines.push([test, cmd, res, status, notes]);
           });
         });
-        const csv = lines.map(r=>r.map(x=>`"${(x||'').replace(/"/g,'""')}` ).join(',')).join('\n');
+        const csv = lines.map(r=>r.map(x => '"' + String((x||'')).replace(/"/g,'""') + '"').join(',')).join('\\n');
         const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -463,12 +476,6 @@ write_followup_section() {
         <td>authorized_keys review</td>
         <td><pre>grep -R --line-number '' /root/.ssh/authorized_keys /home/*/.ssh/authorized_keys 2>/dev/null</pre></td>
         <td>Manually verify keys and permissions</td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>Proprietary software identification</td>
-        <td><pre>apt-mark showmanual | sort</pre></td>
-        <td>Cross-check against vendor requirements; review Installed Packages section</td>
         <td></td>
       </tr>
       <tr>
@@ -778,16 +785,28 @@ run_security_audit_tests() {
             if (( count > 1 )); then
                 html+="<div class=\"banner\">Multiple MOTD fragments detected (${count} files)</div>"
             fi
+            # List file names first
+            html+="<div><strong>Files:</strong><ul>"
+            while IFS= read -r f; do
+                [[ -z "$f" ]] && continue
+                local sf
+                sf=$(echo "$f" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
+                html+="<li>${sf}</li>"
+            done <<< "$motd_files"
+            html+="</ul></div>"
+            # Then contents, one box per file
             while IFS= read -r f; do
                 [[ -z "$f" ]] && continue
                 local content
                 content=$(cat "$f" 2>&1)
                 local safe
                 safe=$(echo "$content" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
-                html+="<div><strong>${f}</strong><pre>${safe}</pre></div>"
+                local sf
+                sf=$(echo "$f" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
+                html+="<div class=\"box\"><div style=\"font-weight:600; color:#a9b1d6\">${sf}</div><pre>${safe}</pre></div>"
             done <<< "$motd_files"
             html+="</details>"
-            add_row_to_html_report_html "MOTD" "cat /etc/motd; ls /etc/update-motd.d" "$html" "$([ $count -gt 1 ] && echo partial || echo pass)" "$([ $count -gt 1 ] && echo "Multiple files" || echo "Found MOTD files")"
+            add_row_to_html_report_html "MOTD" "cat /etc/motd; ls /etc/update-motd.d" "$html" "$([ $count -gt 1 ] && echo partial || echo pass)" "$([ $count -gt 1 ] && echo \"Multiple files\" || echo \"Found MOTD files\")"
         else
             add_row_to_html_report "MOTD" "cat /etc/motd" "No MOTD files found" "partial" ""
         fi
@@ -1079,31 +1098,16 @@ run_software_tests() {
         add_row_to_html_report_html "Process List" "ps axfcu" "$html" "pass" ""
     }
 
-    # dpkg -l collapsible with highlights for manually installed packages
+    # Installed packages as expandable list (package + version)
     {
-        local manual chips html dpkgout
+        local manual html
         manual=$(apt-mark showmanual 2>/dev/null | sort -u)
-        chips="<div class=\"disk-chips\">"
-        if [[ -n "$manual" ]]; then
-            while IFS= read -r pkg; do
-                [[ -z "$pkg" ]] && continue
-                chips+="<span class=\"disk-chip\">${pkg}</span>"
-            done <<< "$manual"
-        else
-            chips+="<span class=\"disk-chip\">No manual packages detected</span>"
-        fi
-        chips+="</div>"
-        dpkgout=$(dpkg -l 2>&1)
-        local safe
-        safe=$(echo "$dpkgout" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
-        html="${chips}<details><summary>Show dpkg -l output (raw)</summary><pre>${safe}</pre></details>"
-        add_row_to_html_report_html "Installed Packages" "dpkg -l" "$html" "pass" "Manual packages highlighted above"
 
-        # Installed Packages (summary: package + version)
+        # Installed Packages (package + version)
         local q
         q=$(dpkg-query -W -f='${Package}\t${Version}\n' 2>/dev/null)
         if [[ -n "$q" ]]; then
-            local tab="<details><summary>Installed Packages (summary)</summary><table><thead><tr><th>Package</th><th>Version</th></tr></thead><tbody>"
+            local tab="<details><summary>Installed Packages</summary><div><input class=\"search\" id=\"pkgFilter\" placeholder=\"Filter packages...\" oninput=\"filterTable('pkgFilter','pkgTable')\"></div><table id=\"pkgTable\"><thead><tr><th>Package</th><th>Version</th></tr></thead><tbody>"
             while IFS=$'\t' read -r p v; do
                 [[ -z "$p" ]] && continue
                 local sp sv
@@ -1112,12 +1116,14 @@ run_software_tests() {
                 tab+="<tr><td>${sp}</td><td>${sv}</td></tr>"
             done <<< "$q"
             tab+="</tbody></table></details>"
-            add_row_to_html_report_html "Installed Packages (summary)" "dpkg-query -W" "$tab" "pass" "Package and version"
+            add_row_to_html_report_html "Installed Packages" "dpkg-query -W" "$tab" "pass" "Package and version"
+        else
+            add_row_to_html_report "Installed Packages" "dpkg-query -W" "No package data" "partial" "dpkg-query returned no results"
         fi
 
         # Manually installed software (package + version)
         if [[ -n "$manual" ]]; then
-            local manhtml="<details><summary>Manually installed software</summary><table><thead><tr><th>Package</th><th>Version</th></tr></thead><tbody>"
+            local manhtml="<details><summary>Manually installed software</summary><div><input class=\"search\" id=\"manFilter\" placeholder=\"Filter manual packages...\" oninput=\"filterTable('manFilter','manTable')\"></div><table id=\"manTable\"><thead><tr><th>Package</th><th>Version</th></tr></thead><tbody>"
             while IFS= read -r pkg; do
                 [[ -z "$pkg" ]] && continue
                 local ver
@@ -1129,6 +1135,8 @@ run_software_tests() {
             done <<< "$manual"
             manhtml+="</tbody></table></details>"
             add_row_to_html_report_html "Manually installed software" "apt-mark showmanual | sort" "$manhtml" "pass" "From apt-mark showmanual"
+        else
+            add_row_to_html_report_html "Manually installed software" "apt-mark showmanual | sort" "<details><summary>Manually installed software</summary><div>No manual packages detected</div></details>" "partial" "None detected"
         fi
     }
 
