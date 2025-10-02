@@ -673,6 +673,17 @@ run_gpu_tests() {
     close_html_category_section
 }
 
+# Helper: NIC info per IPv4 (driver, vendor, product)
+nic_info_per_ipv4() {
+  ip -o -4 addr show primary scope global | while read -r idx iface fam cidr rest; do
+    ip_addr="${cidr}"
+    drv=$(ethtool -i "$iface" 2>/dev/null | awk -F': ' '/driver/ {gsub(/^ +| +$/, "", $2); print $2}')
+    ven=$(lshw -C network 2>/dev/null | awk -v IF="$iface" '$1=="logical"&&$2=="name:"&&$3==IF{f=1} f&&$1=="vendor:"{sub(/^vendor: /,""); print; exit}')
+    prod=$(lshw -C network 2>/dev/null | awk -v IF="$iface" '$1=="logical"&&$2=="name:"&&$3==IF{f=1} f&&$1=="product:"{sub(/^product: /,""); print; exit}')
+    echo "$iface ${ip_addr} driver=${drv:-unknown} vendor=${ven:-unknown} product=${prod:-unknown}"
+  done
+}
+
 run_ethernet_tests() {
     add_html_category_header "Ethernet Network"
     run_test "Ethernet" "Ethernet NICs" "lshw -C network -short"
@@ -682,7 +693,7 @@ run_ethernet_tests() {
     run_test "Ethernet" "All IP Addresses (IPv4 & IPv6)" "ip -o addr show primary scope global | awk '{print \$2, \$3, \$4}'"
 
     # NIC type per IP (IPv4) with vendor/product
-    run_test "Ethernet" "NIC Type per IPv4" "bash -lc 'ip -o -4 addr show primary scope global | while read -r idx iface fam cidr rest; do ip=\"${cidr}\"; drv=\"$(ethtool -i \"$iface\" 2>/dev/null | awk -F: \"/driver/{gsub(/^ +| +?$/ ,\"\",\$2); print \$2}\")\"; ven=\"$(lshw -C network 2>/dev/null | awk -v IF=\"$iface\" '\''$1=="logical"&&$2=="name:"&&$3==IF{f=1} f&&$1=="vendor:"{sub(/^vendor: /,""); print; exit}'\'')\"; prod=\"$(lshw -C network 2>/dev/null | awk -v IF=\"$iface\" '\''$1=="logical"&&$2=="name:"&&$3==IF{f=1} f&&$1=="product:"{sub(/^product: /,""); print; exit}'\'')\"; echo \"$iface ${ip} driver=${drv:-unknown} vendor=${ven:-unknown} product=${prod:-unknown}\"; done'"
+    run_test "Ethernet" "NIC Type per IPv4" "nic_info_per_ipv4"
 
     # Link speed assertion against MIN_LINK_SPEED_MBPS (0 disables threshold)
     {
