@@ -339,7 +339,7 @@ add_html_category_header() {
     local category="$1"
     cat >> "${OUTPUT_FILE}" << EOF
 <details open>
-    <summary>${category} Tests</summary>
+    <summary>${category}</summary>
     <table>
         <thead>
             <tr>
