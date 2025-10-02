@@ -11,9 +11,17 @@
 #
 # Usage:
 #   - Standard run (interactive):
-#     'sudo ./system_tests.sh'
-#   - Automated run (skips all checks and prompts):
-#     'sudo ./system_tests.sh --nocheck'
+#     'sudo ./hpctests.sh'
+#   - Headless (auto-yes to prompts; installs allowed):
+#     'sudo ./hpctests.sh --headless'
+#   - Skip Docker benchmarks:
+#     'sudo ./hpctests.sh --noburn'
+#   - Do not install missing software (also skips benchmarks), still run tests and generate report:
+#     'sudo ./hpctests.sh --noinstall'
+#   - Legacy automated mode (skip prompts; run all tests):
+#     'sudo ./hpctests.sh --nocheck'
+#   - Help:
+#     'sudo ./hpctests.sh --help'
 #
 # ==============================================================================
 
@@ -23,6 +31,9 @@ readonly TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 readonly FILENAME_TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
 readonly OUTPUT_FILE="system_test_report_${FILENAME_TIMESTAMP}.html"
 NOCHECK_MODE=false # This flag will be set to true if --nocheck is passed
+HEADLESS_MODE=false  # Auto-yes to prompts; still performs installs unless --noinstall
+NOINSTALL_MODE=false # Do not install missing software; still run tests and generate report
+NOBURN_MODE=false    # Skip Docker-based benchmark tests (HPL/GPU-burn)
 
 # Host identification (best-effort)
 HOSTNAME_FQDN=$(hostname -f 2>/dev/null || hostname)
@@ -65,6 +76,23 @@ log_success() {
 
 log_warn() {
     echo -e "${C_YELLOW}[WARNING]${C_RESET} $1"
+}
+
+print_usage() {
+    cat <<USAGE
+Usage: sudo ./hpctests.sh [options]
+
+Options:
+  --headless   Run all tests non-interactively, defaulting "yes" to prompts (installs allowed).
+  --noburn     Skip Docker-based benchmarks (HPL and GPU-burn). Tests still run; report generated.
+  --noinstall  Do not install missing software or run burn tests. Tests still run; report generated.
+  --nocheck    Legacy automated mode: skip dependency prompts and confirmations; run all tests.
+  --help, -h   Show this help and exit.
+
+Notes:
+- --headless may be combined with --noburn (to skip benchmarks) or left alone to auto-run them.
+- --noinstall implies no Docker installation and benchmarks are skipped.
+USAGE
 }
 
 # --- HTML Report Generation Functions ---
@@ -567,12 +595,21 @@ check_and_install_dependencies() {
     if [ ${#packages_to_install[@]} -gt 0 ]; then
         log_warn "The following standard packages appear to be missing:"
         for pkg in "${packages_to_install[@]}"; do echo -e "  - ${C_YELLOW}${pkg}${C_RESET}"; done; echo
-        read -p "Do you want to attempt to install them using 'apt'? (y/N): " choice
-        if [[ "$choice" =~ ^[Yy]$ ]]; then
-            log "Updating and installing packages..."
-            apt-get update && apt-get install -y "${packages_to_install[@]}" || { log_error "Package installation failed."; exit 1; }
+        if $NOINSTALL_MODE; then
+            log_warn "--noinstall specified: skipping installation of missing standard packages; tests may fail."
         else
-            log_error "Cannot proceed without required packages. Aborting."; exit 1
+            if $HEADLESS_MODE; then
+                log "--headless specified: auto-installing missing standard packages via apt..."
+                DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y "${packages_to_install[@]}" || { log_error "Package installation failed."; exit 1; }
+            else
+                read -p "Do you want to attempt to install them using 'apt'? (y/N): " choice
+                if [[ "$choice" =~ ^[Yy]$ ]]; then
+                    log "Updating and installing packages..."
+                    apt-get update && apt-get install -y "${packages_to_install[@]}" || { log_error "Package installation failed."; exit 1; }
+                else
+                    log_warn "Continuing without installing missing standard packages; tests may fail."
+                fi
+            fi
         fi
     fi
     log "Scanning for complex drivers and tools..."
@@ -591,8 +628,12 @@ check_and_install_dependencies() {
     if $any_complex_missing; then
         log_warn "\nTests for these components will report 'command not found'."
         log_warn "----------------------------------------------------------------"
-        read -p "Do you want to continue with the tests? (Y/n): " continue_choice
-        [[ "${continue_choice:-y}" =~ ^[Nn]$ ]] && { log_error "Aborting as requested."; exit 1; }
+        if $HEADLESS_MODE || $NOINSTALL_MODE; then
+            log_warn "Auto-continuing due to --headless/--noinstall."
+        else
+            read -p "Do you want to continue with the tests? (Y/n): " continue_choice
+            [[ "${continue_choice:-y}" =~ ^[Nn]$ ]] && { log_error "Aborting as requested."; exit 1; }
+        fi
     fi
     log_success "Dependency check complete." && echo
 }
@@ -1033,21 +1074,32 @@ run_benchmark_tests() {
     add_html_category_header "High-Performance Benchmarks"
     if ! command -v docker &> /dev/null; then
         log_warn "Docker is not installed, but it is required for benchmark tests."
-        # In --nocheck mode, we can't ask, so we must assume Docker is present or fail.
-        if $NOCHECK_MODE; then
-             add_row_to_html_report "Benchmarks" "N/A" "Skipped - Docker not installed and running in --nocheck mode" "partial" "Install Docker to enable benchmarks"; close_html_category_section; return
+        # If any non-install or burn-skip mode is active, skip benchmarks gracefully
+        if $NOCHECK_MODE || $NOINSTALL_MODE || $NOBURN_MODE; then
+             add_row_to_html_report "Benchmarks" "N/A" "Skipped - Docker not installed" "partial" "Benches disabled by flag or nocheck"
+             close_html_category_section; return
         fi
-        read -p "Do you want to install Docker CE now? (y/N): " docker_choice
-        if [[ "$docker_choice" =~ ^[Yy]$ ]]; then
+        if $HEADLESS_MODE; then
+            log_warn "--headless specified: attempting automatic Docker CE installation..."
             install_docker_ce || { add_row_to_html_report "Benchmarks" "N/A" "Skipped due to failed Docker installation" "fail" "Docker installation failed"; close_html_category_section; return; }
         else
-            add_row_to_html_report "Benchmarks" "N/A" "Skipped - Docker not installed" "partial" "User skipped installation"; close_html_category_section; return;
+            read -p "Do you want to install Docker CE now? (y/N): " docker_choice
+            if [[ "$docker_choice" =~ ^[Yy]$ ]]; then
+                install_docker_ce || { add_row_to_html_report "Benchmarks" "N/A" "Skipped due to failed Docker installation" "fail" "Docker installation failed"; close_html_category_section; return; }
+            else
+                add_row_to_html_report "Benchmarks" "N/A" "Skipped - Docker not installed" "partial" "User skipped installation"; close_html_category_section; return;
+            fi
         fi
     fi
     
     local choice
-    if $NOCHECK_MODE; then
-        log_warn "Auto-accepting benchmarks due to --nocheck flag."
+    if $NOBURN_MODE || $NOINSTALL_MODE; then
+        add_row_to_html_report "HPL Single Node" "N/A" "Skipped by flag" "partial" "--noburn/--noinstall"
+        add_row_to_html_report "GPU Burn" "N/A" "Skipped by flag" "partial" "--noburn/--noinstall"
+        close_html_category_section; return
+    fi
+    if $NOCHECK_MODE || $HEADLESS_MODE; then
+        log_warn "Auto-accepting benchmarks due to automated mode."
         choice="y"
     else
         read -p "Run long-running Docker benchmarks (HPL/GPU-burn)? (y/N): " choice
@@ -1140,10 +1192,24 @@ main() {
 
     # --- Parse Command-Line Arguments ---
     for arg in "$@"; do
-        if [[ "$arg" == "--nocheck" ]]; then
-            NOCHECK_MODE=true
-            break
-        fi
+        case "$arg" in
+            --nocheck)
+                NOCHECK_MODE=true
+                ;;
+            --headless)
+                HEADLESS_MODE=true
+                ;;
+            --noinstall)
+                NOINSTALL_MODE=true
+                ;;
+            --noburn)
+                NOBURN_MODE=true
+                ;;
+            --help|-h)
+                print_usage
+                exit 0
+                ;;
+        esac
     done
     
     clear
