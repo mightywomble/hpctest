@@ -162,13 +162,17 @@ initialize_html_report() {
         table {
             width: 100%;
             border-collapse: collapse;
+            table-layout: fixed; /* enforce fixed widths */
         }
         th, td {
             padding: 0.8rem 1rem;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
             vertical-align: top;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
+        pre { white-space: pre-wrap; word-break: break-word; }
         thead {
             background-color: var(--table-header-bg);
             color: #a9b1d6;
@@ -194,6 +198,7 @@ initialize_html_report() {
             font-size: 0.8rem;
             color: #7a82ac;
         }
+        .banner { padding: 0.6rem 0.9rem; border: 1px dashed var(--yellow); background: rgba(250,204,21,0.08); color: var(--yellow); border-radius: 8px; margin-bottom: 0.6rem; font-weight: 600; }
     </style>
     <script>
       function findRowByTestName(name){
@@ -723,7 +728,7 @@ run_ethernet_tests() {
                         entry+=" (below ${min}Mb/s)"
                     fi
                 fi
-                lines+="$entry\n"
+                lines+="$entry"$'\n'
             done
             if (( min == 0 )) && [[ "$overall_status" == "pass" ]]; then
                 notes="No minimum threshold configured"
@@ -763,17 +768,22 @@ run_security_audit_tests() {
         motd_files=$( ( [ -f /etc/motd ] && echo /etc/motd; ls -1 /etc/update-motd.d/* 2>/dev/null ) | sed '/^$/d' )
         local html=""
         if [[ -n "$motd_files" ]]; then
+            local count
+            count=$(echo "$motd_files" | wc -l | awk '{print $1}')
             html+="<details><summary>Show MOTD files and contents</summary>"
+            if (( count > 1 )); then
+                html+="<div class=\"banner\">Multiple MOTD fragments detected (${count} files)</div>"
+            fi
             while IFS= read -r f; do
                 [[ -z "$f" ]] && continue
                 local content
                 content=$(cat "$f" 2>&1)
                 local safe
-                safe=$(echo "$content" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+                safe=$(echo "$content" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
                 html+="<div><strong>${f}</strong><pre>${safe}</pre></div>"
             done <<< "$motd_files"
             html+="</details>"
-            add_row_to_html_report_html "MOTD" "cat /etc/motd; ls /etc/update-motd.d" "$html" "pass" "Found MOTD files"
+            add_row_to_html_report_html "MOTD" "cat /etc/motd; ls /etc/update-motd.d" "$html" "$([ $count -gt 1 ] && echo partial || echo pass)" "$([ $count -gt 1 ] && echo "Multiple files" || echo "Found MOTD files")"
         else
             add_row_to_html_report "MOTD" "cat /etc/motd" "No MOTD files found" "partial" ""
         fi
@@ -787,6 +797,7 @@ run_security_audit_tests() {
         if [[ -z "$files" ]]; then
             html+="<div>No SSH key-like files found</div>"
         else
+            html+="<table><thead><tr><th>Path</th><th>Type</th><th>Perms</th><th>Owner</th><th>Fingerprint</th></tr></thead><tbody>"
             while IFS= read -r f; do
                 [[ -z "$f" ]] && continue
                 local perms owner fp type
@@ -801,10 +812,10 @@ run_security_audit_tests() {
                     [[ -z "$fp" ]] && fp="(fingerprint unavailable)"
                 fi
                 local safe_f
-                safe_f=$(echo "$f" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
-                html+="<div><strong>${safe_f}</strong> [${type}] perms=${perms:-N/A} owner=${owner:-N/A} fingerprint=${fp:-N/A}</div>"
+                safe_f=$(echo "$f" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
+                html+="<tr><td>${safe_f}</td><td>${type}</td><td>${perms:-N/A}</td><td>${owner:-N/A}</td><td>${fp:-N/A}</td></tr>"
             done <<< "$files"
-            html+="<div style=\"margin-top:4px;color:#a9b1d6\">Key contents are intentionally redacted</div>"
+            html+="</tbody></table><div style=\"margin-top:4px;color:#a9b1d6\">Key contents are intentionally redacted</div>"
         fi
         html+="</details>"
         add_row_to_html_report_html "SSH Keys Audit" "find ~/.ssh /home/*/.ssh" "$html" "partial" "Metadata only; contents redacted"
@@ -849,23 +860,47 @@ run_security_audit_tests() {
         fi
     }
 
-    # Home directories
+    # Home directories (/home) and from /etc/passwd
     {
-        local homes
-        homes=$(awk -F: '{print $6}' /etc/passwd | sort -u)
-        local html="<div class=\"disk-chips\">"
-        if [[ -n "$homes" ]]; then
+        local html=""
+        # /home listing
+        local homelist
+        homelist=$(ls -1 /home 2>/dev/null)
+        local html1="<details><summary>/home directory listing</summary>"
+        if [[ -n "$homelist" ]]; then
+            html1+="<table><thead><tr><th>Name</th></tr></thead><tbody>"
             while IFS= read -r h; do
                 [[ -z "$h" ]] && continue
                 local safe
-                safe=$(echo "$h" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
-                html+="<span class=\"disk-chip\">${safe}</span>"
-            done <<< "$homes"
+                safe=$(echo "$h" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
+                html1+="<tr><td>${safe}</td></tr>"
+            done <<< "$homelist"
+            html1+="</tbody></table>"
         else
-            html+="<span class=\"disk-chip\">No home directories found</span>"
+            html1+="<div>Empty or inaccessible /home</div>"
         fi
-        html+="</div>"
-        add_row_to_html_report_html "Home Directories" "parsed from /etc/passwd" "$html" "pass" ""
+        html1+="</details>"
+
+        # From /etc/passwd
+        local homes
+        homes=$(awk -F: '{print $6}' /etc/passwd | sort -u)
+        local html2="<details><summary>Home directories parsed from /etc/passwd</summary>"
+        if [[ -n "$homes" ]]; then
+            html2+="<table><thead><tr><th>Path</th></tr></thead><tbody>"
+            while IFS= read -r h; do
+                [[ -z "$h" ]] && continue
+                local safe
+                safe=$(echo "$h" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
+                html2+="<tr><td>${safe}</td></tr>"
+            done <<< "$homes"
+            html2+="</tbody></table>"
+        else
+            html2+="<div>No home directories found</div>"
+        fi
+        html2+="</details>"
+
+        html="${html1}${html2}"
+        add_row_to_html_report_html "Home Directories" "ls /home and /etc/passwd" "$html" "pass" ""
     }
 
     close_html_category_section
@@ -905,7 +940,11 @@ run_speedtest_tests() {
         sid_us="$SPEEDTEST_SERVER_US"
         label_us=$(echo "$list_all" | grep -E "^\s*${sid_us}\)" | sed 's/^ *[0-9]\+) //')
     else
-        sid_us=$(echo "$list_all" | grep -i "United States" | head -n 1 | grep -Eo '^[[:space:]]*[0-9]+' | tr -d ' ')
+        # Prefer New York servers for US
+        sid_us=$(echo "$list_all" | grep -i "New York" | head -n 1 | grep -Eo '^[[:space:]]*[0-9]+' | tr -d ' ')
+        if [[ -z "$sid_us" ]]; then
+            sid_us=$(echo "$list_all" | grep -i "United States" | head -n 1 | grep -Eo '^[[:space:]]*[0-9]+' | tr -d ' ')
+        fi
         label_us=$(echo "$list_all" | grep -E "^\s*${sid_us}\)" | sed 's/^ *[0-9]\+) //')
     fi
 
@@ -1040,8 +1079,6 @@ run_software_tests() {
         if [[ -n "$manual" ]]; then
             while IFS= read -r pkg; do
                 [[ -z "$pkg" ]] && continue
-                case "$pkg" in ubuntu-minimal|ubuntu-standard|ubuntu-desktop|base-files|debconf|*) ;;
-                esac
                 chips+="<span class=\"disk-chip\">${pkg}</span>"
             done <<< "$manual"
         else
@@ -1050,9 +1087,41 @@ run_software_tests() {
         chips+="</div>"
         dpkgout=$(dpkg -l 2>&1)
         local safe
-        safe=$(echo "$dpkgout" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
-        html="${chips}<details><summary>Show dpkg -l output</summary><pre>${safe}</pre></details>"
+        safe=$(echo "$dpkgout" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
+        html="${chips}<details><summary>Show dpkg -l output (raw)</summary><pre>${safe}</pre></details>"
         add_row_to_html_report_html "Installed Packages" "dpkg -l" "$html" "pass" "Manual packages highlighted above"
+
+        # Installed Packages (summary: package + version)
+        local q
+        q=$(dpkg-query -W -f='${Package}\t${Version}\n' 2>/dev/null)
+        if [[ -n "$q" ]]; then
+            local tab="<details><summary>Installed Packages (summary)</summary><table><thead><tr><th>Package</th><th>Version</th></tr></thead><tbody>"
+            while IFS=$'\t' read -r p v; do
+                [[ -z "$p" ]] && continue
+                local sp sv
+                sp=$(echo "$p" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
+                sv=$(echo "$v" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
+                tab+="<tr><td>${sp}</td><td>${sv}</td></tr>"
+            done <<< "$q"
+            tab+="</tbody></table></details>"
+            add_row_to_html_report_html "Installed Packages (summary)" "dpkg-query -W" "$tab" "pass" "Package and version"
+        fi
+
+        # Manually installed software (package + version)
+        if [[ -n "$manual" ]]; then
+            local manhtml="<details><summary>Manually installed software</summary><table><thead><tr><th>Package</th><th>Version</th></tr></thead><tbody>"
+            while IFS= read -r pkg; do
+                [[ -z "$pkg" ]] && continue
+                local ver
+                ver=$(dpkg-query -W -f='${Version}' "$pkg" 2>/dev/null)
+                local sp sv
+                sp=$(echo "$pkg" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
+                sv=$(echo "${ver:-N/A}" | sed 's/&/\\&amp;/g; s/</\\&lt;/g; s/>/\\&gt;/g;')
+                manhtml+="<tr><td>${sp}</td><td>${sv}</td></tr>"
+            done <<< "$manual"
+            manhtml+="</tbody></table></details>"
+            add_row_to_html_report_html "Manually installed software" "apt-mark showmanual | sort" "$manhtml" "pass" "From apt-mark showmanual"
+        fi
     }
 
     close_html_category_section
