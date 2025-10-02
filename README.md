@@ -3,8 +3,6 @@
 
 A comprehensive bash script designed to automate the auditing and performance testing of high-performance computing (HPC) nodes. It runs a series of hardware and software checks and compiles the results into a clean, self-contained, and professional HTML report.
 
-![Web Output](interface.png)
-
 
 ## Features
 
@@ -17,6 +15,11 @@ A comprehensive bash script designed to automate the auditing and performance te
 -   **Optional Performance Benchmarks**: Includes long-running HPL and GPU-burn benchmarks via Docker, with interactive prompts to run or skip them.
     
 -   **Automated Mode**: A `--nocheck` flag allows the script to run non-interactively, skipping all prompts, making it ideal for automated CI/CD pipelines or batch testing.
+
+## Screenshots
+![Web Output](screenshots/interface.png)
+![Web Output](screenshots/interface1.png)
+![Web Output](screenshots/interface2.png)
     
 
 ## Sample Report
