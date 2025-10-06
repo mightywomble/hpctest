@@ -1,0 +1,29 @@
+---
+- name: System Health Check Playbook
+  hosts: all
+  gather_facts: true
+
+  pre_tasks:
+    - name: Initialize the list of test results
+      ansible.builtin.set_fact:
+        test_results: []
+
+  roles:
+    - role: check_package
+      when: run_package_check | default(false) | bool
+    - role: check_service
+      when: run_service_check | default(false) | bool
+    - role: check_port
+      when: run_port_check | default(false) | bool
+    - role: check_file
+      when: run_file_check | default(false) | bool
+    - role: check_disk_space
+      when: run_disk_space_check | default(false) | bool
+
+  post_tasks:
+    - name: Generate HTML report from template
+      ansible.builtin.template:
+        src: templates/report.html.j2
+        dest: "reports/health_check_report_{{ ansible_hostname }}_{{ ansible_date_time.iso8610 }}.html"
+      delegate_to: localhost
+      run_once: true
