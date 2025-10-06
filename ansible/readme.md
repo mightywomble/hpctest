@@ -1,21 +1,21 @@
 
-# Ansible Health Check & Reporting Playbook
+# Ansible Hardware & Performance Report
 
-This project provides an automated, idempotent, and extensible framework for running system health checks using Ansible. It's designed to be run from a CI/CD pipeline like Rundeck or Jenkins, generating a clean HTML report for each run.
+This project provides an automated, idempotent, and extensible framework for running system hardware, performance, and security checks using Ansible. It is designed to replicate the output of a detailed diagnostic script, generating a clean, dark-themed HTML report for each run.
 
-The entire playbook operates in a **read-only** capacity, using Ansible's fact-gathering and check-mode capabilities to inspect system state without making any changes.
+The entire playbook operates in a **read-only** capacity, using Ansible's fact-gathering and command modules to inspect system state without making any changes.
 
 ----------
 
 ## ✨ Features
 
+-   **Comprehensive Checks**: Includes roles for system info, CPU, RAM, storage, GPU, networking, security, and more.
+    
+-   **Identical HTML Reporting**: Generates a visually identical, collapsible HTML report that matches the provided diagnostic script's output.
+    
 -   **100% Idempotent**: Safely run checks multiple times without altering the system.
     
--   **Role-Based**: Each type of check is a self-contained role, making it easy to manage and extend.
-    
--   **HTML Reporting**: Generates a user-friendly, timestamped HTML report summarizing test results.
-    
--   **Declarative Configuration**: Define all your tests in a simple YAML file (`group_vars/all.yml`).
+-   **Role-Based**: Each category of check is a self-contained role, making it easy to manage and extend.
     
 -   **CI/CD Friendly**: Use flags to control which checks to run, perfect for integration with tools like Rundeck.
     
@@ -44,7 +44,7 @@ cd ansible_health_check
 
 ### 2. Configure Your Checks
 
-All tests are defined in `group_vars/all.yml`. Open this file and customize the lists of packages, services, ports, etc., that you want to validate.
+Most tests gather facts directly, but some can be configured in `group_vars/all.yml`. For example, you can define which speed test servers to use.
 
 ### 3. Run the Playbook
 
@@ -53,86 +53,61 @@ Execute the playbook from the command line, using flags to specify which checks 
 Bash
 
 ```
-# Example: Run only the package and service checks on the local machine
-ansible-playbook playbook.yml -e "run_package_check=true run_service_check=true"
+# Example: Run only the system and GPU checks on the local machine
+ansible-playbook playbook.yml -e "run_system_check=true run_gpu_check=true"
 
 ```
 
 ----------
 
-## 📁 File & Directory Structure
-
-Here's a breakdown of the key files in this project:
-
--   `ansible.cfg`: Basic Ansible configuration file pointing to the inventory and roles directory.
-    
--   `inventory`: Defines the hosts to run the checks against. By default, it's set to `localhost`.
-    
--   `playbook.yml`: The main playbook. It orchestrates the entire process, from initializing variables to conditionally running roles and generating the final report.
-    
--   `group_vars/all.yml`: **This is where you define your tests.** All check roles read their configuration from this file.
-    
--   `roles/`: Contains a subdirectory for each health check.
-    
--   `templates/report.html.j2`: The Jinja2 template used to generate the HTML report.
-    
--   `reports/`: The output directory where the generated HTML reports are saved.
-    
-
-----------
-
 ## ⚙️ How the Roles Work
 
-Each role is designed to perform a specific type of check and report its findings in a standardized format.
+Each role performs a specific set of checks and appends its results to a categorized dictionary, which is then used to build the HTML report.
 
--   `check_package`
+-   `check_system`: Gathers basic OS and system information.
     
-    -   **What it does**: Verifies that a list of packages is installed.
-        
-    -   **How it works**: It uses the `ansible.builtin.package_facts` module to get a list of all installed packages and then checks if the required packages from `group_vars/all.yml` are present in that list.
-        
--   `check_service`
+-   `check_cpu`: Uses `lscpu` to get detailed CPU information like model and core count.
     
-    -   **What it does**: Ensures services are both `running` and `enabled`.
-        
-    -   **How it works**: It uses the `ansible.builtin.service_facts` module to gather the state of all services on the system and compares it against the desired state.
-        
--   `check_port`
+-   `check_ram`: Uses Ansible's gathered facts (`ansible_facts.memtotal_mb`) to report total memory.
     
-    -   **What it does**: Checks if specific TCP ports are open and listening.
-        
-    -   **How it works**: It uses the `ansible.builtin.wait_for` module with a short timeout to probe the port without making a full connection. It's configured to check for a `started` state.
-        
--   `check_file`
+-   `check_storage`: Reports on block devices and filesystem usage from `ansible_facts.mounts`.
     
-    -   **What it does**: Verifies the existence, type (file/directory), or absence of a path.
-        
-    -   **How it works**: It uses the `ansible.builtin.stat` module to get metadata about a path and then compares the `state` (e.g., `file`, `directory`, `absent`) with the expected state defined in your variables.
-        
--   `check_disk_space`
+-   `check_gpu`: Executes `nvidia-smi` to check for GPU presence and driver status. **Fails gracefully** if the command is not found.
     
-    -   **What it does**: Confirms that a mount point has a minimum percentage of free space.
-        
-    -   **How it works**: It reads the `ansible_facts.mounts` variable (gathered automatically by Ansible) and calculates the percentage of free space, comparing it against the defined threshold.
-        
+-   `check_ethernet`: Gathers network interface details using the `ip -br a` command.
+    
+-   `check_infiniband`: Checks for InfiniBand hardware using `ibstatus`. **Fails gracefully** if the command is not found.
+    
+-   `check_security`: Audits user accounts by reading `/etc/passwd` using Ansible's `slurp` module.
+    
+-   `check_network_speed`: Runs `speedtest-cli` against specified server IDs to benchmark internet performance.
+    
 
 ----------
 
 ## 🏃‍♂️ Running the Playbook
 
-To run the playbook, you use the standard `ansible-playbook` command. The key is to use **flags** (`-e` or `--extra-vars`) to tell the playbook which roles to execute. If no flags are provided, no tests will run.
+To run the playbook, you must use **flags** (`-e` or `--extra-vars`) to specify which roles to execute. If no flags are provided, no tests will run.
 
 ### Available Flags
 
--   `run_package_check=true`: Executes the package installation checks.
+-   `run_system_check=true`
     
--   `run_service_check=true`: Executes the service status checks.
+-   `run_cpu_check=true`
     
--   `run_port_check=true`: Executes the open port checks.
+-   `run_ram_check=true`
     
--   `run_file_check=true`: Executes the file and directory state checks.
+-   `run_storage_check=true`
     
--   `run_disk_space_check=true`: Executes the disk space checks.
+-   `run_gpu_check=true`
+    
+-   `run_ethernet_check=true`
+    
+-   `run_infiniband_check=true`
+    
+-   `run_security_check=true`
+    
+-   `run_network_speed_check=true`
     
 
 ### Command Examples
@@ -140,117 +115,125 @@ To run the playbook, you use the standard `ansible-playbook` command. The key is
 Bash
 
 ```
-# Run a single check for services
-ansible-playbook playbook.yml -e "run_service_check=true"
-
-# Run checks for ports and disk space simultaneously
-ansible-playbook playbook.yml -e "run_port_check=true run_disk_space_check=true"
+# Run a quick check on CPU and RAM
+ansible-playbook playbook.yml -e "run_cpu_check=true run_ram_check=true"
 
 # Run all available checks
-ansible-playbook playbook.yml -e "run_package_check=true run_service_check=true run_port_check=true run_file_check=true run_disk_space_check=true"
+ansible-playbook playbook.yml -e "run_system_check=true run_cpu_check=true run_ram_check=true run_storage_check=true run_gpu_check=true run_ethernet_check=true run_infiniband_check=true run_security_check=true run_network_speed_check=true"
 
 ```
+
+----------
+
+## 🌐 Running on a Remote System
+
+You can easily run these checks on any remote machine managed by Ansible.
+
+### Prerequisites
+
+1.  **SSH Access**: You must have passwordless SSH access (using SSH keys) from your command line to the remote server.
+    
+2.  **Sudo Privileges**: The user you connect with must have `sudo` privileges to run certain diagnostic commands.
+    
+3.  **Inventory File**: The remote host must be defined in an Ansible inventory file. Your system-wide inventory is typically at `/etc/ansible/hosts`.
+    
+
+### Example Command
+
+To run the playbook against a remote server named `webserver01` defined in your system inventory, use the `-i` (inventory) and `--limit` flags.
+
+Bash
+
+```
+ansible-playbook playbook.yml \
+    -i /etc/ansible/hosts \
+    --limit webserver01 \
+    -u your-remote-user \
+    --ask-become-pass \
+    -e "run_gpu_check=true run_storage_check=true"
+
+```
+
+-   `-i /etc/ansible/hosts`: Specifies the inventory file to use.
+    
+-   `--limit webserver01`: Restricts the playbook run to only the host named `webserver01`.
+    
+-   `-u your-remote-user`: Specifies the username to connect with via SSH.
+    
+-   `--ask-become-pass`: Prompts you to enter the `sudo` password for the remote user. For full automation, configure passwordless `sudo`.
+    
 
 ----------
 
 ## 📄 The HTML Report
 
-After a successful run, a report is generated in the `reports/` directory.
-
--   **Filename**: The report has a descriptive name, including the hostname and a precise timestamp (e.g., `health_check_report_my-server_2025-10-06T133000Z.html`).
-    
--   **Content**: The report contains a summary table with four columns:
-    
-    1.  **Test Name**: A description of the check (e.g., "Package Check: curl").
-        
-    2.  **Status**: The result, which is either **SUCCESS** (green) or **FAILED** (red).
-        
-    3.  **Details**: A brief message explaining the outcome (e.g., "Package is installed." or "Port is closed or unreachable.").
-        
+The generated report in the `reports/` directory is a faithful recreation of the dark-themed diagnostic output. It includes collapsible sections for each category, status badges (PASS/FAIL/PARTIAL), and the Ansible module or command used to perform the check.
 
 ----------
 
 ## 🧩 How to Add a New Role
 
-Adding a new check is straightforward. Let's say you want to create a new role to check if a kernel parameter (`sysctl`) has the correct value.
+To extend the playbook with a new category of checks, follow these steps.
 
 #### Step 1: Create the Role Directory
-
-Create the basic directory structure for your new role.
 
 Bash
 
 ```
-mkdir -p roles/check_kernel_param/tasks
+mkdir -p roles/check_new_thing/tasks
 
 ```
 
-#### Step 2: Define the Check Logic
+#### Step 2: Add Logic to `tasks/main.yml`
 
-Create a `main.yml` file inside `roles/check_kernel_param/tasks/` and add your logic. The key is to format the result into a standard dictionary and add it to the `test_results` list.
+In the new task file, perform your check and use `set_fact` to add the result to the correct category. The `combine` filter with `recursive=True` is essential.
 
 YAML
 
 ```
-# roles/check_kernel_param/tasks/main.yml
+# roles/check_new_thing/tasks/main.yml
 ---
-- name: Get value of a kernel parameter
-  ansible.posix.sysctl:
-    name: net.ipv4.ip_forward
-  register: sysctl_result
+- name: Perform a new check
+  ansible.builtin.command: your_command_here
+  register: command_result
+  changed_when: false
+  failed_when: false
 
-- name: Evaluate kernel parameter check result
+- name: Format the new check's result
   ansible.builtin.set_fact:
-    test_results: "{{ test_results + [item_result] }}"
+    test_results: "{{ test_results | combine({'new_thing': test_results.new_thing + [item_result]}}, recursive=True) }}"
   vars:
-    # Define the expected value (you could move this to group_vars/all.yml)
-    expected_value: '1'
-    actual_value: "{{ sysctl_result.value }}"
-    is_success: actual_value == expected_value
-    # This dictionary structure is CRUCIAL for the report to work.
     item_result:
-      name: "Kernel Param Check: net.ipv4.ip_forward"
-      status: "{{ is_success | ternary('SUCCESS', 'FAILED') }}"
-      details: "Expected '{{ expected_value }}', but found '{{ actual_value }}'."
+      name: "My New Awesome Check"
+      command: "your_command_here"
+      result: "{{ command_result.stdout }}"
+      status: "{{ command_result.rc == 0 | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code was {{ command_result.rc }}"
 
 ```
 
-#### Step 3: Integrate the Role into the Main Playbook
+#### Step 3: Integrate into the Main Playbook
 
-Open `playbook.yml` and add your new role, complete with its own `when` condition and flag.
+Open `playbook.yml` and add the new role with its flag. You will also need to add `new_thing: []` to the `test_results` dictionary in the `pre_tasks` section.
 
 YAML
 
 ```
 # playbook.yml
 ...
+  pre_tasks:
+    - name: Initialize test results dictionary
+      ansible.builtin.set_fact:
+        test_results:
+          system: []
+          # ... other categories
+          new_thing: [] # <-- Add new category here
+
   roles:
-    - role: check_package
-      when: run_package_check | default(false) | bool
-    - role: check_service
-      when: run_service_check | default(false) | bool
-    - role: check_port
-      when: run_port_check | default(false) | bool
-    - role: check_file
-      when: run_file_check | default(false) | bool
-    - role: check_disk_space
-      when: run_disk_space_check | default(false) | bool
-    # Add your new role here
-    - role: check_kernel_param
-      when: run_kernel_check | default(false) | bool
+    # ... other roles
+    - { role: check_new_thing, when: run_new_thing_check | default(false) | bool }
 ...
 
 ```
 
-#### Step 4: Run Your New Check
-
-You can now execute your new check using the flag you just defined.
-
-Bash
-
-```
-ansible-playbook playbook.yml -e "run_kernel_check=true"
-
-```
-
-The new test result will automatically appear in the HTML report without any changes needed to the template, because you used the correct data structure!
+Now you can run your new check with the `-e "run_new_thing_check=true"` flag, and it will appear in its own section in the HTML report.
