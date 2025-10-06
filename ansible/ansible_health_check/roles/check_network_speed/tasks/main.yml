@@ -1,0 +1,21 @@
+---
+- name: Run speedtest-cli for each server
+  ansible.builtin.command: "speedtest-cli --server {{ item.server_id }} --simple"
+  register: speedtest_results
+  loop: "{{ speed_test_servers }}"
+  changed_when: false
+  failed_when: false
+
+- name: Format results for Network Speed Tests
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({network_speed: test_results.network_speed + [item_result]}, recursive=True) }}"
+  loop: "{{ speedtest_results.results }}"
+  vars:
+    is_fail: item.rc != 0
+    item_result:
+      name: "{{ item.item.desc }}"
+      command: "speedtest-cli --server {{ item.item.server_id }} --simple"
+      result: "{{ is_fail | ternary(item.stderr, item.stdout) }}"
+      status: "{{ is_fail | ternary(FAIL, PASS) }}"
+      notes: ""
+

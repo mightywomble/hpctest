@@ -1,0 +1,18 @@
+---
+- name: Get CPU Model
+  ansible.builtin.command: lscpu
+  register: lscpu_output
+  changed_when: false
+
+- name: Format result for CPU Model
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({cpu: test_results.cpu + [item]}, recursive=True) }}"
+  vars:
+    item:
+      name: "CPU Model"
+      command: "lscpu | grep Model name:"
+      result: "{{ lscpu_output.stdout | regex_search(Model name:\s+(.+), \1) | first }}"
+      status: "PASS"
+      notes: ""
+  loop: [1]
+

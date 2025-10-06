@@ -1,0 +1,18 @@
+---
+- name: Get Ethernet Links
+  ansible.builtin.command: ip -br a
+  register: ip_links
+  changed_when: false
+
+- name: Format result for Ethernet Links
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({ethernet: test_results.ethernet + [item]}, recursive=True) }}"
+  vars:
+    item:
+      name: "Ethernet Links"
+      command: "ip -br a"
+      result: "{{ ip_links.stdout }}"
+      status: "PASS"
+      notes: ""
+  loop: [1]
+

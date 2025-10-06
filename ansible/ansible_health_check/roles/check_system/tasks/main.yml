@@ -1,0 +1,19 @@
+---
+- name: Get OS Version
+  ansible.builtin.command: grep PRETTY_NAME /etc/os-release
+  register: os_version
+  changed_when: false
+  failed_when: false
+
+- name: Format result for OS Version
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({system: test_results.system + [item]}, recursive=True) }}"
+  vars:
+    item:
+      name: "OS Version"
+      command: "grep PRETTY_NAME /etc/os-release"
+      result: "{{ os_version.stdout | regex_replace(^PRETTY_NAME=\"(.*?)\"$, \1) }}"
+      status: "{{ os_version.rc == 0 | ternary(PASS, FAIL) }}"
+      notes: ""
+  loop: [1] # Loop once to create the item
+

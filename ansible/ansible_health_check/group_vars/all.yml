@@ -1,35 +1,12 @@
 ---
-# Define all checks in this file. This makes it easy to manage your tests.
+# This file is for global configuration. Specific tests can be toggled via flags.
 
-# 1. Package checks: List of packages that should be present.
-packages_to_check:
-  - name: curl
-  - name: vim
+# Example: Define a list of users whose SSH keys should be audited
+ssh_key_audit_users:
+  - root
+  - david
 
-# 2. Service checks: List of services to check for 'running' and 'enabled' state.
-services_to_check:
-  - name: sshd
-  - name: rsyslog
-
-# 3. Port checks: List of TCP ports that should be listening.
-ports_to_check:
-  - port: 22
-    desc: "SSH Port"
-  - port: 80
-    desc: "Web Server Port"
-
-# 4. File/Directory checks: List of paths to verify.
-# 'state' can be 'directory', 'file', or 'absent'.
-files_to_check:
-  - path: /etc/hosts
-    state: file
-  - path: /tmp
-    state: directory
-  - path: /no/such/file
-    state: absent
-
-# 5. Disk space checks: List of mount points and the minimum free space required.
-# 'threshold' is the minimum percentage of free space required.
-disk_space_to_check:
-  - mount: /
-    threshold: 10
+# Example: Define network speed test servers
+speed_test_servers:
+  - { desc: "Speedtest Nearby", server_id: "14679" }
+  - { desc: "Speedtest Europe", server_id: "14679" } # Using same for demo

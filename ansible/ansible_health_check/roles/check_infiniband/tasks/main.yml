@@ -1,0 +1,20 @@
+---
+- name: Check for ibstatus command
+  ansible.builtin.command: ibstatus
+  register: ib_status
+  changed_when: false
+  failed_when: false
+
+- name: Format result for IB Links Speed
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({infiniband: test_results.infiniband + [item]}, recursive=True) }}"
+  vars:
+    is_fail: ib_status.rc != 0
+    item:
+      name: "IB Links Speed"
+      command: "ibstatus"
+      result: "{{ is_fail | ternary(ib_status.stderr, ib_status.stdout) }}"
+      status: "{{ is_fail | ternary(FAIL, PASS) }}"
+      notes: "Exit code {{ ib_status.rc }}"
+  loop: [1]
+

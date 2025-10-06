@@ -2,49 +2,88 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Ansible Health Check Report</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Test Report</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 40px; background-color: #f4f7f9; color: #333; }
-        h1, h2 { color: #2c3e50; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #3498db; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        .status-SUCCESS { color: #27ae60; font-weight: bold; }
-        .status-FAILED { color: #c0392b; font-weight: bold; }
-        .summary { padding: 20px; background-color: #ecf0f1; border-radius: 5px; margin-bottom: 20px; }
-        .summary p { margin: 5px 0; }
+        :root {
+            --bg-color: #1a1b26; --card-color: #24283b; --text-color: #c0caf5;
+            --header-color: #ffffff; --accent-color: #00bfff; --border-color: #414868;
+            --table-header-bg: #2e3452; --green: #34d399; --yellow: #facc15; --red: #f87171;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 2rem; font-size: 14px; }
+        .container { max-width: 1200px; margin: 0 auto; background-color: var(--card-color); border-radius: 12px; padding: 2rem; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        h1 { color: var(--header-color); text-align: center; border-bottom: 2px solid var(--accent-color); padding-bottom: 1rem; margin-bottom: 0.5rem; font-weight: 700; }
+        .report-meta, .report-host { text-align: center; margin-bottom: 1.5rem; font-size: 0.95rem; color: #7a82ac; }
+        details { background: var(--bg-color); border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--border-color); overflow: hidden; }
+        summary { font-weight: 600; font-size: 1.2rem; padding: 1rem; cursor: pointer; color: var(--accent-color); background-color: var(--table-header-bg); list-style: none; display: flex; justify-content: space-between; }
+        summary::after { content: '+'; font-size: 1.5rem; transition: transform 0.2s; }
+        details[open] summary::after { transform: rotate(45deg); }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { padding: 0.8rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: top; overflow-wrap: anywhere; word-break: break-word; }
+        pre { white-space: pre-wrap; word-break: break-word; margin: 0;}
+        thead { background-color: var(--table-header-bg); color: #a9b1d6; font-weight: 600; }
+        tbody tr:nth-child(even) { background-color: #2e345250; }
+        thead th:nth-child(1) { width: 20%; }
+        thead th:nth-child(2) { width: 30%; }
+        thead th:nth-child(3) { width: 40%; }
+        thead th:nth-child(4) { width: 10%; }
+        td:nth-child(1) { font-weight: 600; color: #a9b1d6;}
+        td:nth-child(2) { font-family: monospace; color: #e0af68; }
+        td:nth-child(3) { white-space: pre-wrap; word-break: break-word; font-family: monospace; font-size: 0.85rem;}
+        .status-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 9999px; font-weight: 600; font-size: 0.8rem; }
+        .status-pass { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.4); }
+        .status-partial { background: rgba(250,204,21,0.15); color: var(--yellow); border: 1px solid rgba(250,204,21,0.4); }
+        .status-fail { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.4); }
+        .status-notes { display:block; margin-top:0.25rem; font-size: 0.8rem; color: #a9b1d6; white-space: pre-wrap; }
+        .footer { text-align: center; margin-top: 2rem; font-size: 0.8rem; color: #7a82ac; }
     </style>
 </head>
 <body>
-    <h1>Ansible Health Check Report</h1>
-    <div class="summary">
-        <p><strong>Target Host:</strong> {{ inventory_hostname }}</p>
-        <p><strong>Report Generated:</strong> {{ ansible_date_time.iso8610_basic_short }}</p>
-    </div>
+    <div class="container">
+        <h1>System Hardware & Performance Report</h1>
+        <div class="report-meta">Generated on: {{ ansible_date_time.iso8610 }}</div>
+        <div class="report-host">Hostname: {{ ansible_hostname }} • Primary IP: {{ ansible_default_ipv4.address }}</div>
 
-    <h2>Test Results</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Test Name</th>
-                <th>Status</th>
-                <th>Details</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for result in test_results %}
-            <tr>
-                <td>{{ result.name }}</td>
-                <td><span class="status-{{ result.status }}">{{ result.status }}</span></td>
-                <td>{{ result.details }}</td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="3">No tests were executed.</td>
-            </tr>
+        {% set categories = {
+            'System': test_results.system, 'CPU': test_results.cpu, 'RAM': test_results.ram,
+            'NVMe Storage': test_results.storage, 'GPU': test_results.gpu, 'Ethernet Network': test_results.ethernet,
+            'InfiniBand Network': test_results.infiniband, 'Security & Accounts': test_results.security,
+            'Network Speed Tests': test_results.network_speed
+        } %}
+
+        {% for category, results in categories.items() %}
+        {% if results %}
+        <details open>
+            <summary>{{ category }}</summary>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test</th>
+                        <th>Command</th>
+                        <th>Result</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for result in results %}
+                    <tr>
+                        <td>{{ result.name }}</td>
+                        <td><pre>{{ result.command }}</pre></td>
+                        <td><pre>{{ result.result }}</pre></td>
+                        <td>
+                            <span class="status-badge status-{{ result.status | lower }}">{{ result.status }}</span>
+                            {% if result.notes %}
+                            <span class="status-notes">{{ result.notes }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </details>
+        {% endif %}
         {% endfor %}
-        </tbody>
-    </table>
+    </div>
+    <div class="footer">Generated by Ansible</div>
 </body>
 </html>

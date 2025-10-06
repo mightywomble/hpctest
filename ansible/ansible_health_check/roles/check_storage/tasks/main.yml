@@ -1,0 +1,16 @@
+---
+- name: Format result for Filesystem Usage
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({storage: test_results.storage + [item]}, recursive=True) }}"
+  vars:
+    item:
+      name: "Filesystem Usage"
+      command: "ansible_facts.mounts"
+      result: |
+        {% for mount in ansible_facts.mounts -%}
+        {{ mount.device }} {{ mount.size_total | human_readable }} {{ mount.size_used | human_readable }} {{ mount.size_available | human_readable }} {{ (mount.size_used / mount.size_total * 100) | round(0) }}% {{ mount.mount }}
+        {% endfor %}
+      status: "PASS"
+      notes: ""
+  loop: [1]
+

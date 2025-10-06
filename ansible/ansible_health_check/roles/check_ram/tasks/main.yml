@@ -1,0 +1,13 @@
+---
+- name: Format result for RAM Size
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({ram: test_results.ram + [item]}, recursive=True) }}"
+  vars:
+    item:
+      name: "RAM Size"
+      command: "ansible_facts.memtotal_mb"
+      result: "{{ (ansible_facts.memtotal_mb / 1024) | round(0, ceil) }}Gi"
+      status: "PASS"
+      notes: ""
+  loop: [1]
+

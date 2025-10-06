@@ -1,29 +1,37 @@
 ---
-- name: System Health Check Playbook
+- name: System Hardware & Performance Report Playbook
   hosts: all
   gather_facts: true
 
   pre_tasks:
-    - name: Initialize the list of test results
+    - name: Initialize test results dictionary
       ansible.builtin.set_fact:
-        test_results: []
+        test_results:
+          system: []
+          cpu: []
+          ram: []
+          storage: []
+          gpu: []
+          ethernet: []
+          infiniband: []
+          security: []
+          network_speed: []
 
   roles:
-    - role: check_package
-      when: run_package_check | default(false) | bool
-    - role: check_service
-      when: run_service_check | default(false) | bool
-    - role: check_port
-      when: run_port_check | default(false) | bool
-    - role: check_file
-      when: run_file_check | default(false) | bool
-    - role: check_disk_space
-      when: run_disk_space_check | default(false) | bool
+    - { role: check_system, when: run_system_check | default(false) | bool }
+    - { role: check_cpu, when: run_cpu_check | default(false) | bool }
+    - { role: check_ram, when: run_ram_check | default(false) | bool }
+    - { role: check_storage, when: run_storage_check | default(false) | bool }
+    - { role: check_gpu, when: run_gpu_check | default(false) | bool }
+    - { role: check_ethernet, when: run_ethernet_check | default(false) | bool }
+    - { role: check_infiniband, when: run_infiniband_check | default(false) | bool }
+    - { role: check_security, when: run_security_check | default(false) | bool }
+    - { role: check_network_speed, when: run_network_speed_check | default(false) | bool }
 
   post_tasks:
     - name: Generate HTML report from template
       ansible.builtin.template:
         src: templates/report.html.j2
-        dest: "reports/health_check_report_{{ ansible_hostname }}_{{ ansible_date_time.iso8610 }}.html"
+        dest: "reports/system_test_report_{{ ansible_hostname }}_{{ ansible_date_time.iso8610 }}.html"
       delegate_to: localhost
       run_once: true
