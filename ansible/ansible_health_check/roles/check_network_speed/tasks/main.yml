@@ -8,14 +8,12 @@
 
 - name: Format results for Network Speed Tests
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({network_speed: test_results.network_speed + [item_result]}, recursive=True) }}"
+    test_results: "{{ test_results | combine({'network_speed': test_results.network_speed + [item_result]}, recursive=True) }}"
   loop: "{{ speedtest_results.results }}"
   vars:
-    is_fail: item.rc != 0
     item_result:
       name: "{{ item.item.desc }}"
       command: "speedtest-cli --server {{ item.item.server_id }} --simple"
-      result: "{{ is_fail | ternary(item.stderr, item.stdout) }}"
-      status: "{{ is_fail | ternary(FAIL, PASS) }}"
+      result: "{{ item.rc != 0 | ternary(item.stderr, item.stdout) }}"
+      status: "{{ item.rc == 0 | ternary('PASS', 'FAIL') }}"
       notes: ""
-

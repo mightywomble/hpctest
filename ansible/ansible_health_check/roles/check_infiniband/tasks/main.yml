@@ -5,16 +5,15 @@
   changed_when: false
   failed_when: false
 
-- name: Format result for IB Links Speed
+- name: Create IB Links result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({infiniband: test_results.infiniband + [item]}, recursive=True) }}"
-  vars:
-    is_fail: ib_status.rc != 0
-    item:
+    ib_links_result:
       name: "IB Links Speed"
       command: "ibstatus"
-      result: "{{ is_fail | ternary(ib_status.stderr, ib_status.stdout) }}"
-      status: "{{ is_fail | ternary(FAIL, PASS) }}"
+      result: "{{ ib_status.rc != 0 | ternary(ib_status.stderr, ib_status.stdout) }}"
+      status: "{{ ib_status.rc == 0 | ternary('PASS', 'FAIL') }}"
       notes: "Exit code {{ ib_status.rc }}"
-  loop: [1]
 
+- name: Append IB Links result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'infiniband': test_results.infiniband + [ib_links_result]}, recursive=True) }}"

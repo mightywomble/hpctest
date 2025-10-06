@@ -3,16 +3,17 @@
   ansible.builtin.slurp:
     src: /etc/passwd
   register: passwd_file
+  failed_when: not passwd_file.content
 
-- name: Format result for /etc/passwd
+- name: Create /etc/passwd result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({security: test_results.security + [item]}, recursive=True) }}"
-  vars:
-    item:
+    passwd_result:
       name: "/etc/passwd"
       command: "cat /etc/passwd"
       result: "{{ passwd_file.content | b64decode }}"
       status: "PASS"
       notes: ""
-  loop: [1]
 
+- name: Append /etc/passwd result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'security': test_results.security + [passwd_result]}, recursive=True) }}"

@@ -3,16 +3,17 @@
   ansible.builtin.command: ip -br a
   register: ip_links
   changed_when: false
+  failed_when: false
 
-- name: Format result for Ethernet Links
+- name: Create Ethernet Links result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({ethernet: test_results.ethernet + [item]}, recursive=True) }}"
-  vars:
-    item:
+    ethernet_links_result:
       name: "Ethernet Links"
       command: "ip -br a"
       result: "{{ ip_links.stdout }}"
       status: "PASS"
       notes: ""
-  loop: [1]
 
+- name: Append Ethernet Links result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'ethernet': test_results.ethernet + [ethernet_links_result]}, recursive=True) }}"

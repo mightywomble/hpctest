@@ -1,5 +1,5 @@
 #!/bin/bash
-# setup_ansible_project.sh (v3 - Corrected YAML Syntax)
+# setup_ansible_project.sh (v4 - Consolidated Fixes)
 # This script creates the directory structure and files for the Ansible health check playbook.
 
 echo "🚀 Creating Ansible project directories..."
@@ -29,11 +29,6 @@ echo "🔧 Creating test configuration file..."
 cat > ansible_health_check/group_vars/all.yml << 'EOL'
 ---
 # This file is for global configuration. Specific tests can be toggled via flags.
-
-# Example: Define a list of users whose SSH keys should be audited
-ssh_key_audit_users:
-  - root
-  - david
 
 # Example: Define network speed test servers
 speed_test_servers:
@@ -78,7 +73,7 @@ cat > ansible_health_check/playbook.yml << 'EOL'
     - name: Generate HTML report from template
       ansible.builtin.template:
         src: templates/report.html.j2
-        dest: "reports/system_test_report_{{ ansible_hostname }}_{{ ansible_date_time.iso8610 }}.html"
+        dest: "reports/system_test_report_{{ ansible_hostname }}_{{ ansible_date_time.iso8601 }}.html"
       delegate_to: localhost
       run_once: true
 EOL
@@ -129,7 +124,7 @@ cat > ansible_health_check/templates/report.html.j2 << 'EOL'
 <body>
     <div class="container">
         <h1>System Hardware & Performance Report</h1>
-        <div class="report-meta">Generated on: {{ ansible_date_time.iso8610 }}</div>
+        <div class="report-meta">Generated on: {{ ansible_date_time.iso8601 }}</div>
         <div class="report-host">Hostname: {{ ansible_hostname }} • Primary IP: {{ ansible_default_ipv4.address }}</div>
 
         {% set categories = {
@@ -186,6 +181,7 @@ done
 
 echo "✍️ Writing task files for all roles..."
 
+# --- TASKS FOR EACH ROLE ---
 # Helper function to create task files
 create_task_file() {
     role_name=$1
@@ -203,73 +199,78 @@ create_task_file "check_system" \
   changed_when: false
   failed_when: false
 
-- name: Format result for OS Version
+- name: Create OS Version result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({''system'': test_results.system + [item]}, recursive=True) }}"
-  vars:
-    item:
+    os_version_result:
       name: "OS Version"
       command: "grep PRETTY_NAME /etc/os-release"
-      result: "{{ os_version.stdout | regex_replace(''PRETTY_NAME=\"(.*?)\"'', ''\\\\1'') | trim }}"
+      result: "{{ os_version.stdout | regex_replace(''PRETTY_NAME=\"(.*?)\"'', ''\\1'') | trim }}"
       status: "{{ os_version.rc == 0 | ternary(''PASS'', ''FAIL'') }}"
       notes: ""
-  loop: [1] # Loop once to create the item
+
+- name: Append OS Version result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({''system'': test_results.system + [os_version_result]}, recursive=True) }}"
 '
 
 # Role: check_cpu
 create_task_file "check_cpu" \
 '---
-- name: Get CPU Model
+- name: Get CPU Information
   ansible.builtin.command: lscpu
   register: lscpu_output
   changed_when: false
+  failed_when: false
 
-- name: Format result for CPU Model
+- name: Create CPU Model result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({''cpu'': test_results.cpu + [item]}, recursive=True) }}"
-  vars:
-    item:
+    cpu_model_result:
       name: "CPU Model"
-      command: "lscpu | grep ''Model name:''"
-      result: "{{ lscpu_output.stdout | regex_search(''Model name:\\s+(.+)'', ''\\1'') | first }}"
-      status: "PASS"
+      command: "lscpu"
+      result: "{{ lscpu_output.stdout | regex_search(''Model name:\\s+(.+)'', ''\\1'') | first | trim }}"
+      status: "{{ lscpu_output.rc == 0 | ternary(''PASS'', ''FAIL'') }}"
       notes: ""
-  loop: [1]
+
+- name: Append CPU Model result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({''cpu'': test_results.cpu + [cpu_model_result]}, recursive=True) }}"
 '
 
 # Role: check_ram
 create_task_file "check_ram" \
 '---
-- name: Format result for RAM Size
+- name: Create RAM Size result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({''ram'': test_results.ram + [item]}, recursive=True) }}"
-  vars:
-    item:
+    ram_size_result:
       name: "RAM Size"
       command: "ansible_facts.memtotal_mb"
       result: "{{ (ansible_facts.memtotal_mb / 1024) | round(0, ''ceil'') }}Gi"
       status: "PASS"
       notes: ""
-  loop: [1]
+
+- name: Append RAM Size result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({''ram'': test_results.ram + [ram_size_result]}, recursive=True) }}"
 '
 
 # Role: check_storage
 create_task_file "check_storage" \
 '---
-- name: Format result for Filesystem Usage
+- name: Create Filesystem Usage result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({''storage'': test_results.storage + [item]}, recursive=True) }}"
-  vars:
-    item:
+    fs_usage_result:
       name: "Filesystem Usage"
       command: "ansible_facts.mounts"
       result: |
         {% for mount in ansible_facts.mounts -%}
-        {{ mount.device }} {{ mount.size_total | human_readable }} {{ mount.size_used | human_readable }} {{ mount.size_available | human_readable }} {{ (mount.size_used / mount.size_total * 100) | round(0) }}% {{ mount.mount }}
+        {{ mount.device }} {{ mount.size_total | human_readable }} {{ (mount.size_total - mount.size_available) | human_readable }} {{ mount.size_available | human_readable }} {{ (((mount.size_total - mount.size_available) / mount.size_total) * 100) | round(0) }}% {{ mount.mount }}
         {% endfor %}
       status: "PASS"
       notes: ""
-  loop: [1]
+
+- name: Append Filesystem Usage result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({''storage'': test_results.storage + [fs_usage_result]}, recursive=True) }}"
 '
 
 # Role: check_gpu
@@ -281,18 +282,18 @@ create_task_file "check_gpu" \
   changed_when: false
   failed_when: false
 
-- name: Format result for GPU Type
+- name: Create GPU Type result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({''gpu'': test_results.gpu + [item]}, recursive=True) }}"
-  vars:
-    is_fail: gpu_type.rc != 0
-    item:
+    gpu_type_result:
       name: "GPU Type"
       command: "nvidia-smi --query-gpu=gpu_name --format=csv,noheader"
-      result: "{{ is_fail | ternary(gpu_type.stderr, gpu_type.stdout) }}"
-      status: "{{ is_fail | ternary(''FAIL'', ''PASS'') }}"
+      result: "{{ gpu_type.rc != 0 | ternary(gpu_type.stderr if gpu_type.stderr else gpu_type.stdout, gpu_type.stdout) }}"
+      status: "{{ gpu_type.rc == 0 | ternary(''PASS'', ''FAIL'') }}"
       notes: "Exit code {{ gpu_type.rc }}"
-  loop: [1]
+
+- name: Append GPU Type result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({''gpu'': test_results.gpu + [gpu_type_result]}, recursive=True) }}"
 '
 
 # Role: check_ethernet
@@ -302,18 +303,20 @@ create_task_file "check_ethernet" \
   ansible.builtin.command: ip -br a
   register: ip_links
   changed_when: false
+  failed_when: false
 
-- name: Format result for Ethernet Links
+- name: Create Ethernet Links result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({''ethernet'': test_results.ethernet + [item]}, recursive=True) }}"
-  vars:
-    item:
+    ethernet_links_result:
       name: "Ethernet Links"
       command: "ip -br a"
       result: "{{ ip_links.stdout }}"
       status: "PASS"
       notes: ""
-  loop: [1]
+
+- name: Append Ethernet Links result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({''ethernet'': test_results.ethernet + [ethernet_links_result]}, recursive=True) }}"
 '
 
 # Role: check_infiniband
@@ -325,18 +328,18 @@ create_task_file "check_infiniband" \
   changed_when: false
   failed_when: false
 
-- name: Format result for IB Links Speed
+- name: Create IB Links result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({''infiniband'': test_results.infiniband + [item]}, recursive=True) }}"
-  vars:
-    is_fail: ib_status.rc != 0
-    item:
+    ib_links_result:
       name: "IB Links Speed"
       command: "ibstatus"
-      result: "{{ is_fail | ternary(ib_status.stderr, ib_status.stdout) }}"
-      status: "{{ is_fail | ternary(''FAIL'', ''PASS'') }}"
+      result: "{{ ib_status.rc != 0 | ternary(ib_status.stderr if ib_status.stderr else ib_status.stdout, ib_status.stdout) }}"
+      status: "{{ ib_status.rc == 0 | ternary(''PASS'', ''FAIL'') }}"
       notes: "Exit code {{ ib_status.rc }}"
-  loop: [1]
+
+- name: Append IB Links result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({''infiniband'': test_results.infiniband + [ib_links_result]}, recursive=True) }}"
 '
 
 # Role: check_security
@@ -346,18 +349,20 @@ create_task_file "check_security" \
   ansible.builtin.slurp:
     src: /etc/passwd
   register: passwd_file
+  failed_when: not passwd_file.content
 
-- name: Format result for /etc/passwd
+- name: Create /etc/passwd result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({''security'': test_results.security + [item]}, recursive=True) }}"
-  vars:
-    item:
+    passwd_result:
       name: "/etc/passwd"
       command: "cat /etc/passwd"
       result: "{{ passwd_file.content | b64decode }}"
       status: "PASS"
       notes: ""
-  loop: [1]
+
+- name: Append /etc/passwd result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({''security'': test_results.security + [passwd_result]}, recursive=True) }}"
 '
 
 # Role: check_network_speed
@@ -370,18 +375,19 @@ create_task_file "check_network_speed" \
   changed_when: false
   failed_when: false
 
-- name: Format results for Network Speed Tests
+- name: Format and append speedtest results
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({''network_speed'': test_results.network_speed + [item_result]}, recursive=True) }}"
+    test_results: "{{ test_results | combine({''network_speed'': test_results.network_speed + [
+        {
+          ''name'': item.item.desc,
+          ''command'': ''speedtest-cli --server '' ~ item.item.server_id ~ '' --simple'',
+          ''result'': item.rc != 0 | ternary(item.stderr, item.stdout),
+          ''status'': item.rc == 0 | ternary(''PASS'', ''FAIL''),
+          ''notes'': ''''
+        }
+      ]
+    }, recursive=True) }}"
   loop: "{{ speedtest_results.results }}"
-  vars:
-    is_fail: item.rc != 0
-    item_result:
-      name: "{{ item.item.desc }}"
-      command: "speedtest-cli --server {{ item.item.server_id }} --simple"
-      result: "{{ is_fail | ternary(item.stderr, item.stdout) }}"
-      status: "{{ is_fail | ternary(''FAIL'', ''PASS'') }}"
-      notes: ""
 '
 
 echo "✅ All done. Your corrected Ansible project is ready in the 'ansible_health_check' directory."

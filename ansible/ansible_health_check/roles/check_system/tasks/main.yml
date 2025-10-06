@@ -5,15 +5,15 @@
   changed_when: false
   failed_when: false
 
-- name: Format result for OS Version
+- name: Create OS Version result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({system: test_results.system + [item]}, recursive=True) }}"
-  vars:
-    item:
+    os_version_result:
       name: "OS Version"
       command: "grep PRETTY_NAME /etc/os-release"
-      result: "{{ os_version.stdout | regex_replace(PRETTY_NAME=\"(.*?)\", \\1) | trim }}"
-      status: "{{ os_version.rc == 0 | ternary(PASS, FAIL) }}"
+      result: "{{ os_version.stdout | regex_replace('^PRETTY_NAME=\"(.*?)\"$', '\\1') | trim }}"
+      status: "{{ os_version.rc == 0 | ternary('PASS', 'FAIL') }}"
       notes: ""
-  loop: [1] # Loop once to create the item
 
+- name: Append OS Version result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'system': test_results.system + [os_version_result]}, recursive=True) }}"

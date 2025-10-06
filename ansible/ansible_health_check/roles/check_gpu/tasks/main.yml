@@ -5,16 +5,15 @@
   changed_when: false
   failed_when: false
 
-- name: Format result for GPU Type
+- name: Create GPU Type result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({gpu: test_results.gpu + [item]}, recursive=True) }}"
-  vars:
-    is_fail: gpu_type.rc != 0
-    item:
+    gpu_type_result:
       name: "GPU Type"
       command: "nvidia-smi --query-gpu=gpu_name --format=csv,noheader"
-      result: "{{ is_fail | ternary(gpu_type.stderr, gpu_type.stdout) }}"
-      status: "{{ is_fail | ternary(FAIL, PASS) }}"
+      result: "{{ gpu_type.rc != 0 | ternary(gpu_type.stderr, gpu_type.stdout) }}"
+      status: "{{ gpu_type.rc == 0 | ternary('PASS', 'FAIL') }}"
       notes: "Exit code {{ gpu_type.rc }}"
-  loop: [1]
 
+- name: Append GPU Type result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'gpu': test_results.gpu + [gpu_type_result]}, recursive=True) }}"
