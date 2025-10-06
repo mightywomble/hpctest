@@ -1,18 +1,19 @@
 ---
-- name: Get CPU Model
+# roles/check_cpu/tasks/main.yml
+- name: Get CPU Information
   ansible.builtin.command: lscpu
   register: lscpu_output
   changed_when: false
+  failed_when: false
 
 - name: Format result for CPU Model
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({cpu: test_results.cpu + [item]}, recursive=True) }}"
+    test_results: "{{ test_results | combine({'cpu': test_results.cpu + [item]}, recursive=True) }}"
   vars:
     item:
       name: "CPU Model"
-      command: "lscpu | grep Model name:"
-      result: "{{ lscpu_output.stdout | regex_search(Model name:\s+(.+), \1) | first }}"
-      status: "PASS"
+      command: "lscpu"
+      result: "{{ lscpu_output.stdout | regex_search('Model name:\\s+(.+)', '\\1') | first | trim }}"
+      status: "{{ lscpu_output.rc == 0 | ternary('PASS', 'FAIL') }}"
       notes: ""
-  loop: [1]
-
+  loop: [1] # Loop once to create the item

@@ -12,7 +12,7 @@
     item:
       name: "OS Version"
       command: "grep PRETTY_NAME /etc/os-release"
-      result: "{{ os_version.stdout | regex_replace(^PRETTY_NAME=\"(.*?)\"$, \1) }}"
+      result: "{{ os_version.stdout | regex_replace(PRETTY_NAME=\"(.*?)\", \\1) | trim }}"
       status: "{{ os_version.rc == 0 | ternary(PASS, FAIL) }}"
       notes: ""
   loop: [1] # Loop once to create the item

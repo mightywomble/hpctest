@@ -1,5 +1,5 @@
 #!/bin/bash
-# setup_ansible_project.sh (v2 - Expanded to match report)
+# setup_ansible_project.sh (v3 - Corrected YAML Syntax)
 # This script creates the directory structure and files for the Ansible health check playbook.
 
 echo "🚀 Creating Ansible project directories..."
@@ -186,7 +186,6 @@ done
 
 echo "✍️ Writing task files for all roles..."
 
-# --- TASKS FOR EACH ROLE ---
 # Helper function to create task files
 create_task_file() {
     role_name=$1
@@ -211,7 +210,7 @@ create_task_file "check_system" \
     item:
       name: "OS Version"
       command: "grep PRETTY_NAME /etc/os-release"
-      result: "{{ os_version.stdout | regex_replace(''^PRETTY_NAME=\"(.*?)\"$'', ''\\1'') }}"
+      result: "{{ os_version.stdout | regex_replace(''PRETTY_NAME=\"(.*?)\"'', ''\\\\1'') | trim }}"
       status: "{{ os_version.rc == 0 | ternary(''PASS'', ''FAIL'') }}"
       notes: ""
   loop: [1] # Loop once to create the item
@@ -385,4 +384,4 @@ create_task_file "check_network_speed" \
       notes: ""
 '
 
-echo "✅ All done. Your expanded Ansible project is ready in the 'ansible_health_check' directory."
+echo "✅ All done. Your corrected Ansible project is ready in the 'ansible_health_check' directory."

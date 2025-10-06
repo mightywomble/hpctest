@@ -32,6 +32,6 @@
     - name: Generate HTML report from template
       ansible.builtin.template:
         src: templates/report.html.j2
-        dest: "reports/system_test_report_{{ ansible_hostname }}_{{ ansible_date_time.iso8610 }}.html"
+        dest: "reports/system_test_report_{{ ansible_hostname }}_{{ ansible_date_time.iso8601 }}.html"
       delegate_to: localhost
       run_once: true
