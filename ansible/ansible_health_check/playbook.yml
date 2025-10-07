@@ -19,6 +19,7 @@
           software: []
           services: []
           hcl_benchmark: []
+          nccl_benchmark: [] # <-- Add this new category
 
   roles:
     - { role: check_system, when: run_system_check | default(false) | bool }
@@ -33,6 +34,7 @@
     - { role: check_software, when: run_software_check | default(false) | bool }
     - { role: check_services, when: run_services_check | default(false) | bool }
     - { role: check_hcl_benchmark, when: run_hcl_check | default(false) | bool }
+    - { role: check_nccl_benchmark, when: run_nccl_check | default(false) | bool } # <-- Add this new role
 
   post_tasks:
     # NEW TASK: Ensure the reports directory exists.

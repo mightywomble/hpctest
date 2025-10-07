@@ -1,0 +1,102 @@
+---
+- name: Check for NVIDIA GPU presence before running NCCL tests
+  ansible.builtin.command: nvidia-smi
+  register: nvidia_check
+  changed_when: false
+  failed_when: false
+
+- name: Skip NCCL benchmark if no NVIDIA GPU is found
+  when: nvidia_check.rc != 0
+  block:
+    - name: Create NCCL skip result object
+      ansible.builtin.set_fact:
+        nccl_skip_result:
+          name: "NCCL Benchmark (all_reduce_perf)"
+          command: "N/A"
+          result: "Skipped: No NVIDIA GPU detected or nvidia-smi not found."
+          status: "PARTIAL"
+          notes: ""
+    - name: Append NCCL skip result
+      ansible.builtin.set_fact:
+        test_results: "{{ test_results | combine({'nccl_benchmark': test_results.nccl_benchmark + [nccl_skip_result]}, recursive=True) }}"
+
+- name: Build and run NCCL tests
+  when: nvidia_check.rc == 0
+  become: true
+  block:
+    - name: Install NCCL build dependencies
+      ansible.builtin.package:
+        name:
+          - build-essential
+          - devscripts
+          - debhelper
+          - libnccl-dev
+          - fakeroot
+          - git
+          - libpmix-dev
+          - libfabric-dev
+          - libev-dev
+          - zlib1g-dev
+        state: present
+        update_cache: yes
+
+    - name: Clone the NCCL repository
+      ansible.builtin.git:
+        repo: 'https://github.com/NVIDIA/nccl.git'
+        dest: /usr/local/NCCL
+        version: master
+        force: no
+
+    - name: Build the NCCL debian package
+      ansible.builtin.command: make pkg.debian.build
+      args:
+        chdir: /usr/local/NCCL/
+        creates: /usr/local/NCCL/build/pkg/deb/libnccl2_{{ ansible_architecture }}.deb # Skips if .deb already exists
+
+    - name: Install the built NCCL package
+      ansible.builtin.apt:
+        deb: "{{ item }}"
+      loop: "{{ lookup('fileglob', '/usr/local/NCCL/build/pkg/deb/*.deb', wantlist=True) }}"
+      # This task will fail if no .deb files are found, which is correct.
+
+    - name: Clone the NCCL-Tests repository
+      ansible.builtin.git:
+        repo: 'https://github.com/NVIDIA/nccl-tests.git'
+        dest: /usr/local/nccl-tests
+        version: master
+        force: no
+
+    - name: Compile the NCCL tests
+      ansible.builtin.command: make
+      args:
+        chdir: /usr/local/nccl-tests/
+        creates: /usr/local/nccl-tests/build/all_reduce_perf # Skips if already compiled
+
+    - name: Link NCCL test binaries to /usr/local/bin
+      ansible.builtin.file:
+        src: "/usr/local/nccl-tests/build/{{ item }}"
+        dest: "/usr/local/bin/{{ item }}"
+        state: link
+      loop:
+        - all_reduce_perf
+        - all_gather_perf
+        # Add other binaries here if needed
+
+    - name: Run a sample NCCL benchmark (all_reduce_perf)
+      ansible.builtin.command: all_reduce_perf -b 8 -e 128M -f 2 -g 1
+      register: nccl_result
+      changed_when: false
+      failed_when: false
+
+    - name: Create NCCL result object
+      ansible.builtin.set_fact:
+        nccl_benchmark_result:
+          name: "NCCL Benchmark (all_reduce_perf)"
+          command: "all_reduce_perf -b 8 -e 128M -f 2 -g 1"
+          result: "{{ nccl_result.stdout if nccl_result.rc == 0 else nccl_result.stderr }}"
+          status: "{{ (nccl_result.rc == 0) | ternary('PASS', 'FAIL') }}"
+          notes: "<details><summary>Show full benchmark output</summary><pre>{{ nccl_result.stdout }}</pre></details>"
+
+    - name: Append NCCL Benchmark result
+      ansible.builtin.set_fact:
+        test_results: "{{ test_results | combine({'nccl_benchmark': test_results.nccl_benchmark + [nccl_benchmark_result]}, recursive=True) }}"
