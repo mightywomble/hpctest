@@ -1,20 +1,54 @@
 ---
-- name: Run speedtest-cli for each server
-  ansible.builtin.command: "speedtest-cli --server {{ item.server_id }} --simple"
-  register: speedtest_results
-  loop: "{{ speed_test_servers }}"
+- name: Check if Ookla speedtest binary already exists
+  ansible.builtin.stat:
+    path: /usr/local/bin/speedtest
+  register: speedtest_binary
+
+- name: Download and install Ookla speedtest CLI
+  when: not speedtest_binary.stat.exists
+  block:
+    - name: Download Ookla speedtest CLI archive
+      ansible.builtin.get_url:
+        url: "https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-{{ 'aarch64' if ansible_architecture == 'arm64' else 'x86_64' }}.tgz"
+        dest: /tmp/speedtest.tgz
+        mode: '0644'
+
+    - name: Unarchive the speedtest CLI
+      ansible.builtin.unarchive:
+        src: /tmp/speedtest.tgz
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Move speedtest binary into place
+      ansible.builtin.copy:
+        src: /tmp/speedtest
+        dest: /usr/local/bin/speedtest
+        mode: '0755'
+        remote_src: yes
+      become: true
+
+- name: Run Ookla speedtest
+  ansible.builtin.command: /usr/local/bin/speedtest --accept-license --accept-gdpr --format=json-pretty
+  register: speedtest_result
   changed_when: false
   failed_when: false
-- name: Format and append speedtest results
+
+- name: Create Speedtest result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({'network_speed': test_results.network_speed + [
-        {
-          'name': item.item.desc,
-          'command': 'speedtest-cli --server ' ~ item.item.server_id ~ ' --simple',
-          'result': item.stdout if item.rc == 0 else item.stderr,
-          'status': (item.rc == 0) | ternary('PASS', 'FAIL'),
-          'notes': ''
-        }
-      ]
-    }, recursive=True) }}"
-  loop: "{{ speedtest_results.results }}"
+    speedtest_obj:
+      name: "Internet Speedtest"
+      command: "speedtest --format=json-pretty"
+      result: |
+        Ping: {{ (speedtest_json.ping.latency | default('N/A')) | round(2) }} ms
+        Jitter: {{ (speedtest_json.ping.jitter | default('N/A')) | round(2) }} ms
+        Download: {{ ((speedtest_json.download.bandwidth | default(0)) * 8 / 1000000) | round(2) }} Mbit/s
+        Upload: {{ ((speedtest_json.upload.bandwidth | default(0)) * 8 / 1000000) | round(2) }} Mbit/s
+        Server: {{ speedtest_json.server.name | default('N/A') }} ({{ speedtest_json.server.location | default('N/A') }})
+      status: "{{ 'FAIL' if 'error' in speedtest_result.stdout else 'PASS' }}"
+      notes: "{{ speedtest_json.error | default('') }}"
+  vars:
+    speedtest_json: "{{ speedtest_result.stdout | from_json }}"
+
+- name: Append Speedtest result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'network_speed': test_results.network_speed + [speedtest_obj]}, recursive=True) }}"

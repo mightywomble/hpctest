@@ -1,5 +1,3 @@
 ---
-# Example: Define network speed test servers
-speed_test_servers:
-  - { desc: "Speedtest Nearby", server_id: "14679" }
-  - { desc: "Speedtest Europe", server_id: "14679" }
+# No specific configuration needed for the new speedtest role.
+# You can add other global variables here if needed.

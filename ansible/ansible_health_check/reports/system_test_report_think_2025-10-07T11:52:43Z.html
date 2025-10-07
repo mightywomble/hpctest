@@ -42,7 +42,7 @@
 <body>
     <div class="container">
         <h1>System Hardware & Performance Report</h1>
-        <div class="report-meta">Generated on: 2025-10-07T11:46:58Z</div>
+        <div class="report-meta">Generated on: 2025-10-07T11:52:43Z</div>
         <div class="report-host">Hostname: think • Primary IP: 192.168.5.115</div>
 
         
@@ -141,7 +141,7 @@ Thread(s) per core:                   1
 Core(s) per socket:                   6
 Socket(s):                            1
 Stepping:                             10
-CPU(s) scaling MHz:                   71%
+CPU(s) scaling MHz:                   94%
 CPU max MHz:                          3300.0000
 CPU min MHz:                          800.0000
 BogoMIPS:                             3399.90
@@ -429,11 +429,11 @@ tailscale0 inet6 fd7a:115c:a1e0::ef33:3a64/128</pre></td>
                                     <tr>
                         <td>Link Speed Check</td>
                         <td><pre>ethtool <each iface></pre></td>
-                        <td><pre>docker0: Speed: 10000Mb/s
+                        <td><pre>wlp2s0: 
+docker0: Speed: 10000Mb/s
 vethf76773c: Speed: 10000Mb/s
-eno1: Speed: 1000Mb/s
-wlp2s0: 
 tailscale0: Speed: Unknown!
+eno1: Speed: 1000Mb/s
 </pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
@@ -962,19 +962,16 @@ postfix:x:131:130::/var/spool/postfix:/usr/sbin/nologin
                 </thead>
                 <tbody>
                                     <tr>
-                        <td>Speedtest Nearby</td>
-                        <td><pre>speedtest-cli --server 14679 --simple</pre></td>
-                        <td><pre>ERROR: No matched servers: 14679</pre></td>
+                        <td>Internet Speedtest</td>
+                        <td><pre>speedtest --format=json-pretty</pre></td>
+                        <td><pre>Ping: 8.3 ms
+Jitter: 0.65 ms
+Download: 645.69 Mbit/s
+Upload: 112.66 Mbit/s
+Server: Zen Internet (London)
+</pre></td>
                         <td>
-                            <span class="status-badge status-fail">FAIL</span>
-                                                    </td>
-                    </tr>
-                                    <tr>
-                        <td>Speedtest Europe</td>
-                        <td><pre>speedtest-cli --server 14679 --simple</pre></td>
-                        <td><pre>ERROR: No matched servers: 14679</pre></td>
-                        <td>
-                            <span class="status-badge status-fail">FAIL</span>
+                            <span class="status-badge status-pass">PASS</span>
                                                     </td>
                     </tr>
                                 </tbody>
@@ -1123,28 +1120,32 @@ root     3580790  0.0  0.0      0     0 ?        I<   Aug13   0:00  \_ kworker/R
 root     3580791  0.0  0.0      0     0 ?        I<   Aug13   0:00  \_ kworker/R-ib_nl_sa_wq
 root     3552695  0.0  0.0      0     0 ?        I<   Aug22   0:00  \_ kworker/u25:2-hci0
 root     3916148  0.0  0.0      0     0 ?        S    Sep30   0:00  \_ psimon
-root     2193185  0.0  0.0      0     0 ?        I    10:58   0:02  \_ kworker/5:1-events
-root     2209789  0.0  0.0      0     0 ?        I    12:05   0:00  \_ kworker/3:0-events
-root     2213803  0.0  0.0      0     0 ?        I    12:15   0:00  \_ kworker/2:0-events
-root     2214253  0.0  0.0      0     0 ?        I    12:18   0:00  \_ kworker/3:2-i915-unordered
-root     2214277  0.0  0.0      0     0 ?        I    12:19   0:00  \_ kworker/4:2-events
-root     2215712  0.0  0.0      0     0 ?        I    12:26   0:00  \_ kworker/u24:2-kvfree_rcu_reclaim
-root     2215738  0.0  0.0      0     0 ?        I    12:27   0:00  \_ kworker/1:0-cgroup_destroy
-root     2215775  0.0  0.0      0     0 ?        I    12:29   0:00  \_ kworker/5:2-mm_percpu_wq
-root     2215785  0.0  0.0      0     0 ?        I    12:30   0:00  \_ kworker/4:3-i915-unordered
-root     2216467  0.0  0.0      0     0 ?        I    12:31   0:00  \_ kworker/0:2-mm_percpu_wq
-root     2216478  0.0  0.0      0     0 ?        I    12:31   0:00  \_ kworker/u24:3-flush-252:0
-root     2216503  0.0  0.0      0     0 ?        I    12:32   0:00  \_ kworker/1:1-mm_percpu_wq
-root     2217327  0.0  0.0      0     0 ?        I    12:39   0:00  \_ kworker/2:2-events
-root     2217337  0.0  0.0      0     0 ?        I    12:39   0:00  \_ kworker/u24:0-flush-252:0
+root     2193185  0.0  0.0      0     0 ?        I    10:58   0:02  \_ kworker/5:1-i915-unordered
+root     2209789  0.0  0.0      0     0 ?        I    12:05   0:00  \_ kworker/3:0-i915-unordered
+root     2214253  0.0  0.0      0     0 ?        I    12:18   0:00  \_ kworker/3:2-events
+root     2214277  0.0  0.0      0     0 ?        I    12:19   0:00  \_ kworker/4:2-cgroup_destroy
+root     2215712  0.0  0.0      0     0 ?        I    12:26   0:00  \_ kworker/u24:2-ext4-rsv-conversion
+root     2215775  0.0  0.0      0     0 ?        I    12:29   0:00  \_ kworker/5:2-i915-unordered
+root     2215785  0.0  0.0      0     0 ?        I    12:30   0:00  \_ kworker/4:3-events
+root     2216467  0.0  0.0      0     0 ?        I    12:31   0:00  \_ kworker/0:2-events
+root     2216478  0.0  0.0      0     0 ?        I    12:31   0:00  \_ kworker/u24:3-events_power_efficient
+root     2216503  0.0  0.0      0     0 ?        I    12:32   0:00  \_ kworker/1:1-events
+root     2217327  0.0  0.0      0     0 ?        I    12:39   0:00  \_ kworker/2:2-i915-unordered
+root     2217337  0.0  0.0      0     0 ?        I    12:39   0:00  \_ kworker/u24:0-writeback
 root     2217338  0.0  0.0      0     0 ?        I    12:39   0:00  \_ kworker/u24:4-flush-252:0
-root     2217352  0.0  0.0      0     0 ?        I    12:40   0:00  \_ kworker/0:1-i915-unordered
-root     2218016  0.0  0.0      0     0 ?        I    12:41   0:00  \_ kworker/1:2-i915-unordered
-root     2218053  0.0  0.0      0     0 ?        I    12:42   0:00  \_ kworker/5:0
-root     2218152  0.0  0.0      0     0 ?        I    12:45   0:00  \_ kworker/1:3-events
-root     2218755  0.0  0.0      0     0 ?        S    12:46   0:00  \_ psimon
-root     2218784  0.1  0.0      0     0 ?        I    12:46   0:00  \_ kworker/2:1-events
-root           1  0.0  0.0  24088 15316 ?        Ss   Jul22 100:01 systemd
+root     2217352  0.0  0.0      0     0 ?        I    12:40   0:00  \_ kworker/0:1-kacpi_notify
+root     2218016  0.0  0.0      0     0 ?        I    12:41   0:00  \_ kworker/1:2-events
+root     2218784  0.0  0.0      0     0 ?        I    12:46   0:00  \_ kworker/2:1-events
+root     2221004  0.0  0.0      0     0 ?        I    12:48   0:00  \_ kworker/5:0-events
+root     2221007  0.0  0.0      0     0 ?        I    12:48   0:00  \_ kworker/3:1
+root     2221014  0.0  0.0      0     0 ?        I    12:48   0:00  \_ kworker/0:0-i915-unordered
+root     2221023  0.0  0.0      0     0 ?        I    12:49   0:00  \_ kworker/4:0-events
+root     2221024  0.0  0.0      0     0 ?        I    12:49   0:00  \_ kworker/4:1-cgroup_destroy
+root     2221722  0.0  0.0      0     0 ?        S    12:51   0:00  \_ psimon
+root     2221768  0.0  0.0      0     0 ?        I    12:52   0:00  \_ kworker/2:0
+root     2222680  0.1  0.0      0     0 ?        I    12:52   0:00  \_ kworker/1:0-events
+root     2223809  0.0  0.0      0     0 ?        I    12:53   0:00  \_ kworker/1:3-events
+root           1  0.0  0.0  24088 15316 ?        Ss   Jul22 100:02 systemd
 message+    1003  0.0  0.0  13156  7780 ?        Ss   Jul22  21:30 dbus-daemon
 root        1036  0.0  0.0  19416  9984 ?        Ss   Jul22   4:08 systemd-logind
 root        1052  0.0  0.2 762508 43912 ?        Ssl  Jul22   8:01 rclone
@@ -1154,14 +1155,14 @@ root        1414  0.0  0.1 112272 22468 ?        Ssl  Jul22   0:00 unattended-up
 root        1597  0.0  0.1 1250468 29728 ?       Ssl  Jul22  19:20 casaos-message-
 root        1618  0.0  0.1 1250832 27916 ?       Ssl  Jul22   8:58 casaos-user-ser
 root        1649  0.0  0.6 1293780 106524 ?      Ssl  Jul22  35:52 casaos-app-mana
-root        1681  0.0  0.5 773648 86844 ?        Ssl  Jul22 107:33 casaos-local-st
+root        1681  0.0  0.5 773648 86844 ?        Ssl  Jul22 107:34 casaos-local-st
 root        1805  0.0  0.0 314812  9032 ?        Ssl  Jul22   0:00 gdm3
 root        1812  0.0  0.0 242148  9664 ?        Sl   Jul22   0:00  \_ gdm-session-wor
 gdm         1841  0.0  0.0 235668  6004 tty1     Ssl+ Jul22   0:00      \_ gdm-wayland-ses
 gdm         1867  0.0  0.0   6500  2332 tty1     S+   Jul22   0:00          \_ dbus-run-sessio
 gdm         1874  0.0  0.0  10152  5120 tty1     S+   Jul22   0:00              \_ dbus-daemon
 gdm         1881  0.0  0.1 520676 17800 tty1     Sl+  Jul22   0:04              \_ gnome-session-b
-gdm         1927  0.0  1.9 4372460 324056 tty1   Sl+  Jul22 107:35                  \_ gnome-shell
+gdm         1927  0.0  1.9 4372460 324164 tty1   Sl+  Jul22 107:35                  \_ gnome-shell
 gdm         2008  0.0  0.5 538140 81428 tty1     Sl+  Jul22   0:00                  |   \_ Xwayland
 gdm         2271  0.0  0.5 999720 81768 tty1     Sl+  Jul22   0:00                  |   \_ mutter-x11-fram
 gdm         2276  0.0  0.0 388672 11812 tty1     Sl   Jul22   0:00                  |   \_ ibus-daemon
@@ -1201,19 +1202,19 @@ gdm         2227  0.0  0.0 416236 14920 tty1     Sl+  Jul22   0:00 gsd-printer
 gdm         2288  0.0  0.4 617668 69728 tty1     Sl   Jul22   0:00 ibus-x11
 gdm         2290  0.0  0.0 310424  7056 tty1     Sl+  Jul22   0:00 ibus-portal
 gdm         2337  0.0  0.1 2601252 27092 tty1    Sl+  Jul22   0:00 gjs
-root     1872323  1.5  0.8 1519560 131500 ?      Ssl  Aug18 1115:35 tailscaled
+root     1872323  1.5  0.8 1519560 133672 ?      Ssl  Aug18 1115:44 tailscaled
 root     2604307  0.0  0.2 2147060 44284 ?       Ssl  Aug22   5:37 snapd
 root     3552699  0.0  0.0  14404  6532 ?        Ss   Aug22   0:01 bluetoothd
 rudder-+  144439  0.0  0.1 437576 19920 ?        Ssl  Aug26   0:01 rudder-relayd
-root     3228747  0.2  0.5 2620404 95380 ?       Ssl  Sep05  95:30 dockerd
+root     3228747  0.2  0.5 2620404 95380 ?       Ssl  Sep05  95:31 dockerd
 root     3229014  0.0  0.0 1745440 4484 ?        Sl   Sep05   0:04  \_ docker-proxy
 root     3229021  0.0  0.0 1671452 4392 ?        Sl   Sep05   0:04  \_ docker-proxy
-root     3228963  0.1  0.0 1238616 15944 ?       Sl   Sep05  85:43 containerd-shim
+root     3228963  0.1  0.0 1238616 16048 ?       Sl   Sep05  85:44 containerd-shim
 david    3228986  0.0  0.0    860   460 ?        Ss   Sep05   2:25  \_ tini
-david    3229035  0.0  1.1 43287924 188132 ?     Sl   Sep05  27:11      \_ node
+david    3229035  0.0  1.1 43287904 188008 ?     Sl   Sep05  27:11      \_ node
 root     1278895  0.0  0.3 358928 53156 ?        Ssl  Sep22   3:56 accounts-daemon
 www-data 1278896  0.0  0.0   3620  1632 ?        Ss   Sep22   1:04 htcacheclean
-avahi    1278901  0.0  0.0   9040  4528 ?        Ss   Sep22   2:21 avahi-daemon
+avahi    1278901  0.0  0.0   9040  4528 ?        Ss   Sep22   2:22 avahi-daemon
 avahi    1278907  0.0  0.0   8480  1440 ?        S    Sep22   0:00  \_ avahi-daemon
 colord   1278908  0.0  0.0 934544 15236 ?        Ssl  Sep22   0:00 colord
 root     1278911  0.0  0.0   9424  2768 ?        Ss   Sep22   0:06 cron
@@ -1238,15 +1239,15 @@ root     1279853  0.0  0.0 424872 11544 ?        Ssl  Sep22   2:02 thermald
 root     1279856  0.0  0.0  25456  3536 ?        Sl   Sep22   1:11 wazuh-execd
 wazuh    1279881  0.1  0.0 247444  9236 ?        Sl   Sep22  29:00 wazuh-agentd
 root     1279896  0.0  0.0 347228 14604 ?        SNl  Sep22  15:32 wazuh-syscheckd
-root     1279906  0.0  0.2 1197760 47096 ?       Sl   Sep22  15:33 wazuh-logcollec
+root     1279906  0.0  0.2 1197760 47412 ?       Sl   Sep22  15:34 wazuh-logcollec
 root     1279923  0.0  0.1 1026352 25636 ?       Sl   Sep22   5:06 wazuh-modulesd
-root     3915895  0.0  0.2 597272 45148 ?        Ssl  Sep30   0:39 fwupd
+root     3915895  0.0  0.2 597272 45148 ?        Ssl  Sep30   0:40 fwupd
 root     3915896  0.0  0.1  33308 22584 ?        Ss   Sep30   0:52 python3
 gnome-r+ 3915916  0.0  0.5 2459096 86540 ?       Ssl  Sep30   0:01 gnome-remote-de
 root     3915930  0.0  0.1  29604 16664 ?        Ss   Sep30   1:51 cf-execd
 root     3915960  0.0  0.3 359668 49676 ?        Ssl  Sep30   5:28 glances
 root     3915967  0.0  0.1  80680 18556 ?        Ss   Sep30   0:20 nmbd
-systemd+ 3915983  0.0  0.0  17732  7788 ?        Ss   Sep30   5:31 systemd-oomd
+systemd+ 3915983  0.0  0.0  17732  7788 ?        Ss   Sep30   5:32 systemd-oomd
 root     3915995  0.0  0.0  14452  8776 ?        Ss   Sep30   0:40 apache2
 www-data 2089479  0.0  0.0 2007032 7160 ?        Sl   00:00   0:00  \_ apache2
 www-data 2089480  0.0  0.0 2007032 7352 ?        Sl   00:00   0:00  \_ apache2
@@ -1254,16 +1255,16 @@ systemd+ 3916001  0.0  0.0  91048  7876 ?        Ssl  Sep30   0:02 systemd-times
 root     3916012  0.0  0.0 316568  8872 ?        Ssl  Sep30   0:00 upowerd
 root     3916019  0.0  0.0  12144  8172 ?        Ss   Sep30   0:00 sshd
 root     1994081  0.0  0.0  15172 10596 ?        Ss   Oct06   0:00  \_ sshd
-david    1994181  0.0  0.0  15640  7424 ?        S    Oct06   0:05      \_ sshd
+david    1994181  0.0  0.0  15640  7424 ?        S    Oct06   0:06      \_ sshd
 david    1994199  0.0  0.0  16356 10468 pts/0    Ss   Oct06   0:00          \_ bash
-david    2218832  8.3  0.4 160252 69848 pts/0    Sl+  12:46   0:01              \_ ansible-playboo
-david    2220729 20.8  0.3 162108 60072 pts/0    S+   12:47   0:00                  \_ ansible-playboo
-david    2220747  0.0  0.0   2800  1684 pts/0    S+   12:47   0:00                      \_ sh
-david    2220748  0.0  0.0   2800  1620 pts/0    S+   12:47   0:00                          \_ sh
-david    2220749 88.2  0.1  41360 26996 pts/0    S+   12:47   0:00                              \_ python3
-david    2220750  0.0  0.0   2800  1620 pts/0    S+   12:47   0:00                                  \_ sh
-david    2220751  100  0.0  13612  4588 pts/0    R+   12:47   0:00                                      \_ ps
-root     3916037  0.0  0.3 116956 49752 ?        S<s  Sep30   3:14 systemd-journal
+david    2221778  7.5  0.4 160696 70000 pts/0    Sl+  12:52   0:02              \_ ansible-playboo
+david    2223822  9.5  0.3 161340 60184 pts/0    S+   12:53   0:00                  \_ ansible-playboo
+david    2223839  0.0  0.0   2800  1620 pts/0    S+   12:53   0:00                      \_ sh
+david    2223840  0.0  0.0   2800  1620 pts/0    S+   12:53   0:00                          \_ sh
+david    2223841 87.5  0.1  41360 27068 pts/0    S+   12:53   0:00                              \_ python3
+david    2223842  0.0  0.0   2800  1620 pts/0    S+   12:53   0:00                                  \_ sh
+david    2223843  0.0  0.0  13612  4584 pts/0    R+   12:53   0:00                                      \_ ps
+root     3916037  0.0  0.3 116956 50008 ?        S<s  Sep30   3:14 systemd-journal
 root     3916092  0.0  0.0  30584  8348 ?        Ss   Sep30   0:01 systemd-udevd
 root     3916093  0.0  0.0 543472 15500 ?        Ssl  Sep30   1:08 udisksd
 root     3916101  0.0  0.1  93052 26316 ?        Ss   Sep30   0:02 smbd
@@ -1279,7 +1280,7 @@ root     3916474  0.0  0.0  42856  4780 ?        Ss   Sep30   0:03 master
 postfix  3916476  0.0  0.0  43404  8008 ?        S    Sep30   0:00  \_ qmgr
 postfix   511256  0.0  0.0  49684 13512 ?        S    Oct03   0:00  \_ tlsmgr
 postfix  2196622  0.0  0.0  43364  7900 ?        S    11:21   0:00  \_ pickup
-root      269145  0.2  0.3 2099728 53016 ?       Ssl  Oct02  19:19 containerd
+root      269145  0.2  0.3 2099728 53144 ?       Ssl  Oct02  19:20 containerd
 systemd+ 1826241  0.0  0.0  21692 13324 ?        Ss   Oct05   0:03 systemd-resolve
 david    1994088  0.0  0.0  20888 12180 ?        Ss   Oct06   0:00 systemd
 david    1994095  0.0  0.0  21460  3564 ?        S    Oct06   0:00  \_ (sd-pam)
