@@ -18,6 +18,7 @@
           network_speed: []
           software: []
           services: []
+          hcl_benchmark: []
 
   roles:
     - { role: check_system, when: run_system_check | default(false) | bool }
@@ -31,11 +32,47 @@
     - { role: check_network_speed, when: run_network_speed_check | default(false) | bool }
     - { role: check_software, when: run_software_check | default(false) | bool }
     - { role: check_services, when: run_services_check | default(false) | bool }
+    - { role: check_hcl_benchmark, when: run_hcl_check | default(false) | bool }
 
   post_tasks:
-    - name: Generate HTML report from template
-      ansible.builtin.template:
-        src: templates/report.html.j2
-        dest: "reports/system_test_report_{{ ansible_hostname }}_{{ ansible_date_time.iso8601 }}.html"
+    # NEW TASK: Ensure the reports directory exists.
+    - name: Ensure reports directory exists
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/reports"
+        state: directory
       delegate_to: localhost
       run_once: true
+
+    - name: DEBUG | Display collected test results variable
+      ansible.builtin.debug:
+        var: test_results
+        verbosity: 1
+
+    - name: Generate report with error handling
+      block:
+        - name: Generate HTML report from template
+          ansible.builtin.template:
+            src: templates/report.html.j2
+            # MODIFIED: Use an absolute path with playbook_dir.
+            dest: "{{ playbook_dir }}/reports/system_test_report_{{ ansible_hostname }}_{{ ansible_date_time.iso8601 }}.html"
+          delegate_to: localhost
+          run_once: true
+          register: template_result
+
+        - name: Report generation successful
+          ansible.builtin.debug:
+            msg: "Report successfully generated at {{ template_result.dest }}"
+          run_once: true
+
+      rescue:
+        - name: DEBUG | Report generation FAILED
+          ansible.builtin.debug:
+            msg:
+              - "ERROR: The HTML report could not be generated. This is almost always an error inside the 'templates/report.html.j2' file."
+              - "Please check the error details below."
+          run_once: true
+
+        - name: DEBUG | Display the full error
+          ansible.builtin.fail:
+            msg: "{{ ansible_failed_result }}"
+          run_once: true

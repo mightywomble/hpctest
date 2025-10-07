@@ -1,0 +1,87 @@
+---
+# This block checks for an NVIDIA GPU first.
+- name: Check for NVIDIA GPU presence
+  ansible.builtin.command: nvidia-smi
+  register: nvidia_check
+  changed_when: false
+  failed_when: false
+
+# This block runs ONLY if no NVIDIA GPU is found.
+- name: Report HCL benchmark skip if no NVIDIA GPU is found
+  when: nvidia_check.rc != 0
+  block:
+    - name: Create HCL skip result object
+      ansible.builtin.set_fact:
+        hcl_skip_result:
+          name: "HCL Benchmark (HPL)"
+          command: "N/A"
+          result: "Skipped: No NVIDIA GPU detected or nvidia-smi not found."
+          status: "PARTIAL"
+          notes: ""
+    - name: Append HCL skip result
+      ansible.builtin.set_fact:
+        test_results: "{{ test_results | combine({'hcl_benchmark': test_results.hcl_benchmark + [hcl_skip_result]}, recursive=True) }}"
+    # The 'meta: end_host' task has been REMOVED from here.
+
+# This block runs ONLY if an NVIDIA GPU was found.
+- name: Run HCL Benchmark
+  when: nvidia_check.rc == 0
+  block:
+    - name: Ensure prerequisite packages are installed
+      ansible.builtin.package:
+        name:
+          - curl
+          - gpg
+        state: present
+      become: true
+
+    - name: Add NVIDIA Container Toolkit GPG key
+      ansible.builtin.shell: >
+        curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+      changed_when: false
+      become: true
+
+    - name: Add NVIDIA Container Toolkit repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/deb/ all main"
+        state: present
+        filename: nvidia-container-toolkit
+      become: true
+
+    - name: Install Docker and NVIDIA toolkit packages
+      ansible.builtin.package:
+        name:
+          - docker.io
+          - nvidia-container-toolkit
+        state: present
+        update_cache: yes
+      become: true
+
+    - name: Run the HPL Docker container benchmark
+      ansible.builtin.command: >
+        docker run --gpus all --rm
+        --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864
+        nvcr.io/nvidia/hpc-benchmarks:25.04
+        -- mpirun -np 8 --bind-to none --map-by ppr:8:node ./hpl.sh --dat hpl-linux-x86_64/sample-dat/HPL-dgx-1N.dat
+      register: hpl_result
+      changed_when: false
+      failed_when: false
+
+    - name: Create HCL result object
+      ansible.builtin.set_fact:
+        hcl_benchmark_result:
+          name: "HCL Benchmark (HPL)"
+          command: |
+            docker run --gpus all --rm
+            --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864
+            nvcr.io/nvidia/hpc-benchmarks:25.04
+            -- mpirun -np 8 ...
+          result: "{{ hpl_result.stdout | regex_search('WC0.*') | default('Result line not found in output.') }}"
+          status: "{{ ('WC0' in hpl_result.stdout) | ternary('PASS', 'FAIL') }}"
+          notes: "<details><summary>Show full Docker output</summary><pre>{{ hpl_result.stdout if hpl_result.rc == 0 else hpl_result.stderr }}</pre></details>"
+
+    - name: Append HCL Benchmark result
+      ansible.builtin.set_fact:
+        test_results: "{{ test_results | combine({'hcl_benchmark': test_results.hcl_benchmark + [hcl_benchmark_result]}, recursive=True) }}"

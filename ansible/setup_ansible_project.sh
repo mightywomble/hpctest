@@ -1,5 +1,5 @@
 #!/bin/bash
-# setup_ansible_project.sh (v6 - Final Version with all fixes)
+# setup_ansible_project.sh (Final Version with all fixes)
 # This script creates the directory structure and files for the Ansible health check playbook.
 
 echo "🚀 Creating Ansible project directories..."
@@ -56,6 +56,7 @@ cat > ansible_health_check/playbook.yml << 'EOL'
           network_speed: []
           software: []
           services: []
+          hcl_benchmark: []
 
   roles:
     - { role: check_system, when: run_system_check | default(false) | bool }
@@ -69,14 +70,48 @@ cat > ansible_health_check/playbook.yml << 'EOL'
     - { role: check_network_speed, when: run_network_speed_check | default(false) | bool }
     - { role: check_software, when: run_software_check | default(false) | bool }
     - { role: check_services, when: run_services_check | default(false) | bool }
+    - { role: check_hcl_benchmark, when: run_hcl_check | default(false) | bool }
 
   post_tasks:
-    - name: Generate HTML report from template
-      ansible.builtin.template:
-        src: templates/report.html.j2
-        dest: "reports/system_test_report_{{ ansible_hostname }}_{{ ansible_date_time.iso8601 }}.html"
+    - name: Ensure reports directory exists
+      ansible.builtin.file:
+        path: "{{ playbook_dir }}/reports"
+        state: directory
       delegate_to: localhost
       run_once: true
+
+    - name: DEBUG | Display collected test results variable
+      ansible.builtin.debug:
+        var: test_results
+        verbosity: 1
+
+    - name: Generate report with error handling
+      block:
+        - name: Generate HTML report from template
+          ansible.builtin.template:
+            src: templates/report.html.j2
+            dest: "{{ playbook_dir }}/reports/system_test_report_{{ ansible_hostname }}_{{ ansible_date_time.iso8601 }}.html"
+          delegate_to: localhost
+          run_once: true
+          register: template_result
+
+        - name: Report generation successful
+          ansible.builtin.debug:
+            msg: "Report successfully generated at {{ template_result.dest }}"
+          run_once: true
+
+      rescue:
+        - name: DEBUG | Report generation FAILED
+          ansible.builtin.debug:
+            msg:
+              - "ERROR: The HTML report could not be generated. This is almost always an error inside the 'templates/report.html.j2' file."
+              - "Please check the error details below."
+          run_once: true
+
+        - name: DEBUG | Display the full error
+          ansible.builtin.fail:
+            msg: "{{ ansible_failed_result }}"
+          run_once: true
 EOL
 
 # Create the HTML report template
@@ -133,7 +168,8 @@ cat > ansible_health_check/templates/report.html.j2 << 'EOL'
             'System': test_results.system, 'CPU': test_results.cpu, 'RAM': test_results.ram,
             'NVMe Storage': test_results.storage, 'GPU': test_results.gpu, 'Ethernet Network': test_results.ethernet,
             'InfiniBand Network': test_results.infiniband, 'Security & Accounts': test_results.security,
-            'Network Speed Tests': test_results.network_speed, 'Software & Packages': test_results.software, 'Services & Mounts': test_results.services
+            'Network Speed Tests': test_results.network_speed, 'Software & Packages': test_results.software, 'Services & Mounts': test_results.services,
+            'HCL Benchmark': test_results.hcl_benchmark
         } %}
 
         {% for category, results in categories.items() %}
@@ -188,7 +224,7 @@ cat > ansible_health_check/templates/report.html.j2 << 'EOL'
 EOL
 
 # Create role directories
-ROLES=("check_system" "check_cpu" "check_ram" "check_storage" "check_gpu" "check_ethernet" "check_infiniband" "check_security" "check_network_speed" "check_software" "check_services")
+ROLES=("check_system" "check_cpu" "check_ram" "check_storage" "check_gpu" "check_ethernet" "check_infiniband" "check_security" "check_network_speed" "check_software" "check_services" "check_hcl_benchmark")
 for role in "${ROLES[@]}"; do
     echo "⚙️  Creating role: ${role}"
     mkdir -p "ansible_health_check/roles/${role}/tasks"
@@ -730,25 +766,131 @@ EOL
 
 cat > ansible_health_check/roles/check_network_speed/tasks/main.yml << 'EOL'
 ---
-- name: Run speedtest-cli for each server
-  ansible.builtin.command: "speedtest-cli --server {{ item.server_id }} --simple"
-  register: speedtest_results
-  loop: "{{ speed_test_servers }}"
+- name: Check if Ookla speedtest binary already exists
+  ansible.builtin.stat:
+    path: /usr/local/bin/speedtest
+  register: speedtest_binary
+- name: Download and install Ookla speedtest CLI
+  when: not speedtest_binary.stat.exists
+  block:
+    - name: Download Ookla speedtest CLI archive
+      ansible.builtin.get_url:
+        url: "https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-{{ 'aarch64' if ansible_architecture == 'arm64' else 'x86_64' }}.tgz"
+        dest: /tmp/speedtest.tgz
+        mode: '0644'
+    - name: Unarchive the speedtest CLI
+      ansible.builtin.unarchive:
+        src: /tmp/speedtest.tgz
+        dest: /tmp/
+        remote_src: yes
+    - name: Move speedtest binary into place
+      ansible.builtin.copy:
+        src: /tmp/speedtest
+        dest: /usr/local/bin/speedtest
+        mode: '0755'
+        remote_src: yes
+      become: true
+- name: Run Ookla speedtest
+  ansible.builtin.command: /usr/local/bin/speedtest --accept-license --accept-gdpr --format=json-pretty
+  register: speedtest_result
   changed_when: false
   failed_when: false
-- name: Format and append speedtest results
+- name: Create Speedtest result object
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({'network_speed': test_results.network_speed + [
-        {
-          'name': item.item.desc,
-          'command': 'speedtest-cli --server ' ~ item.item.server_id ~ ' --simple',
-          'result': item.stdout if item.rc == 0 else item.stderr,
-          'status': (item.rc == 0) | ternary('PASS', 'FAIL'),
-          'notes': ''
-        }
-      ]
-    }, recursive=True) }}"
-  loop: "{{ speedtest_results.results }}"
+    speedtest_obj:
+      name: "Internet Speedtest"
+      command: "speedtest --format=json-pretty"
+      result: |
+        Ping: {{ (speedtest_json.ping.latency | default('N/A')) | round(2) }} ms
+        Jitter: {{ (speedtest_json.ping.jitter | default('N/A')) | round(2) }} ms
+        Download: {{ ((speedtest_json.download.bandwidth | default(0)) * 8 / 1000000) | round(2) }} Mbit/s
+        Upload: {{ ((speedtest_json.upload.bandwidth | default(0)) * 8 / 1000000) | round(2) }} Mbit/s
+        Server: {{ speedtest_json.server.name | default('N/A') }} ({{ speedtest_json.server.location | default('N/A') }})
+      status: "{{ 'FAIL' if 'error' in speedtest_result.stdout else 'PASS' }}"
+      notes: "{{ speedtest_json.error | default('') }}"
+  vars:
+    speedtest_json: "{{ speedtest_result.stdout | from_json }}"
+- name: Append Speedtest result
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'network_speed': test_results.network_speed + [speedtest_obj]}, recursive=True) }}"
+EOL
+
+cat > ansible_health_check/roles/check_hcl_benchmark/tasks/main.yml << 'EOL'
+---
+- name: Check for NVIDIA GPU presence
+  ansible.builtin.command: nvidia-smi
+  register: nvidia_check
+  changed_when: false
+  failed_when: false
+- name: Report HCL benchmark skip if no NVIDIA GPU is found
+  when: nvidia_check.rc != 0
+  block:
+    - name: Create HCL skip result object
+      ansible.builtin.set_fact:
+        hcl_skip_result:
+          name: "HCL Benchmark (HPL)"
+          command: "N/A"
+          result: "Skipped: No NVIDIA GPU detected or nvidia-smi not found."
+          status: "PARTIAL"
+          notes: ""
+    - name: Append HCL skip result
+      ansible.builtin.set_fact:
+        test_results: "{{ test_results | combine({'hcl_benchmark': test_results.hcl_benchmark + [hcl_skip_result]}, recursive=True) }}"
+- name: Run HCL Benchmark
+  when: nvidia_check.rc == 0
+  block:
+    - name: Ensure prerequisite packages are installed
+      ansible.builtin.package:
+        name:
+          - curl
+          - gpg
+        state: present
+      become: true
+    - name: Add NVIDIA Container Toolkit GPG key
+      ansible.builtin.shell: >
+        curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+      changed_when: false
+      become: true
+    - name: Add NVIDIA Container Toolkit repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/deb/ all main"
+        state: present
+        filename: nvidia-container-toolkit
+      become: true
+    - name: Install Docker and NVIDIA toolkit packages
+      ansible.builtin.package:
+        name:
+          - docker.io
+          - nvidia-container-toolkit
+        state: present
+        update_cache: yes
+      become: true
+    - name: Run the HPL Docker container benchmark
+      ansible.builtin.command: >
+        docker run --gpus all --rm
+        --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864
+        nvcr.io/nvidia/hpc-benchmarks:25.04
+        -- mpirun -np 8 --bind-to none --map-by ppr:8:node ./hpl.sh --dat hpl-linux-x86_64/sample-dat/HPL-dgx-1N.dat
+      register: hpl_result
+      changed_when: false
+      failed_when: false
+    - name: Create HCL result object
+      ansible.builtin.set_fact:
+        hcl_benchmark_result:
+          name: "HCL Benchmark (HPL)"
+          command: |
+            docker run --gpus all --rm
+            --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864
+            nvcr.io/nvidia/hpc-benchmarks:25.04
+            -- mpirun -np 8 ...
+          result: "{{ hpl_result.stdout | regex_search('WC0.*') | default('Result line not found in output.') }}"
+          status: "{{ ('WC0' in hpl_result.stdout) | ternary('PASS', 'FAIL') }}"
+          notes: "<details><summary>Show full Docker output</summary><pre>{{ hpl_result.stdout if hpl_result.rc == 0 else hpl_result.stderr }}</pre></details>"
+    - name: Append HCL Benchmark result
+      ansible.builtin.set_fact:
+        test_results: "{{ test_results | combine({'hcl_benchmark': test_results.hcl_benchmark + [hcl_benchmark_result]}, recursive=True) }}"
 EOL
 
 echo "✅ All done. Your final, corrected Ansible project is ready in the 'ansible_health_check' directory."

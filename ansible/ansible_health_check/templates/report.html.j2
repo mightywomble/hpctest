@@ -49,7 +49,8 @@
             'System': test_results.system, 'CPU': test_results.cpu, 'RAM': test_results.ram,
             'NVMe Storage': test_results.storage, 'GPU': test_results.gpu, 'Ethernet Network': test_results.ethernet,
             'InfiniBand Network': test_results.infiniband, 'Security & Accounts': test_results.security,
-            'Network Speed Tests': test_results.network_speed, 'Software & Packages': test_results.software, 'Services & Mounts': test_results.services
+            'Network Speed Tests': test_results.network_speed, 'Software & Packages': test_results.software, 'Services & Mounts': test_results.services,
+            'HCL Benchmark': test_results.hcl_benchmark
         } %}
 
         {% for category, results in categories.items() %}
