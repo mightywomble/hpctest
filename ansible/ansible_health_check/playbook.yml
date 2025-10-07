@@ -16,6 +16,8 @@
           infiniband: []
           security: []
           network_speed: []
+          software: []
+          services: []
 
   roles:
     - { role: check_system, when: run_system_check | default(false) | bool }
@@ -27,6 +29,8 @@
     - { role: check_infiniband, when: run_infiniband_check | default(false) | bool }
     - { role: check_security, when: run_security_check | default(false) | bool }
     - { role: check_network_speed, when: run_network_speed_check | default(false) | bool }
+    - { role: check_software, when: run_software_check | default(false) | bool }
+    - { role: check_services, when: run_services_check | default(false) | bool }
 
   post_tasks:
     - name: Generate HTML report from template

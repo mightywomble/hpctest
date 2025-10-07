@@ -1,19 +1,60 @@
 ---
-- name: Check for nvidia-smi command
-  ansible.builtin.command: nvidia-smi --query-gpu=gpu_name --format=csv,noheader
-  register: gpu_type
+- name: Run all GPU-related commands
+  ansible.builtin.shell: "{{ item.cmd }}"
+  register: gpu_command_results
+  loop:
+    - { name: "gpu_type", cmd: "nvidia-smi --query-gpu=gpu_name --format=csv,noheader" }
+    - { name: "gpu_vram", cmd: "nvidia-smi --query-gpu=memory.total --format=csv" }
+    - { name: "peermem", cmd: "lsmod | grep -i nvidia_peermem" }
+    - { name: "nvfabric", cmd: "nv-fabricmanager --version" }
+    - { name: "nvlink", cmd: "nvidia-smi nvlink -s" }
+    - { name: "nvidia_smi_full", cmd: "nvidia-smi" }
   changed_when: false
   failed_when: false
-
-- name: Create GPU Type result object
+- name: Create all GPU result objects
   ansible.builtin.set_fact:
     gpu_type_result:
       name: "GPU Type"
-      command: "nvidia-smi --query-gpu=gpu_name --format=csv,noheader"
-      result: "{{ gpu_type.rc != 0 | ternary(gpu_type.stderr, gpu_type.stdout) }}"
-      status: "{{ gpu_type.rc == 0 | ternary('PASS', 'FAIL') }}"
-      notes: "Exit code {{ gpu_type.rc }}"
-
-- name: Append GPU Type result
+      command: "{{ gpu_command_results.results[0].item.cmd }}"
+      result: "{{ gpu_command_results.results[0].stdout if gpu_command_results.results[0].rc == 0 else (gpu_command_results.results[0].stderr if gpu_command_results.results[0].stderr else 'Command not found') }}"
+      status: "{{ (gpu_command_results.results[0].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ gpu_command_results.results[0].rc }}"
+    gpu_vram_result:
+      name: "VRAM per GPU"
+      command: "{{ gpu_command_results.results[1].item.cmd }}"
+      result: "{{ gpu_command_results.results[1].stdout if gpu_command_results.results[1].rc == 0 else (gpu_command_results.results[1].stderr if gpu_command_results.results[1].stderr else 'Command not found') }}"
+      status: "{{ (gpu_command_results.results[1].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ gpu_command_results.results[1].rc }}"
+    peermem_result:
+      name: "NVIDIA Peermem"
+      command: "{{ gpu_command_results.results[2].item.cmd }}"
+      result: "{{ gpu_command_results.results[2].stdout if gpu_command_results.results[2].rc == 0 else 'Module not loaded' }}"
+      status: "{{ (gpu_command_results.results[2].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ gpu_command_results.results[2].rc }}"
+    nvfabric_result:
+      name: "NVLink Fabric Manager"
+      command: "{{ gpu_command_results.results[3].item.cmd }}"
+      result: "{{ gpu_command_results.results[3].stdout if gpu_command_results.results[3].rc == 0 else (gpu_command_results.results[3].stderr if gpu_command_results.results[3].stderr else 'Command not found') }}"
+      status: "{{ (gpu_command_results.results[3].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ gpu_command_results.results[3].rc }}"
+    nvlink_result:
+      name: "NVLink Status"
+      command: "{{ gpu_command_results.results[4].item.cmd }}"
+      result: "{{ gpu_command_results.results[4].stdout if gpu_command_results.results[4].rc == 0 else (gpu_command_results.results[4].stderr if gpu_command_results.results[4].stderr else 'Command not found') }}"
+      status: "{{ (gpu_command_results.results[4].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ gpu_command_results.results[4].rc }}"
+    driver_version_result:
+      name: "Driver Version"
+      command: "nvidia-smi | grep -i 'Driver Version'"
+      result: "{{ gpu_command_results.results[5].stdout | regex_search('Driver Version:\\s*([0-9.]+)') | default('Not found') }}"
+      status: "{{ ('Driver Version:' in gpu_command_results.results[5].stdout) | ternary('PASS', 'FAIL') }}"
+      notes: ""
+    nvidia_smi_full_result:
+      name: "nvidia-smi Full Output"
+      command: "{{ gpu_command_results.results[5].item.cmd }}"
+      result: "<details><summary>Show nvidia-smi output</summary><pre>{{ gpu_command_results.results[5].stdout if gpu_command_results.results[5].rc == 0 else (gpu_command_results.results[5].stderr if gpu_command_results.results[5].stderr else 'Command not found') }}</pre></details>"
+      status: "{{ (gpu_command_results.results[5].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ gpu_command_results.results[5].rc }}"
+- name: Append all GPU results
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({'gpu': test_results.gpu + [gpu_type_result]}, recursive=True) }}"
+    test_results: "{{ test_results | combine({'gpu': test_results.gpu + [gpu_type_result, gpu_vram_result, peermem_result, nvfabric_result, nvlink_result, driver_version_result, nvidia_smi_full_result]}, recursive=True) }}"

@@ -7,7 +7,6 @@
       result: "{{ (ansible_facts.memtotal_mb / 1024) | round(0, 'ceil') }}Gi"
       status: "PASS"
       notes: ""
-
 - name: Append RAM Size result
   ansible.builtin.set_fact:
     test_results: "{{ test_results | combine({'ram': test_results.ram + [ram_size_result]}, recursive=True) }}"

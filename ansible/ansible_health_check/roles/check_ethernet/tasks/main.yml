@@ -1,19 +1,62 @@
 ---
-- name: Get Ethernet Links
-  ansible.builtin.command: ip -br a
-  register: ip_links
+- name: Run general Ethernet-related commands
+  ansible.builtin.shell: "{{ item.cmd }}"
+  register: eth_commands
+  loop:
+    - { name: "nics", cmd: "lshw -C network -short" }
+    - { name: "links", cmd: "ip -br a" }
+    - { name: "ips", cmd: "ip -o addr show primary scope global | awk '{print $2, $3, $4}'" }
+    - { name: "bond_speed", cmd: "ethtool bond0" }
+    - { name: "bond_type", cmd: "cat /proc/net/bonding/bond0" }
   changed_when: false
   failed_when: false
-
-- name: Create Ethernet Links result object
+- name: Check ethtool link speed for each active interface
+  ansible.builtin.command: "ethtool {{ item }}"
+  register: ethtool_results
+  loop: "{{ ansible_facts.interfaces | difference(['lo']) }}"
+  changed_when: false
+  failed_when: false
+- name: Create Ethernet result objects
   ansible.builtin.set_fact:
+    ethernet_nics_result:
+      name: "Ethernet NICs"
+      command: "{{ eth_commands.results[0].item.cmd }}"
+      result: "{{ eth_commands.results[0].stdout }}"
+      status: "{{ (eth_commands.results[0].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: ""
     ethernet_links_result:
       name: "Ethernet Links"
-      command: "ip -br a"
-      result: "{{ ip_links.stdout }}"
+      command: "{{ eth_commands.results[1].item.cmd }}"
+      result: "{{ eth_commands.results[1].stdout }}"
       status: "PASS"
       notes: ""
-
-- name: Append Ethernet Links result
+    all_ips_result:
+      name: "All IP Addresses (IPv4 & IPv6)"
+      command: "{{ eth_commands.results[2].item.cmd }}"
+      result: "{{ eth_commands.results[2].stdout }}"
+      status: "{{ (eth_commands.results[2].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: ""
+    link_speed_result:
+      name: "Link Speed Check"
+      command: "ethtool <each iface>"
+      result: |
+        {% for result in ethtool_results.results -%}
+        {{ result.item }}: {{ result.stdout | regex_search('Speed: (.*)') | default('Speed: Unknown') }}
+        {% endfor %}
+      status: "PASS"
+      notes: "No minimum threshold configured"
+    bond_speed_result:
+      name: "Bond Speed"
+      command: "{{ eth_commands.results[3].item.cmd }}"
+      result: "{{ eth_commands.results[3].stdout if eth_commands.results[3].rc == 0 else 'Device not found' }}"
+      status: "{{ (eth_commands.results[3].rc == 0) | ternary('PASS', 'PARTIAL') }}"
+      notes: "{{ '' if (eth_commands.results[3].rc == 0) else 'bond0 not present' }}"
+    bond_type_result:
+      name: "Bond Type"
+      command: "{{ eth_commands.results[4].item.cmd }}"
+      result: "{{ eth_commands.results[4].stdout if eth_commands.results[4].rc == 0 else 'Device not found' }}"
+      status: "{{ (eth_commands.results[4].rc == 0) | ternary('PASS', 'PARTIAL') }}"
+      notes: "{{ '' if (eth_commands.results[4].rc == 0) else 'bond0 not present' }}"
+- name: Append all Ethernet results
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({'ethernet': test_results.ethernet + [ethernet_links_result]}, recursive=True) }}"
+    test_results: "{{ test_results | combine({'ethernet': test_results.ethernet + [ethernet_nics_result, ethernet_links_result, all_ips_result, link_speed_result, bond_speed_result, bond_type_result]}, recursive=True) }}"

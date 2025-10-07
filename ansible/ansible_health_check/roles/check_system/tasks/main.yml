@@ -1,19 +1,39 @@
 ---
 - name: Get OS Version
-  ansible.builtin.command: grep PRETTY_NAME /etc/os-release
+  ansible.builtin.shell: "grep PRETTY_NAME /etc/os-release | cut -d '\"' -f 2"
   register: os_version
   changed_when: false
   failed_when: false
-
-- name: Create OS Version result object
+- name: Get System Name
+  ansible.builtin.command: cat /sys/devices/virtual/dmi/id/product_name
+  register: system_name
+  changed_when: false
+  failed_when: false
+- name: Get Full OS Version (lsb_release)
+  ansible.builtin.command: lsb_release -a
+  register: lsb_release_full
+  changed_when: false
+  failed_when: false
+- name: Create System result objects
   ansible.builtin.set_fact:
+    system_name_result:
+      name: "System Name"
+      command: "cat /sys/devices/virtual/dmi/id/product_name"
+      result: "{{ system_name.stdout | trim }}"
+      status: "{{ (system_name.rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: ""
     os_version_result:
       name: "OS Version"
-      command: "grep PRETTY_NAME /etc/os-release"
-      result: "{{ os_version.stdout | regex_replace('^PRETTY_NAME=\"(.*?)\"$', '\\1') | trim }}"
-      status: "{{ os_version.rc == 0 | ternary('PASS', 'FAIL') }}"
+      command: "grep PRETTY_NAME /etc/os-release | cut -d '\"' -f 2"
+      result: "{{ os_version.stdout | trim }}"
+      status: "{{ (os_version.rc == 0) | ternary('PASS', 'FAIL') }}"
       notes: ""
-
-- name: Append OS Version result
+    lsb_release_result:
+      name: "OS Full Version (lsb_release -a)"
+      command: "lsb_release -a"
+      result: "{{ lsb_release_full.stdout | trim }}"
+      status: "{{ (lsb_release_full.rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: ""
+- name: Append all System results
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({'system': test_results.system + [os_version_result]}, recursive=True) }}"
+    test_results: "{{ test_results | combine({'system': test_results.system + [system_name_result, os_version_result, lsb_release_result]}, recursive=True) }}"

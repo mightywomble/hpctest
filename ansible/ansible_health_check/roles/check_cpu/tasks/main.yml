@@ -1,20 +1,45 @@
 ---
-- name: Get CPU Information
+- name: Get all CPU Information with lscpu
   ansible.builtin.command: lscpu
   register: lscpu_output
   changed_when: false
   failed_when: false
-
-- name: Create CPU Model result object
+- name: Get CPU Core Count
+  ansible.builtin.shell: "lscpu | grep -E '^(Socket|Core)' | tr '\\n' ' ' | sed 's/  */ /g'"
+  register: core_count
+  changed_when: false
+  failed_when: false
+- name: Get NUMA Configuration
+  ansible.builtin.shell: "lscpu | grep 'NUMA node' | tr '\\n' ' ' | sed 's/  */ /g'"
+  register: numa_config
+  changed_when: false
+  failed_when: false
+- name: Create CPU result objects
   ansible.builtin.set_fact:
     cpu_model_result:
       name: "CPU Model"
-      command: "lscpu"
+      command: "lscpu | grep 'Model name:' | sed 's/Model name:[[:space:]]*//'"
       result: "{{ lscpu_output.stdout | regex_search('Model name:\\s+(.+)', '\\1') | first | trim }}"
-      status: "{{ lscpu_output.rc == 0 | ternary('PASS', 'FAIL') }}"
+      status: "{{ (lscpu_output.rc == 0) | ternary('PASS', 'FAIL') }}"
       notes: ""
-
-- name: Append CPU Model result
+    core_count_result:
+      name: "CPU Core Count"
+      command: "lscpu | grep -E '^(Socket|Core)' | tr '\\n' ' ' | sed 's/  */ /g'"
+      result: "{{ core_count.stdout | trim }}"
+      status: "{{ (core_count.rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: ""
+    numa_config_result:
+      name: "NUMA Configuration"
+      command: "lscpu | grep 'NUMA node' | tr '\\n' ' ' | sed 's/  */ /g'"
+      result: "{{ numa_config.stdout | trim }}"
+      status: "{{ (numa_config.rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: ""
+    lscpu_summary_result:
+      name: "lscpu Summary"
+      command: "lscpu"
+      result: "<details><summary>Show lscpu output</summary><pre>{{ lscpu_output.stdout }}</pre></details>"
+      status: "{{ (lscpu_output.rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Basic lscpu output"
+- name: Append all CPU results
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({'cpu': test_results.cpu + [cpu_model_result]}, recursive=True) }}"
-
+    test_results: "{{ test_results | combine({'cpu': test_results.cpu + [cpu_model_result, core_count_result, numa_config_result, lscpu_summary_result]}, recursive=True) }}"

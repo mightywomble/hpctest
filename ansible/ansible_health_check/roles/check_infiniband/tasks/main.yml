@@ -1,19 +1,47 @@
 ---
-- name: Check for ibstatus command
-  ansible.builtin.command: ibstatus
-  register: ib_status
+- name: Run InfiniBand-related commands
+  ansible.builtin.shell: "{{ item.cmd }}"
+  register: ib_commands
+  loop:
+    - { name: "speed", cmd: "ibstatus | grep -e 'rate:' -e 'device'" }
+    - { name: "status", cmd: "ibstatus | grep -e 'link_layer:' -e 'phys state:'" }
+    - { name: "ofed", cmd: "ofed_info -s" }
+    - { name: "iboip", cmd: "ibdev2netdev" }
+    - { name: "fabric", cmd: "iblinkinfo --switches-only" }
   changed_when: false
   failed_when: false
-
-- name: Create IB Links result object
+- name: Create InfiniBand result objects
   ansible.builtin.set_fact:
-    ib_links_result:
+    ib_speed_result:
       name: "IB Links Speed"
-      command: "ibstatus"
-      result: "{{ ib_status.rc != 0 | ternary(ib_status.stderr, ib_status.stdout) }}"
-      status: "{{ ib_status.rc == 0 | ternary('PASS', 'FAIL') }}"
-      notes: "Exit code {{ ib_status.rc }}"
-
-- name: Append IB Links result
+      command: "{{ ib_commands.results[0].item.cmd }}"
+      result: "{{ ib_commands.results[0].stdout if ib_commands.results[0].rc == 0 else (ib_commands.results[0].stderr if ib_commands.results[0].stderr else 'Command not found') }}"
+      status: "{{ (ib_commands.results[0].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ ib_commands.results[0].rc }}"
+    ib_status_result:
+      name: "IB Links Status"
+      command: "{{ ib_commands.results[1].item.cmd }}"
+      result: "{{ ib_commands.results[1].stdout if ib_commands.results[1].rc == 0 else (ib_commands.results[1].stderr if ib_commands.results[1].stderr else 'Command not found') }}"
+      status: "{{ (ib_commands.results[1].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ ib_commands.results[1].rc }}"
+    ofed_result:
+      name: "OFED Version"
+      command: "{{ ib_commands.results[2].item.cmd }}"
+      result: "{{ ib_commands.results[2].stdout if ib_commands.results[2].rc == 0 else (ib_commands.results[2].stderr if ib_commands.results[2].stderr else 'Command not found') }}"
+      status: "{{ (ib_commands.results[2].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ ib_commands.results[2].rc }}"
+    iboip_result:
+      name: "IBoIP Enabled"
+      command: "{{ ib_commands.results[3].item.cmd }}"
+      result: "{{ ib_commands.results[3].stdout if ib_commands.results[3].rc == 0 else (ib_commands.results[3].stderr if ib_commands.results[3].stderr else 'Command not found') }}"
+      status: "{{ (ib_commands.results[3].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ ib_commands.results[3].rc }}"
+    fabric_result:
+      name: "IB Fabric"
+      command: "{{ ib_commands.results[4].item.cmd }}"
+      result: "{{ ib_commands.results[4].stdout if ib_commands.results[4].rc == 0 else (ib_commands.results[4].stderr if ib_commands.results[4].stderr else 'Command not found') }}"
+      status: "{{ (ib_commands.results[4].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ ib_commands.results[4].rc }}"
+- name: Append all InfiniBand results
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({'infiniband': test_results.infiniband + [ib_links_result]}, recursive=True) }}"
+    test_results: "{{ test_results | combine({'infiniband': test_results.infiniband + [ib_speed_result, ib_status_result, ofed_result, iboip_result, fabric_result]}, recursive=True) }}"

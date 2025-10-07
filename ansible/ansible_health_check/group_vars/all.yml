@@ -1,12 +1,5 @@
 ---
-# This file is for global configuration. Specific tests can be toggled via flags.
-
-# Example: Define a list of users whose SSH keys should be audited
-ssh_key_audit_users:
-  - root
-  - david
-
 # Example: Define network speed test servers
 speed_test_servers:
   - { desc: "Speedtest Nearby", server_id: "14679" }
-  - { desc: "Speedtest Europe", server_id: "14679" } # Using same for demo
+  - { desc: "Speedtest Europe", server_id: "14679" }

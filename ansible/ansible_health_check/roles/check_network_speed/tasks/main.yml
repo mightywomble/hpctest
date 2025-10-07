@@ -5,15 +5,16 @@
   loop: "{{ speed_test_servers }}"
   changed_when: false
   failed_when: false
-
-- name: Format results for Network Speed Tests
+- name: Format and append speedtest results
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({'network_speed': test_results.network_speed + [item_result]}, recursive=True) }}"
+    test_results: "{{ test_results | combine({'network_speed': test_results.network_speed + [
+        {
+          'name': item.item.desc,
+          'command': 'speedtest-cli --server ' ~ item.item.server_id ~ ' --simple',
+          'result': item.stdout if item.rc == 0 else item.stderr,
+          'status': (item.rc == 0) | ternary('PASS', 'FAIL'),
+          'notes': ''
+        }
+      ]
+    }, recursive=True) }}"
   loop: "{{ speedtest_results.results }}"
-  vars:
-    item_result:
-      name: "{{ item.item.desc }}"
-      command: "speedtest-cli --server {{ item.item.server_id }} --simple"
-      result: "{{ item.rc != 0 | ternary(item.stderr, item.stdout) }}"
-      status: "{{ item.rc == 0 | ternary('PASS', 'FAIL') }}"
-      notes: ""

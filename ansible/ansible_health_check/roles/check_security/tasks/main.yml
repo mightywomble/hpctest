@@ -4,16 +4,122 @@
     src: /etc/passwd
   register: passwd_file
   failed_when: not passwd_file.content
-
-- name: Create /etc/passwd result object
+- name: Get /etc/shadow content
+  ansible.builtin.slurp:
+    src: /etc/shadow
+  register: shadow_file
+  become: true
+  failed_when: not shadow_file.content
+- name: Find all SSH key files
+  ansible.builtin.find:
+    paths:
+      - /root/.ssh
+      - /home/
+    patterns: "authorized_keys,*.pub,id_*"
+    recurse: true
+    file_type: file
+  register: ssh_files
+- name: Get stats for each SSH key file
+  ansible.builtin.stat:
+    path: "{{ item.path }}"
+  loop: "{{ ssh_files.files }}"
+  register: ssh_stat_results
+- name: Get fingerprints for each SSH key file
+  ansible.builtin.shell: |
+    set -e
+    fingerprint="N/A"
+    if [[ "{{ item.path }}" == *.pub ]] || [[ "{{ item.path }}" == *authorized_keys ]]; then
+      fingerprint=$(ssh-keygen -lf "{{ item.path }}" | awk '{print $1, $2, $3}' | tr -d '\\n' | sed 's/SHA256:/\\nSHA256:/g' | sed '/^$/d' || echo "Invalid key format")
+    fi
+    echo "fingerprint=${fingerprint}"
+  args:
+    executable: /bin/bash
+  register: ssh_fingerprints
+  loop: "{{ ssh_files.files }}"
+  changed_when: false
+- name: Get list of MOTD files
+  ansible.builtin.find:
+    paths: /etc/update-motd.d
+    file_type: file
+  register: motd_files
+- name: Slurp content of MOTD files
+  ansible.builtin.slurp:
+    src: "{{ item.path }}"
+  loop: "{{ motd_files.files }}"
+  register: motd_contents
+- name: Create Security & Accounts result objects
   ansible.builtin.set_fact:
+    motd_result:
+      name: "MOTD"
+      command: "cat /etc/motd; ls /etc/update-motd.d"
+      result: |
+        <details><summary>Show MOTD files and contents</summary>
+        <div class="banner">Multiple MOTD fragments detected ({{ motd_files.files | length }} files)</div>
+        <div><strong>Files:</strong><ul>
+        {% for file in motd_files.files %}<li>{{ file.path }}</li>{% endfor %}
+        </ul></div>
+        {% for content in motd_contents.results %}
+        <div class="box"><div style="font-weight:600; color:#a9b1d6">{{ content.item.path }}</div><pre>{{ content.content | b64decode }}</pre></div>
+        {% endfor %}
+        </details>
+      status: "PARTIAL"
+      notes: "Multiple files"
+    ssh_keys_result:
+      name: "SSH Keys Audit"
+      command: "find ~/.ssh /home/*/.ssh"
+      result: |
+        <details><summary>Show SSH key metadata (paths, perms, fingerprints)</summary>
+        <table><thead><tr><th>Path</th><th>Type</th><th>Perms</th><th>Owner</th><th>Fingerprint</th></tr></thead><tbody>
+        {% for file in ssh_files.files %}
+        <tr><td>{{ file.path }}</td><td>{{ 'private' if 'id_' in file.path and not file.path.endswith('.pub') else 'public' }}</td><td>{{ ssh_stat_results.results[loop.index0].stat.mode }}</td><td>{{ ssh_stat_results.results[loop.index0].stat.pw_name }}:{{ ssh_stat_results.results[loop.index0].stat.gr_name }}</td><td><pre>{{ ssh_fingerprints.results[loop.index0].stdout | regex_replace('fingerprint=') }}</pre></td></tr>
+        {% endfor %}
+        </tbody></table><div style="margin-top:4px;color:#a9b1d6">Key contents are intentionally redacted</div></details>
+      status: "PARTIAL"
+      notes: "Metadata only; contents redacted"
     passwd_result:
       name: "/etc/passwd"
       command: "cat /etc/passwd"
-      result: "{{ passwd_file.content | b64decode }}"
+      result: "<details><summary>Show /etc/passwd</summary><pre>{{ passwd_file.content | b64decode }}</pre></details>"
       status: "PASS"
       notes: ""
-
-- name: Append /etc/passwd result
+    shadow_result:
+      name: "/etc/shadow (redacted)"
+      command: "analyzed"
+      result: |
+        <div class="disk-chips">
+        {% for account in accounts_with_passwords %}<span class="disk-chip">{{ account }}</span>{% endfor %}
+        </div>
+        <details><summary>Show shadow account status (redacted)</summary><pre>
+        {%- for line in (shadow_file.content | b64decode).split('\n') -%}
+        {%- if line -%}
+        {{- line.split(':')[0] }}: {{ 'password set' if not line.split(':')[1] in ['!', '*'] else 'locked' }}
+        {%- endif -%}
+        {%- endfor -%}
+        </pre></details>
+      status: "PASS"
+      notes: "{{ accounts_with_passwords | length }} account(s) with passwords set"
+    home_dirs_result:
+      name: "Home Directories"
+      command: "ls /home and /etc/passwd"
+      result: |
+        <details><summary>/home directory listing</summary>
+        </details>
+        <details><summary>Home directories parsed from /etc/passwd</summary><table><thead><tr><th>Path</th></tr></thead><tbody>
+        {% for path in (passwd_file.content | b64decode).split('\n') | map('regex_replace', '^.*?:.*?:.*?:.*?:.*?:(.*?):.*$', '\\1') | unique | sort %}
+        {% if path %}<tr><td>{{ path }}</td></tr>{% endif %}
+        {% endfor %}
+        </tbody></table></details>
+      status: "PASS"
+      notes: ""
+  vars:
+    accounts_with_passwords: >-
+      {%- set accounts = [] -%}
+      {%- for line in (shadow_file.content | b64decode).split('\n') -%}
+        {%- if line and not line.split(':')[1] in ['!', '*'] -%}
+          {%- set _ = accounts.append(line.split(':')[0]) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{- accounts -}}
+- name: Append all Security results
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({'security': test_results.security + [passwd_result]}, recursive=True) }}"
+    test_results: "{{ test_results | combine({'security': test_results.security + [motd_result, ssh_keys_result, passwd_result, shadow_result, home_dirs_result]}, recursive=True) }}"

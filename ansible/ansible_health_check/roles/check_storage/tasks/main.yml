@@ -1,16 +1,32 @@
 ---
-- name: Create Filesystem Usage result object
+- name: Get block device information
+  ansible.builtin.command: lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,MOUNTPOINTS
+  register: lsblk_output
+  changed_when: false
+  failed_when: false
+- name: Create Storage result objects
   ansible.builtin.set_fact:
+    block_devices_result:
+      name: "Block Devices"
+      command: "lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,MOUNTPOINTS"
+      result: "{{ lsblk_output.stdout }}"
+      status: "{{ (lsblk_output.rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: ""
+    lsblk_overview_result:
+      name: "lsblk Overview"
+      command: "lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,MOUNTPOINTS"
+      result: "<details><summary>Show lsblk output</summary><pre>{{ lsblk_output.stdout }}</pre></details>"
+      status: "{{ (lsblk_output.rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Full lsblk output"
     fs_usage_result:
       name: "Filesystem Usage"
-      command: "ansible_facts.mounts"
+      command: "df -h (from ansible_facts.mounts)"
       result: |
         {% for mount in ansible_facts.mounts -%}
-        {{ mount.device }} {{ mount.size_total | human_readable }} {{ (mount.size_total - mount.size_available) | human_readable }} {{ mount.size_available | human_readable }} {{ ((mount.size_total - mount.size_available) / mount.size_total * 100) | round(0) }}% {{ mount.mount }}
+        {{ mount.device }} {{ mount.size_total | human_readable }} {{ (mount.size_total - mount.size_available) | human_readable }} {{ mount.size_available | human_readable }} {{ (((mount.size_total - mount.size_available) / mount.size_total) * 100) | round(0) }}% {{ mount.mount }}
         {% endfor %}
       status: "PASS"
       notes: ""
-
-- name: Append Filesystem Usage result
+- name: Append all Storage results
   ansible.builtin.set_fact:
-    test_results: "{{ test_results | combine({'storage': test_results.storage + [fs_usage_result]}, recursive=True) }}"
+    test_results: "{{ test_results | combine({'storage': test_results.storage + [block_devices_result, lsblk_overview_result, fs_usage_result]}, recursive=True) }}"
