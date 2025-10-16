@@ -42,7 +42,7 @@
 <body>
     <div class="container">
         <h1>System Hardware & Performance Report</h1>
-        <div class="report-meta">Generated on: 2025-10-15T21:20:55Z</div>
+        <div class="report-meta">Generated on: 2025-10-16T12:13:15Z</div>
         <div class="report-host">Hostname: david-gpu • Primary IP: 66.172.11.9</div>
 
         
@@ -141,7 +141,7 @@ Thread(s) per core:                      1
 Core(s) per socket:                      3
 Socket(s):                               1
 Stepping:                                2
-BogoMIPS:                                4799.94
+BogoMIPS:                                4800.14
 Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx rdtscp lm constant_tsc rep_good nopl xtopology cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault invpcid_single pti ibrs ibpb fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap xsaveopt arat
 L1d cache:                               96 KiB (3 instances)
 L1i cache:                               96 KiB (3 instances)
@@ -212,12 +212,12 @@ Vulnerability Tsx async abort:           Not affected</pre></details></pre></td>
                         <td>Block Devices</td>
                         <td><pre>lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,MOUNTPOINTS</pre></td>
                         <td><pre>NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
-loop0    7:0    0 63.7M  1 loop /snap/core20/2496
-loop1    7:1    0 89.4M  1 loop /snap/lxd/31333
-loop2    7:2    0 44.4M  1 loop /snap/snapd/23545
-loop3    7:3    0 50.8M  1 loop /snap/snapd/25202
-loop4    7:4    0 63.8M  1 loop /snap/core20/2669
-loop5    7:5    0 91.4M  1 loop /snap/lxd/35819
+loop0    7:0    0 63.8M  1 loop /snap/core20/2669
+loop1    7:1    0 63.7M  1 loop /snap/core20/2496
+loop2    7:2    0 89.4M  1 loop /snap/lxd/31333
+loop3    7:3    0 91.4M  1 loop /snap/lxd/35819
+loop4    7:4    0 44.4M  1 loop /snap/snapd/23545
+loop5    7:5    0 50.8M  1 loop /snap/snapd/25202
 sda      8:0    0  100G  0 disk 
 ├─sda1   8:1    0    4M  0 part 
 ├─sda2   8:2    0  106M  0 part /boot/efi
@@ -231,12 +231,12 @@ sr0     11:0    1  368K  0 rom  </pre></td>
                         <td>lsblk Overview</td>
                         <td><pre>lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,MOUNTPOINTS</pre></td>
                         <td><pre><details><summary>Show lsblk output</summary><pre>NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
-loop0    7:0    0 63.7M  1 loop /snap/core20/2496
-loop1    7:1    0 89.4M  1 loop /snap/lxd/31333
-loop2    7:2    0 44.4M  1 loop /snap/snapd/23545
-loop3    7:3    0 50.8M  1 loop /snap/snapd/25202
-loop4    7:4    0 63.8M  1 loop /snap/core20/2669
-loop5    7:5    0 91.4M  1 loop /snap/lxd/35819
+loop0    7:0    0 63.8M  1 loop /snap/core20/2669
+loop1    7:1    0 63.7M  1 loop /snap/core20/2496
+loop2    7:2    0 89.4M  1 loop /snap/lxd/31333
+loop3    7:3    0 91.4M  1 loop /snap/lxd/35819
+loop4    7:4    0 44.4M  1 loop /snap/snapd/23545
+loop5    7:5    0 50.8M  1 loop /snap/snapd/25202
 sda      8:0    0  100G  0 disk 
 ├─sda1   8:1    0    4M  0 part 
 ├─sda2   8:2    0  106M  0 part /boot/efi
@@ -250,14 +250,14 @@ sr0     11:0    1  368K  0 rom  </pre></details></pre></td>
                                     <tr>
                         <td>Filesystem Usage</td>
                         <td><pre>df -h (from ansible_facts.mounts)</pre></td>
-                        <td><pre>/dev/sda3 96.73 GB 34.21 GB 62.53 GB 35.0% /
-/dev/loop0 63.75 MB 63.75 MB 0.00 Bytes 100.0% /snap/core20/2496
-/dev/loop1 89.50 MB 89.50 MB 0.00 Bytes 100.0% /snap/lxd/31333
-/dev/loop2 44.50 MB 44.50 MB 0.00 Bytes 100.0% /snap/snapd/23545
+                        <td><pre>/dev/sda3 96.73 GB 31.15 GB 65.58 GB 32.0% /
+/dev/loop1 63.75 MB 63.75 MB 0.00 Bytes 100.0% /snap/core20/2496
+/dev/loop0 63.88 MB 63.88 MB 0.00 Bytes 100.0% /snap/core20/2669
+/dev/loop2 89.50 MB 89.50 MB 0.00 Bytes 100.0% /snap/lxd/31333
+/dev/loop3 91.50 MB 91.50 MB 0.00 Bytes 100.0% /snap/lxd/35819
+/dev/loop4 44.50 MB 44.50 MB 0.00 Bytes 100.0% /snap/snapd/23545
+/dev/loop5 50.88 MB 50.88 MB 0.00 Bytes 100.0% /snap/snapd/25202
 /dev/sda2 104.33 MB 6.05 MB 98.28 MB 6.0% /boot/efi
-/dev/loop3 50.88 MB 50.88 MB 0.00 Bytes 100.0% /snap/snapd/25202
-/dev/loop4 63.88 MB 63.88 MB 0.00 Bytes 100.0% /snap/core20/2669
-/dev/loop5 91.50 MB 91.50 MB 0.00 Bytes 100.0% /snap/lxd/35819
 </pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
@@ -335,7 +335,7 @@ sr0     11:0    1  368K  0 rom  </pre></details></pre></td>
                                     <tr>
                         <td>nvidia-smi Full Output</td>
                         <td><pre>nvidia-smi</pre></td>
-                        <td><pre><details><summary>Show nvidia-smi output</summary><pre>Wed Oct 15 21:20:58 2025       
+                        <td><pre><details><summary>Show nvidia-smi output</summary><pre>Thu Oct 16 12:13:18 2025       
 +-----------------------------------------------------------------------------------------+
 | NVIDIA-SMI 550.163.01             Driver Version: 550.163.01     CUDA Version: 12.4     |
 |-----------------------------------------+------------------------+----------------------+
@@ -344,7 +344,7 @@ sr0     11:0    1  368K  0 rom  </pre></details></pre></td>
 |                                         |                        |               MIG M. |
 |=========================================+========================+======================|
 |   0  Tesla V100-SXM2-16GB           Off |   00000000:01:01.0 Off |                    0 |
-| N/A   36C    P0             22W /  300W |       1MiB /  16384MiB |      0%      Default |
+| N/A   33C    P0             22W /  300W |       1MiB /  16384MiB |      0%      Default |
 |                                         |                        |                  N/A |
 +-----------------------------------------+------------------------+----------------------+
                                                                                          
@@ -391,7 +391,7 @@ sr0     11:0    1  368K  0 rom  </pre></details></pre></td>
                         <td><pre>ip -br a</pre></td>
                         <td><pre>lo               UNKNOWN        127.0.0.1/8 ::1/128 
 ens4             UP             66.172.11.9/24 fe80::42ff:feac:b09/64 
-docker0          DOWN           172.17.0.1/16 fe80::ecae:77ff:fe2b:2f06/64 </pre></td>
+docker0          DOWN           172.17.0.1/16 fe80::7838:f6ff:fe54:dcd6/64 </pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
                                                     </td>
@@ -408,8 +408,8 @@ docker0 inet 172.17.0.1/16</pre></td>
                                     <tr>
                         <td>Link Speed Check</td>
                         <td><pre>ethtool <each iface></pre></td>
-                        <td><pre>ens4: Speed: Unknown!
-docker0: Speed: Unknown!
+                        <td><pre>docker0: Speed: Unknown!
+ens4: Speed: Unknown!
 </pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
@@ -803,7 +803,15 @@ find $stamp -newermt 'now-7 days' 2> /dev/null | grep -q -m 1 '.' || /usr/share/
                         <td><pre>find ~/.ssh /home/*/.ssh</pre></td>
                         <td><pre><details><summary>Show SSH key metadata (paths, perms, fingerprints)</summary>
 <table><thead><tr><th>Path</th><th>Type</th><th>Perms</th><th>Owner</th><th>Fingerprint</th></tr></thead><tbody>
-<tr><td>/root/.ssh/authorized_keys</td><td>public</td><td>0600</td><td>root:root</td><td><pre>3072 \nSHA256:uLcbW65FOxiuKf6LRca24oZxwyDm+hvzGxASURxS5V8 david@pegui
+<tr><td>/root/.ssh/id_rsa.original</td><td>private</td><td>0644</td><td>root:root</td><td><pre>N/A</pre></td></tr>
+<tr><td>/root/.ssh/customer04.pub</td><td>public</td><td>0644</td><td>root:root</td><td><pre>256 \nSHA256:W3CRwCmLZqFApmv6gSFYK7HJ0/logQIANZZ7DZAWGk o</pre></td></tr>
+<tr><td>/root/.ssh/id_rsa.pub</td><td>public</td><td>0644</td><td>root:root</td><td><pre>3072 \nSHA256:uLcbW65FOxiuKf6LRca24oZxwyDm+hvzGxASURxS5V8 david@pegui</pre></td></tr>
+<tr><td>/root/.ssh/id_rsa.rsa</td><td>private</td><td>0644</td><td>root:root</td><td><pre>N/A</pre></td></tr>
+<tr><td>/root/.ssh/vp_ed25519.pub</td><td>public</td><td>0644</td><td>root:root</td><td><pre>256 \nSHA256:jUOZOwc06lmzLkVLWqY2kkIXfIZMM38di4T9Wfw3tA david@Davids-Mac-mii.local</pre></td></tr>
+<tr><td>/root/.ssh/authorized_keys</td><td>public</td><td>0600</td><td>root:root</td><td><pre>3072 \nSHA256:AMGy9HHGYJU3J+HQAO2im1ADUe3dAiK5LFavSRDrU david@pegui
+3072 \nSHA256:uLcbW65FOxiuKf6LRca24oZxwyDm+hvzGxASURxS5V8 david@pegui
+2048 \nSHA256:rgyrkQltV6Lf337eBfuTApoVyDLPjRXDmXulrrieys0 david@david-ThikPad-T430s
+3072 \nSHA256:uLcbW65FOxiuKf6LRca24oZxwyDm+hvzGxASURxS5V8 david@pegui
 256 \nSHA256:hAlgfxj7ERDsRJfBulLgUtRh/g19pL8rLSqf5QYWdU divya.chaudhary@cudovetures.com
 256 \nSHA256:wuKsZDiE66sWzQp/HutsVgg8e7k5S3Jg2ziaXf0qaLg Be
 3072 \nSHA256:9kwuJ79q5f7m7YI7HG6X8ztIDjj+jL/5WyElX/QXEs divya@LAPTOP-DIHR3H9P
@@ -817,6 +825,7 @@ find $stamp -newermt 'now-7 days' 2> /dev/null | grep -q -m 1 '.' || /usr/share/
 256 \nSHA256:fDeZzZizArIzCLKF8XqxoY12u+O3C7LT7QMhowMA tylerlechowski@Tylers-MacBook-Air.local
 256 \nSHA256:Y+IsAe4TQ9jYOguCrllu1qQ4pU1NmQSJKC1JPuaMq7I carl.woolley@cudovetures.com
 3072 \nSHA256:9Pr3Q0CZqyLdiMU2hqAvl2/HC4QomxtPt+2eKUI+Vyg tyler@tyler-Latitude-7650</pre></td></tr>
+<tr><td>/root/.ssh/id_rsa</td><td>private</td><td>0600</td><td>root:root</td><td><pre>N/A</pre></td></tr>
 </tbody></table><div style="margin-top:4px;color:#a9b1d6">Key contents are intentionally redacted</div></details>
 </pre></td>
                         <td>
@@ -907,10 +916,10 @@ lxd:x:999:100::/var/snap/lxd/common/lxd:/bin/false
                                     <tr>
                         <td>Internet Speedtest</td>
                         <td><pre>speedtest --format=json-pretty</pre></td>
-                        <td><pre>Ping: 18.63 ms
-Jitter: 7.42 ms
-Download: 916.71 Mbit/s
-Upload: 485.15 Mbit/s
+                        <td><pre>Ping: 10.17 ms
+Jitter: 0.08 ms
+Download: 597.14 Mbit/s
+Upload: 510.44 Mbit/s
 Server: Chisholm Broadband (Enid, OK)
 </pre></td>
                         <td>
@@ -936,136 +945,140 @@ Server: Chisholm Broadband (Enid, OK)
                         <td>Process List</td>
                         <td><pre>ps axfcu</pre></td>
                         <td><pre><details><summary>Show process list (ps axfcu)</summary><pre>USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-root           2  0.0  0.0      0     0 ?        S    19:48   0:00 kthreadd
-root           3  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ rcu_gp
-root           4  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ rcu_par_gp
-root           5  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ slub_flushwq
-root           6  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ netns
-root           8  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kworker/0:0H-events_highpri
-root          10  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ mm_percpu_wq
-root          11  0.0  0.0      0     0 ?        S    19:48   0:00  \_ rcu_tasks_rude_
-root          12  0.0  0.0      0     0 ?        S    19:48   0:00  \_ rcu_tasks_trace
-root          13  0.0  0.0      0     0 ?        S    19:48   0:00  \_ ksoftirqd/0
-root          14  0.0  0.0      0     0 ?        I    19:48   0:00  \_ rcu_sched
-root          15  0.0  0.0      0     0 ?        S    19:48   0:00  \_ migration/0
-root          16  0.0  0.0      0     0 ?        S    19:48   0:00  \_ idle_inject/0
-root          18  0.0  0.0      0     0 ?        S    19:48   0:00  \_ cpuhp/0
-root          19  0.0  0.0      0     0 ?        S    19:48   0:00  \_ cpuhp/1
-root          20  0.0  0.0      0     0 ?        S    19:48   0:00  \_ idle_inject/1
-root          21  0.0  0.0      0     0 ?        S    19:48   0:00  \_ migration/1
-root          22  0.0  0.0      0     0 ?        S    19:48   0:00  \_ ksoftirqd/1
-root          24  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kworker/1:0H-events_highpri
-root          25  0.0  0.0      0     0 ?        S    19:48   0:00  \_ cpuhp/2
-root          26  0.0  0.0      0     0 ?        S    19:48   0:00  \_ idle_inject/2
-root          27  0.0  0.0      0     0 ?        S    19:48   0:00  \_ migration/2
-root          28  0.0  0.0      0     0 ?        S    19:48   0:01  \_ ksoftirqd/2
-root          30  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kworker/2:0H-kblockd
-root          31  0.0  0.0      0     0 ?        S    19:48   0:00  \_ kdevtmpfs
-root          32  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ inet_frag_wq
-root          33  0.0  0.0      0     0 ?        S    19:48   0:00  \_ kauditd
-root          34  0.0  0.0      0     0 ?        S    19:48   0:00  \_ khungtaskd
-root          35  0.0  0.0      0     0 ?        S    19:48   0:00  \_ oom_reaper
-root          36  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ writeback
-root          37  0.0  0.0      0     0 ?        S    19:48   0:00  \_ kcompactd0
-root          38  0.0  0.0      0     0 ?        SN   19:48   0:00  \_ ksmd
-root          39  0.0  0.0      0     0 ?        SN   19:48   0:00  \_ khugepaged
-root          86  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kintegrityd
-root          87  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kblockd
-root          88  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ blkcg_punt_bio
-root          90  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ tpm_dev_wq
-root          91  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ ata_sff
-root          92  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ md
-root          93  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ edac-poller
-root          94  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ devfreq_wq
-root          95  0.0  0.0      0     0 ?        S    19:48   0:00  \_ watchdogd
-root          96  0.0  0.0      0     0 ?        I    19:48   0:02  \_ kworker/u6:1-events_unbound
-root          97  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kworker/0:1H-kblockd
-root          99  0.0  0.0      0     0 ?        S    19:48   0:05  \_ kswapd0
-root         100  0.0  0.0      0     0 ?        S    19:48   0:00  \_ ecryptfs-kthrea
-root         102  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kthrotld
-root         103  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ acpi_thermal_pm
-root         105  0.0  0.0      0     0 ?        S    19:48   0:00  \_ scsi_eh_0
-root         106  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ scsi_tmf_0
-root         107  0.0  0.0      0     0 ?        S    19:48   0:00  \_ scsi_eh_1
-root         108  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ scsi_tmf_1
-root         110  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ vfio-irqfd-clea
-root         111  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ mld
-root         112  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ ipv6_addrconf
-root         116  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kworker/2:1H-kblockd
-root         124  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kstrp
-root         127  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ zswap-shrink
-root         128  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kworker/u7:0
-root         133  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ charger_manager
-root         181  0.0  0.0      0     0 ?        S    19:48   0:00  \_ scsi_eh_2
-root         182  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ scsi_tmf_2
-root         183  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ cryptd
-root         221  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kworker/1:1H-kblockd
-root         249  0.0  0.0      0     0 ?        S    19:48   0:00  \_ nv_queue
-root         250  0.0  0.0      0     0 ?        S    19:48   0:00  \_ nv_queue
-root         251  0.0  0.0      0     0 ?        S    19:48   0:00  \_ nv_open_q
-root         252  0.0  0.0      0     0 ?        S    19:48   0:00  \_ nvidia-modeset/
-root         253  0.0  0.0      0     0 ?        S    19:48   0:00  \_ nvidia-modeset/
-root         254  0.0  0.0      0     0 ?        S    19:48   0:00  \_ irq/35-nvidia
-root         255  0.0  0.0      0     0 ?        S    19:48   0:00  \_ nvidia
-root         256  0.0  0.0      0     0 ?        S    19:48   0:02  \_ nv_queue
-root         280  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ raid5wq
-root         327  0.0  0.0      0     0 ?        S    19:48   0:01  \_ jbd2/sda3-8
-root         328  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ ext4-rsv-conver
-root         418  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kaluad
-root         420  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kmpath_rdacd
-root         423  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kmpathd
-root         424  0.0  0.0      0     0 ?        I<   19:48   0:00  \_ kmpath_handlerd
-root         466  0.0  0.0      0     0 ?        S    19:48   0:00  \_ UVM global queu
-root         467  0.0  0.0      0     0 ?        S    19:48   0:00  \_ UVM deferred re
-root         468  0.0  0.0      0     0 ?        S    19:48   0:00  \_ UVM Tools Event
-root       11682  0.0  0.0      0     0 ?        I    20:16   0:00  \_ kworker/1:2-events
-root       24504  0.0  0.0      0     0 ?        I    20:48   0:00  \_ kworker/2:0-events
-root       24538  0.0  0.0      0     0 ?        I    20:48   0:00  \_ kworker/0:0-cgroup_destroy
-root       24941  0.0  0.0      0     0 ?        I    21:01   0:00  \_ kworker/u6:2-loop5
-root       25001  0.0  0.0      0     0 ?        I    21:01   0:00  \_ kworker/2:1-mm_percpu_wq
-root       25175  0.0  0.0      0     0 ?        I    21:01   0:00  \_ kworker/0:1-events
-root       33491  0.0  0.0      0     0 ?        I    21:09   0:00  \_ kworker/1:0-events
-root       35296  0.0  0.0      0     0 ?        I    21:15   0:00  \_ kworker/u6:4-loop2
-root       38184  0.0  0.0      0     0 ?        I    21:20   0:00  \_ kworker/u6:0-events_unbound
-root       38185  0.0  0.0      0     0 ?        I    21:20   0:00  \_ kworker/u6:3
-root           1  0.0  0.1 167740 12972 ?        Ss   19:48   0:04 systemd
-root         390  0.0  0.1  56832 21400 ?        S<s  19:48   0:01 systemd-journal
-root         425  0.0  0.2 289352 27100 ?        SLsl 19:48   0:00 multipathd
-root         429  0.0  0.0  23100  6644 ?        Ss   19:48   0:00 systemd-udevd
-systemd+     576  0.0  0.0  89364  6624 ?        Ssl  19:48   0:00 systemd-timesyn
-message+     658  0.0  0.0   8680  4656 ?        Ss   19:48   0:00 dbus-daemon
-root         668  0.0  0.0  82768  3904 ?        Ssl  19:48   0:00 irqbalance
-root         673  0.0  0.1  33208 19380 ?        Ss   19:48   0:00 networkd-dispat
-root         675  0.0  0.0  80052  3836 ?        Ssl  19:48   0:00 qemu-ga
-syslog       676  0.0  0.0 222404  5324 ?        Ssl  19:48   0:00 rsyslogd
-root         679  0.0  0.0  15536  7424 ?        Ss   19:48   0:00 systemd-logind
-nvidia-+     681  0.0  0.0   5468  1928 ?        Ss   19:48   0:00 nvidia-persiste
-systemd+    1313  0.0  0.0  16256  8260 ?        Ss   19:48   0:00 systemd-network
-systemd+    1337  0.0  0.1  26332 13472 ?        Ss   19:48   0:00 systemd-resolve
-root        1465  0.0  0.1 110140 21296 ?        Ssl  19:48   0:00 unattended-upgr
-root        1471  0.0  0.2 1803488 28540 ?       Ssl  19:48   0:03 containerd
-root        1543  2.6  0.4 2326036 57796 ?       Ssl  19:48   2:29 dockerd
-root        1545  0.0  0.0   7288  2852 ?        Ss   19:48   0:00 cron
-root        1555  0.0  0.0   6176  1112 tty1     Ss+  19:48   0:00 agetty
-root        1560  0.0  0.0  15440  9312 ?        Ss   19:48   0:00 sshd
-root        1946  0.0  0.0  17204 11036 ?        Ss   19:48   0:00  \_ sshd
-root        2032  0.0  0.0   9324  5512 pts/0    Ss   19:48   0:00  |   \_ bash
-root       38154 11.0  0.4 143912 57328 pts/0    Sl+  21:20   0:04  |       \_ ansible-playboo
-root       38583  0.0  0.4 144348 50488 pts/0    S+   21:21   0:00  |           \_ ansible-playboo
-root       38584  0.0  0.0   2892   960 pts/0    S+   21:21   0:00  |               \_ sh
-root       38585  0.0  0.0   2892   968 pts/0    S+   21:21   0:00  |                   \_ sh
-root       38586  0.0  0.1  35316 23984 pts/0    S+   21:21   0:00  |                       \_ python3
-root       38587  0.0  0.0   2892   960 pts/0    S+   21:21   0:00  |                           \_ sh
-root       38588  0.0  0.0  10624  3220 pts/0    R+   21:21   0:00  |                               \_ ps
-root       23130  0.0  0.0  17200 11212 ?        Ss   20:40   0:00  \_ sshd
-root       23186  0.0  0.0   9060  5208 pts/1    Ss   20:40   0:00      \_ bash
-root       27733  0.2  0.0   9016  4616 pts/1    S+   21:02   0:03          \_ htop
-root        1949  0.0  0.0  17084  9472 ?        Ss   19:48   0:00 systemd
-root        1950  0.0  0.0 170496  4884 ?        S    19:48   0:00  \_ (sd-pam)
-uuidd       2172  0.0  0.0   9620  1500 ?        Ss   19:52   0:00 uuidd
-root        3298  0.0  0.1 296012 19352 ?        Ssl  19:53   0:00 packagekitd
-root        3302  0.0  0.0 234516  6676 ?        Ssl  19:53   0:00 polkitd
-root        3320  0.0  0.3 1473276 37088 ?       Ssl  19:53   0:04 snapd</pre></details></pre></td>
+root           2  0.0  0.0      0     0 ?        S    09:02   0:00 kthreadd
+root           3  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ rcu_gp
+root           4  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ rcu_par_gp
+root           5  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ slub_flushwq
+root           6  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ netns
+root           8  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/0:0H-events_highpri
+root          10  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ mm_percpu_wq
+root          11  0.0  0.0      0     0 ?        S    09:02   0:00  \_ rcu_tasks_rude_
+root          12  0.0  0.0      0     0 ?        S    09:02   0:00  \_ rcu_tasks_trace
+root          13  0.0  0.0      0     0 ?        S    09:02   0:01  \_ ksoftirqd/0
+root          14  0.0  0.0      0     0 ?        I    09:02   0:01  \_ rcu_sched
+root          15  0.0  0.0      0     0 ?        S    09:02   0:00  \_ migration/0
+root          16  0.0  0.0      0     0 ?        S    09:02   0:00  \_ idle_inject/0
+root          18  0.0  0.0      0     0 ?        S    09:02   0:00  \_ cpuhp/0
+root          19  0.0  0.0      0     0 ?        S    09:02   0:00  \_ cpuhp/1
+root          20  0.0  0.0      0     0 ?        S    09:02   0:00  \_ idle_inject/1
+root          21  0.0  0.0      0     0 ?        S    09:02   0:00  \_ migration/1
+root          22  0.0  0.0      0     0 ?        S    09:02   0:03  \_ ksoftirqd/1
+root          24  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/1:0H-events_highpri
+root          25  0.0  0.0      0     0 ?        S    09:02   0:00  \_ cpuhp/2
+root          26  0.0  0.0      0     0 ?        S    09:02   0:00  \_ idle_inject/2
+root          27  0.0  0.0      0     0 ?        S    09:02   0:00  \_ migration/2
+root          28  0.0  0.0      0     0 ?        S    09:02   0:01  \_ ksoftirqd/2
+root          30  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/2:0H-kblockd
+root          31  0.0  0.0      0     0 ?        S    09:02   0:00  \_ kdevtmpfs
+root          32  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ inet_frag_wq
+root          33  0.0  0.0      0     0 ?        S    09:02   0:00  \_ kauditd
+root          34  0.0  0.0      0     0 ?        S    09:02   0:00  \_ khungtaskd
+root          35  0.0  0.0      0     0 ?        S    09:02   0:00  \_ oom_reaper
+root          36  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ writeback
+root          37  0.0  0.0      0     0 ?        S    09:02   0:01  \_ kcompactd0
+root          38  0.0  0.0      0     0 ?        SN   09:02   0:00  \_ ksmd
+root          39  0.0  0.0      0     0 ?        SN   09:02   0:00  \_ khugepaged
+root          86  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kintegrityd
+root          87  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kblockd
+root          88  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ blkcg_punt_bio
+root          90  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ tpm_dev_wq
+root          91  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ ata_sff
+root          92  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ md
+root          93  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ edac-poller
+root          94  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ devfreq_wq
+root          95  0.0  0.0      0     0 ?        S    09:02   0:00  \_ watchdogd
+root          97  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/0:1H-kblockd
+root          99  0.6  0.0      0     0 ?        S    09:02   1:13  \_ kswapd0
+root         100  0.0  0.0      0     0 ?        S    09:02   0:00  \_ ecryptfs-kthrea
+root         102  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kthrotld
+root         103  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ acpi_thermal_pm
+root         105  0.0  0.0      0     0 ?        S    09:02   0:00  \_ scsi_eh_0
+root         106  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ scsi_tmf_0
+root         107  0.0  0.0      0     0 ?        S    09:02   0:00  \_ scsi_eh_1
+root         108  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ scsi_tmf_1
+root         110  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ vfio-irqfd-clea
+root         111  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ mld
+root         112  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ ipv6_addrconf
+root         115  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/1:1H-kblockd
+root         117  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/2:1H-kblockd
+root         125  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kstrp
+root         128  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ zswap-shrink
+root         129  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/u7:0
+root         134  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ charger_manager
+root         181  0.0  0.0      0     0 ?        S    09:02   0:00  \_ scsi_eh_2
+root         183  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ scsi_tmf_2
+root         184  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ cryptd
+root         248  0.0  0.0      0     0 ?        S    09:02   0:00  \_ nv_queue
+root         249  0.0  0.0      0     0 ?        S    09:02   0:00  \_ nv_queue
+root         250  0.0  0.0      0     0 ?        S    09:02   0:00  \_ nv_open_q
+root         251  0.0  0.0      0     0 ?        S    09:02   0:00  \_ nvidia-modeset/
+root         252  0.0  0.0      0     0 ?        S    09:02   0:00  \_ nvidia-modeset/
+root         253  0.0  0.0      0     0 ?        S    09:02   0:01  \_ irq/35-nvidia
+root         254  0.0  0.0      0     0 ?        S    09:02   0:00  \_ nvidia
+root         255  0.0  0.0      0     0 ?        S    09:02   0:05  \_ nv_queue
+root         279  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ raid5wq
+root         326  0.0  0.0      0     0 ?        S    09:02   0:00  \_ jbd2/sda3-8
+root         327  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ ext4-rsv-conver
+root         416  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kaluad
+root         418  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kmpath_rdacd
+root         419  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kmpathd
+root         420  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kmpath_handlerd
+root         467  0.0  0.0      0     0 ?        S    09:02   0:00  \_ UVM global queu
+root         468  0.0  0.0      0     0 ?        S    09:02   0:00  \_ UVM deferred re
+root         469  0.0  0.0      0     0 ?        S    09:02   0:00  \_ UVM Tools Event
+root        2976  0.0  0.0      0     0 ?        I<   09:07   0:00  \_ ib-comp-wq
+root        2977  0.0  0.0      0     0 ?        I<   09:07   0:00  \_ ib-comp-unb-wq
+root        2978  0.0  0.0      0     0 ?        I<   09:07   0:00  \_ ib_mcast
+root        2979  0.0  0.0      0     0 ?        I<   09:07   0:00  \_ ib_nl_sa_wq
+root       59520  0.0  0.0      0     0 ?        I    11:08   0:00  \_ kworker/1:3-rcu_gp
+root       70791  0.0  0.0      0     0 ?        I    11:19   0:00  \_ kworker/0:3-ipv6_addrconf
+root       70792  0.0  0.0      0     0 ?        I    11:19   0:00  \_ kworker/2:0-events
+root       90845  0.0  0.0      0     0 ?        I    11:25   0:00  \_ kworker/2:1-events
+root       91112  0.0  0.0      0     0 ?        I    11:27   0:00  \_ kworker/0:0-events
+root       91166  0.0  0.0      0     0 ?        I    11:53   0:00  \_ kworker/u6:3-flush-8:0
+root       91177  0.0  0.0      0     0 ?        I    11:59   0:00  \_ kworker/u6:2-ext4-rsv-conversion
+root       91210  0.0  0.0      0     0 ?        I    12:04   0:00  \_ kworker/u6:0-events_power_efficient
+root       91860  0.0  0.0      0     0 ?        I    12:07   0:00  \_ kworker/u6:1-events_power_efficient
+root       91916  0.0  0.0      0     0 ?        I    12:07   0:00  \_ kworker/2:2-cgroup_destroy
+root       93742  0.0  0.0      0     0 ?        I    12:07   0:00  \_ kworker/u6:4-flush-8:0
+root       93770  0.0  0.0      0     0 ?        I    12:07   0:00  \_ kworker/u6:5-writeback
+root       96942  0.0  0.0      0     0 ?        I    12:08   0:00  \_ kworker/1:0-events
+root      104181  0.0  0.0      0     0 ?        I    12:08   0:00  \_ kworker/2:3-events
+root           1  0.0  0.0 167528 10920 ?        Ss   09:02   0:06 systemd
+root         389  0.0  0.2  80624 31212 ?        S<s  09:02   0:09 systemd-journal
+root         421  0.0  0.2 289352 27100 ?        SLsl 09:02   0:01 multipathd
+root         427  0.0  0.0  23180  5228 ?        Ss   09:02   0:00 systemd-udevd
+systemd+     588  0.0  0.0  89364  4008 ?        Ssl  09:02   0:00 systemd-timesyn
+message+     662  0.0  0.0   8688  3892 ?        Ss   09:02   0:00 dbus-daemon
+root         670  0.0  0.0  82768  3280 ?        Ssl  09:02   0:00 irqbalance
+root         674  0.0  0.1  33304 13268 ?        Ss   09:02   0:00 networkd-dispat
+root         679  0.0  0.0  80052  3232 ?        Ssl  09:02   0:01 qemu-ga
+syslog       680  0.0  0.0 222404  2852 ?        Ssl  09:02   0:01 rsyslogd
+root         682  0.0  0.1 1399032 21316 ?       Ssl  09:02   0:02 snapd
+root         683  0.0  0.0  15508  4296 ?        Ss   09:02   0:00 systemd-logind
+nvidia-+     685  0.0  0.0   5468   768 ?        Ss   09:02   0:00 nvidia-persiste
+systemd+    1319  0.0  0.0  16252  4988 ?        Ss   09:02   0:00 systemd-network
+systemd+    1340  0.0  0.0  26332  9280 ?        Ss   09:02   0:00 systemd-resolve
+root        1468  0.0  0.0 110140 11416 ?        Ssl  09:02   0:00 unattended-upgr
+root        1474  0.1  0.1 1877220 24124 ?       Ssl  09:02   0:12 containerd
+root        1545  0.0  0.3 2121232 42256 ?       Ssl  09:02   0:09 dockerd
+root        1547  0.0  0.0   7288  2216 ?        Ss   09:02   0:00 cron
+root        1555  0.0  0.0   6176   820 tty1     Ss+  09:02   0:00 agetty
+root        1562  0.0  0.0  15440  5964 ?        Ss   09:02   0:01 sshd
+root        2002  0.0  0.0  17204  5400 ?        Ss   09:04   0:00  \_ sshd
+root        2090  0.0  0.0   9292  5052 pts/0    Ss   09:04   0:00      \_ bash
+root      112763 13.4  0.4 143816 57040 pts/0    Sl+  12:13   0:06          \_ ansible-playboo
+root      113275  0.0  0.4 145528 50660 pts/0    S+   12:13   0:00              \_ ansible-playboo
+root      113276  0.0  0.0   2892   940 pts/0    S+   12:13   0:00                  \_ sh
+root      113277  0.0  0.0   2892   992 pts/0    S+   12:13   0:00                      \_ sh
+root      113278  0.0  0.1  35316 24056 pts/0    S+   12:13   0:00                          \_ python3
+root      113279  0.0  0.0   2892   988 pts/0    S+   12:13   0:00                              \_ sh
+root      113280  0.0  0.0  10624  3076 pts/0    R+   12:13   0:00                                  \_ ps
+root        2007  0.0  0.0  17068  5360 ?        Ss   09:04   0:00 systemd
+root        2008  0.0  0.0 170440  4940 ?        S    09:04   0:00  \_ (sd-pam)
+uuidd       2128  0.0  0.0   9620  2896 ?        Ss   09:06   0:00 uuidd
+root        3576  0.0  0.0 296016  6208 ?        Ssl  09:07   0:00 packagekitd
+root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre></details></pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
                                                     </td>
@@ -2392,7 +2405,7 @@ root        3320  0.0  0.3 1473276 37088 ?       Ssl  19:53   0:04 snapd</pre></
                                     <tr>
                         <td>SSH Access</td>
                         <td><pre>systemctl status sshd | grep 'Active:' | sed 's/^[ \t]*//'</pre></td>
-                        <td><pre>Active: active (running) since Wed 2025-10-15 19:48:38 UTC; 1h 32min ago</pre></td>
+                        <td><pre>Active: active (running) since Thu 2025-10-16 09:02:51 UTC; 3h 11min ago</pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
                                                     </td>
@@ -2432,43 +2445,31 @@ root        3320  0.0  0.3 1473276 37088 ?       Ssl  19:53   0:04 snapd</pre></
                 <tbody>
                                     <tr>
                         <td>HCL Benchmark (HPL)</td>
-                        <td><pre>docker run --gpus all --rm
---shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864
-nvcr.io/nvidia/hpc-benchmarks:25.04
--- mpirun -np 8 ...
-</pre></td>
+                        <td><pre>Dynamically determined mpirun command</pre></td>
                         <td><pre></pre></td>
                         <td>
                             <span class="status-badge status-fail">FAIL</span>
-                                                        <span class="status-notes"><details><summary>Show full Docker output</summary><pre>--------------------------------------------------------------------------
-There are not enough slots available in the system to satisfy the 8
-slots that were requested by the application:
+                                                        <span class="status-notes"><details><summary>Final Run Parameters</summary>
+Problem Size (Ns): N/A (All attempts failed)
+Processes: N/A (All attempts failed)
+</details>
+<details><summary>Show full Docker output</summary><pre>./hpl.sh: line 263:   851 Killed                  ${NUMCMD} ${CPUBIND} ${MEMBIND} ${XHPL} ${DAT}
+--------------------------------------------------------------------------
+Primary job  terminated normally, but 1 process returned
+a non-zero exit code. Per user-direction, the job has been aborted.
+--------------------------------------------------------------------------
+[81e7e415d921:00001] PMIX ERROR: UNREACHABLE in file ptl_tcp_component.c at line 1801
+[81e7e415d921:00001] PMIX ERROR: UNREACHABLE in file ptl_tcp_component.c at line 1849
+[81e7e415d921:00001] PMIX ERROR: UNREACHABLE in file ptl_tcp_component.c at line 1801
+[81e7e415d921:00001] PMIX ERROR: UNREACHABLE in file ptl_tcp_component.c at line 1849
+--------------------------------------------------------------------------
+mpirun detected that one or more processes exited with non-zero status, thus causing
+the job to be terminated. The first process to do so was:
 
-  ./hpl.sh
-
-Either request fewer slots for your application, or make more slots
-available for use.
-
-A "slot" is the Open MPI term for an allocatable unit where we can
-launch a process.  The number of slots available are defined by the
-environment in which Open MPI processes are run:
-
-  1. Hostfile, via "slots=N" clauses (N defaults to number of
-     processor cores if not provided)
-  2. The --host command line parameter, via a ":N" suffix on the
-     hostname (N defaults to 1 if not provided)
-  3. Resource manager (e.g., SLURM, PBS/Torque, LSF, etc.)
-  4. If none of a hostfile, the --host command line parameter, or an
-     RM is present, Open MPI defaults to the number of processor cores
-
-In all the above cases, if you want Open MPI to default to the number
-of hardware threads instead of the number of processor cores, use the
---use-hwthread-cpus option.
-
-Alternatively, you can use the --oversubscribe option to ignore the
-number of available slots when deciding the number of processes to
-launch.
---------------------------------------------------------------------------</pre></details></span>
+  Process name: [[21100,1],10]
+  Exit code:    137
+--------------------------------------------------------------------------</pre></details>
+</span>
                                                     </td>
                     </tr>
                                 </tbody>
@@ -2497,7 +2498,7 @@ launch.
 #
 # Using devices
 david-gpu: Test CUDA failure common.cu:1141 'CUDA driver version is insufficient for CUDA runtime version'
- .. david-gpu pid 39528: Test failure common.cu:1050</pre></details></span>
+ .. david-gpu pid 134941: Test failure common.cu:1050</pre></details></span>
                                                     </td>
                     </tr>
                                 </tbody>
