@@ -38,15 +38,25 @@
   when: nvidia_check.rc == 0
   become: true
   block:
-    - name: Install NCCL and CUDA build dependencies
+    - name: Install required build dependencies
       ansible.builtin.package:
         name:
           - build-essential
           - git
-          - cuda-toolkit # This provides the required compiler and headers
-          - libnccl-dev    # This provides the NCCL library headers
+          - cuda-toolkit
+          - libnccl-dev
         state: present
         update_cache: yes
+
+    - name: PURGE conflicting old CUDA toolkit from Ubuntu repository
+      ansible.builtin.package:
+        name: nvidia-cuda-toolkit
+        state: absent
+
+    - name: Remove old nccl-tests directory to ensure a clean build
+      ansible.builtin.file:
+        path: /usr/local/nccl-tests
+        state: absent
 
     - name: Clone the NCCL-Tests repository
       ansible.builtin.git:
@@ -54,11 +64,34 @@
         dest: /usr/local/nccl-tests
         version: master
 
-    - name: Compile the NCCL tests
-      ansible.builtin.command: make
+    - name: Get the GPU's Compute Capability
+      ansible.builtin.command: nvidia-smi --query-gpu=compute_cap --format=csv,noheader
+      register: compute_capability
+      changed_when: false
+
+    - name: Set compute capability fact
+      ansible.builtin.set_fact:
+        gpu_compute_code: "{{ compute_capability.stdout | replace('.', '') }}"
+
+    # --- START OF THE DIAGNOSTIC AND FIX ---
+    - name: "(DIAGNOSTIC) Show which 'nvcc' the system finds by default"
+      ansible.builtin.shell: "which nvcc"
       args:
         chdir: /usr/local/nccl-tests/
-        creates: /usr/local/nccl-tests/build/all_reduce_perf # Skips if already compiled
+      register: nvcc_path_check
+      changed_when: false
+      failed_when: false # Never fail on a diagnostic step
+
+    - name: "(DIAGNOSTIC) Display the found compiler path"
+      ansible.builtin.debug:
+        msg: "The 'make' command is finding the compiler at this path: {{ nvcc_path_check.stdout | default('nvcc not found in default PATH') }}"
+
+    - name: Compile the NCCL tests, explicitly setting the compiler
+      ansible.builtin.shell:
+        cmd: "make NVCC_GENCODE='-gencode arch=compute_{{ gpu_compute_code }},code=sm_{{ gpu_compute_code }}'"
+        chdir: /usr/local/nccl-tests/
+        creates: /usr/local/nccl-tests/build/all_reduce_perf
+    # --- END OF THE DIAGNOSTIC AND FIX ---
 
     - name: Run a sample NCCL benchmark (all_reduce_perf)
       ansible.builtin.command: /usr/local/nccl-tests/build/all_reduce_perf -b 8 -e 128M -f 2 -g 1

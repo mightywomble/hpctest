@@ -42,7 +42,7 @@
 <body>
     <div class="container">
         <h1>System Hardware & Performance Report</h1>
-        <div class="report-meta">Generated on: 2025-10-16T12:13:15Z</div>
+        <div class="report-meta">Generated on: 2025-10-16T15:11:36Z</div>
         <div class="report-host">Hostname: david-gpu • Primary IP: 66.172.11.9</div>
 
         
@@ -141,7 +141,7 @@ Thread(s) per core:                      1
 Core(s) per socket:                      3
 Socket(s):                               1
 Stepping:                                2
-BogoMIPS:                                4800.14
+BogoMIPS:                                4799.89
 Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx rdtscp lm constant_tsc rep_good nopl xtopology cpuid pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault invpcid_single pti ibrs ibpb fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap xsaveopt arat
 L1d cache:                               96 KiB (3 instances)
 L1i cache:                               96 KiB (3 instances)
@@ -212,12 +212,12 @@ Vulnerability Tsx async abort:           Not affected</pre></details></pre></td>
                         <td>Block Devices</td>
                         <td><pre>lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,MOUNTPOINTS</pre></td>
                         <td><pre>NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
-loop0    7:0    0 63.8M  1 loop /snap/core20/2669
-loop1    7:1    0 63.7M  1 loop /snap/core20/2496
-loop2    7:2    0 89.4M  1 loop /snap/lxd/31333
-loop3    7:3    0 91.4M  1 loop /snap/lxd/35819
-loop4    7:4    0 44.4M  1 loop /snap/snapd/23545
-loop5    7:5    0 50.8M  1 loop /snap/snapd/25202
+loop0    7:0    0 63.7M  1 loop /snap/core20/2496
+loop1    7:1    0 63.8M  1 loop /snap/core20/2669
+loop2    7:2    0 91.4M  1 loop /snap/lxd/35819
+loop3    7:3    0 89.4M  1 loop /snap/lxd/31333
+loop4    7:4    0 50.8M  1 loop /snap/snapd/25202
+loop5    7:5    0 44.4M  1 loop /snap/snapd/23545
 sda      8:0    0  100G  0 disk 
 ├─sda1   8:1    0    4M  0 part 
 ├─sda2   8:2    0  106M  0 part /boot/efi
@@ -231,12 +231,12 @@ sr0     11:0    1  368K  0 rom  </pre></td>
                         <td>lsblk Overview</td>
                         <td><pre>lsblk -o NAME,MAJ:MIN,RM,SIZE,RO,TYPE,MOUNTPOINTS</pre></td>
                         <td><pre><details><summary>Show lsblk output</summary><pre>NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
-loop0    7:0    0 63.8M  1 loop /snap/core20/2669
-loop1    7:1    0 63.7M  1 loop /snap/core20/2496
-loop2    7:2    0 89.4M  1 loop /snap/lxd/31333
-loop3    7:3    0 91.4M  1 loop /snap/lxd/35819
-loop4    7:4    0 44.4M  1 loop /snap/snapd/23545
-loop5    7:5    0 50.8M  1 loop /snap/snapd/25202
+loop0    7:0    0 63.7M  1 loop /snap/core20/2496
+loop1    7:1    0 63.8M  1 loop /snap/core20/2669
+loop2    7:2    0 91.4M  1 loop /snap/lxd/35819
+loop3    7:3    0 89.4M  1 loop /snap/lxd/31333
+loop4    7:4    0 50.8M  1 loop /snap/snapd/25202
+loop5    7:5    0 44.4M  1 loop /snap/snapd/23545
 sda      8:0    0  100G  0 disk 
 ├─sda1   8:1    0    4M  0 part 
 ├─sda2   8:2    0  106M  0 part /boot/efi
@@ -250,13 +250,13 @@ sr0     11:0    1  368K  0 rom  </pre></details></pre></td>
                                     <tr>
                         <td>Filesystem Usage</td>
                         <td><pre>df -h (from ansible_facts.mounts)</pre></td>
-                        <td><pre>/dev/sda3 96.73 GB 31.15 GB 65.58 GB 32.0% /
-/dev/loop1 63.75 MB 63.75 MB 0.00 Bytes 100.0% /snap/core20/2496
-/dev/loop0 63.88 MB 63.88 MB 0.00 Bytes 100.0% /snap/core20/2669
-/dev/loop2 89.50 MB 89.50 MB 0.00 Bytes 100.0% /snap/lxd/31333
-/dev/loop3 91.50 MB 91.50 MB 0.00 Bytes 100.0% /snap/lxd/35819
-/dev/loop4 44.50 MB 44.50 MB 0.00 Bytes 100.0% /snap/snapd/23545
-/dev/loop5 50.88 MB 50.88 MB 0.00 Bytes 100.0% /snap/snapd/25202
+                        <td><pre>/dev/sda3 96.73 GB 25.65 GB 71.08 GB 27.0% /
+/dev/loop0 63.75 MB 63.75 MB 0.00 Bytes 100.0% /snap/core20/2496
+/dev/loop1 63.88 MB 63.88 MB 0.00 Bytes 100.0% /snap/core20/2669
+/dev/loop2 91.50 MB 91.50 MB 0.00 Bytes 100.0% /snap/lxd/35819
+/dev/loop3 89.50 MB 89.50 MB 0.00 Bytes 100.0% /snap/lxd/31333
+/dev/loop4 50.88 MB 50.88 MB 0.00 Bytes 100.0% /snap/snapd/25202
+/dev/loop5 44.50 MB 44.50 MB 0.00 Bytes 100.0% /snap/snapd/23545
 /dev/sda2 104.33 MB 6.05 MB 98.28 MB 6.0% /boot/efi
 </pre></td>
                         <td>
@@ -327,7 +327,7 @@ sr0     11:0    1  368K  0 rom  </pre></details></pre></td>
                                     <tr>
                         <td>Driver Version</td>
                         <td><pre>nvidia-smi | grep -i 'Driver Version'</pre></td>
-                        <td><pre>Driver Version: 550.163.01</pre></td>
+                        <td><pre>Driver Version: 580.95.05</pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
                                                     </td>
@@ -335,22 +335,22 @@ sr0     11:0    1  368K  0 rom  </pre></details></pre></td>
                                     <tr>
                         <td>nvidia-smi Full Output</td>
                         <td><pre>nvidia-smi</pre></td>
-                        <td><pre><details><summary>Show nvidia-smi output</summary><pre>Thu Oct 16 12:13:18 2025       
+                        <td><pre><details><summary>Show nvidia-smi output</summary><pre>Thu Oct 16 15:11:40 2025       
 +-----------------------------------------------------------------------------------------+
-| NVIDIA-SMI 550.163.01             Driver Version: 550.163.01     CUDA Version: 12.4     |
-|-----------------------------------------+------------------------+----------------------+
+| NVIDIA-SMI 580.95.05              Driver Version: 580.95.05      CUDA Version: 13.0     |
++-----------------------------------------+------------------------+----------------------+
 | GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
 | Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
 |                                         |                        |               MIG M. |
 |=========================================+========================+======================|
-|   0  Tesla V100-SXM2-16GB           Off |   00000000:01:01.0 Off |                    0 |
-| N/A   33C    P0             22W /  300W |       1MiB /  16384MiB |      0%      Default |
+|   0  Tesla V100-SXM2-16GB           On  |   00000000:01:01.0 Off |                    0 |
+| N/A   33C    P0             22W /  300W |       0MiB /  16384MiB |      0%      Default |
 |                                         |                        |                  N/A |
 +-----------------------------------------+------------------------+----------------------+
-                                                                                         
+
 +-----------------------------------------------------------------------------------------+
 | Processes:                                                                              |
-|  GPU   GI   CI        PID   Type   Process name                              GPU Memory |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
 |        ID   ID                                                               Usage      |
 |=========================================================================================|
 |  No running processes found                                                             |
@@ -391,7 +391,7 @@ sr0     11:0    1  368K  0 rom  </pre></details></pre></td>
                         <td><pre>ip -br a</pre></td>
                         <td><pre>lo               UNKNOWN        127.0.0.1/8 ::1/128 
 ens4             UP             66.172.11.9/24 fe80::42ff:feac:b09/64 
-docker0          DOWN           172.17.0.1/16 fe80::7838:f6ff:fe54:dcd6/64 </pre></td>
+docker0          DOWN           172.17.0.1/16 </pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
                                                     </td>
@@ -408,8 +408,8 @@ docker0 inet 172.17.0.1/16</pre></td>
                                     <tr>
                         <td>Link Speed Check</td>
                         <td><pre>ethtool <each iface></pre></td>
-                        <td><pre>docker0: Speed: Unknown!
-ens4: Speed: Unknown!
+                        <td><pre>ens4: Speed: Unknown!
+docker0: Speed: Unknown!
 </pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
@@ -867,8 +867,8 @@ sshd:x:109:65534::/run/sshd:/usr/sbin/nologin
 pollinate:x:110:1::/var/cache/pollinate:/bin/false
 landscape:x:111:116::/var/lib/landscape:/usr/sbin/nologin
 fwupd-refresh:x:112:117:fwupd-refresh user,,,:/run/systemd:/usr/sbin/nologin
-nvidia-persistenced:x:113:121:NVIDIA Persistence Daemon,,,:/nonexistent:/usr/sbin/nologin
 lxd:x:999:100::/var/snap/lxd/common/lxd:/bin/false
+nvidia-persistenced:x:113:121:NVIDIA Persistence Daemon,,,:/var/run/nvidia-persistenced/:/usr/sbin/nologin
 </pre></details></pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
@@ -879,7 +879,7 @@ lxd:x:999:100::/var/snap/lxd/common/lxd:/bin/false
                         <td><pre>analyzed</pre></td>
                         <td><pre><div class="disk-chips">
 </div>
-<details><summary>Show shadow account status (redacted)</summary><pre>root: lockeddaemon: lockedbin: lockedsys: lockedsync: lockedgames: lockedman: lockedlp: lockedmail: lockednews: lockeduucp: lockedproxy: lockedwww-data: lockedbackup: lockedlist: lockedirc: lockedgnats: lockednobody: lockedsystemd-network: lockedsystemd-resolve: lockedmessagebus: lockedsystemd-timesync: lockedsyslog: locked_apt: lockedtss: lockeduuidd: lockedtcpdump: lockedsshd: lockedpollinate: lockedlandscape: lockedfwupd-refresh: lockednvidia-persistenced: lockedlxd: locked</pre></details>
+<details><summary>Show shadow account status (redacted)</summary><pre>root: lockeddaemon: lockedbin: lockedsys: lockedsync: lockedgames: lockedman: lockedlp: lockedmail: lockednews: lockeduucp: lockedproxy: lockedwww-data: lockedbackup: lockedlist: lockedirc: lockedgnats: lockednobody: lockedsystemd-network: lockedsystemd-resolve: lockedmessagebus: lockedsystemd-timesync: lockedsyslog: locked_apt: lockedtss: lockeduuidd: lockedtcpdump: lockedsshd: lockedpollinate: lockedlandscape: lockedfwupd-refresh: lockedlxd: lockednvidia-persistenced: locked</pre></details>
 </pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
@@ -892,7 +892,7 @@ lxd:x:999:100::/var/snap/lxd/common/lxd:/bin/false
                         <td><pre><details><summary>/home directory listing</summary>
 </details>
 <details><summary>Home directories parsed from /etc/passwd</summary><table><thead><tr><th>Path</th></tr></thead><tbody>
-<tr><td>/bin</td></tr><tr><td>/dev</td></tr><tr><td>/home/syslog</td></tr><tr><td>/nonexistent</td></tr><tr><td>/root</td></tr><tr><td>/run/ircd</td></tr><tr><td>/run/sshd</td></tr><tr><td>/run/systemd</td></tr><tr><td>/run/uuidd</td></tr><tr><td>/usr/games</td></tr><tr><td>/usr/sbin</td></tr><tr><td>/var/backups</td></tr><tr><td>/var/cache/man</td></tr><tr><td>/var/cache/pollinate</td></tr><tr><td>/var/lib/gnats</td></tr><tr><td>/var/lib/landscape</td></tr><tr><td>/var/lib/tpm</td></tr><tr><td>/var/list</td></tr><tr><td>/var/mail</td></tr><tr><td>/var/snap/lxd/common/lxd</td></tr><tr><td>/var/spool/lpd</td></tr><tr><td>/var/spool/news</td></tr><tr><td>/var/spool/uucp</td></tr><tr><td>/var/www</td></tr></tbody></table></details>
+<tr><td>/bin</td></tr><tr><td>/dev</td></tr><tr><td>/home/syslog</td></tr><tr><td>/nonexistent</td></tr><tr><td>/root</td></tr><tr><td>/run/ircd</td></tr><tr><td>/run/sshd</td></tr><tr><td>/run/systemd</td></tr><tr><td>/run/uuidd</td></tr><tr><td>/usr/games</td></tr><tr><td>/usr/sbin</td></tr><tr><td>/var/backups</td></tr><tr><td>/var/cache/man</td></tr><tr><td>/var/cache/pollinate</td></tr><tr><td>/var/lib/gnats</td></tr><tr><td>/var/lib/landscape</td></tr><tr><td>/var/lib/tpm</td></tr><tr><td>/var/list</td></tr><tr><td>/var/mail</td></tr><tr><td>/var/run/nvidia-persistenced/</td></tr><tr><td>/var/snap/lxd/common/lxd</td></tr><tr><td>/var/spool/lpd</td></tr><tr><td>/var/spool/news</td></tr><tr><td>/var/spool/uucp</td></tr><tr><td>/var/www</td></tr></tbody></table></details>
 </pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
@@ -916,10 +916,10 @@ lxd:x:999:100::/var/snap/lxd/common/lxd:/bin/false
                                     <tr>
                         <td>Internet Speedtest</td>
                         <td><pre>speedtest --format=json-pretty</pre></td>
-                        <td><pre>Ping: 10.17 ms
-Jitter: 0.08 ms
-Download: 597.14 Mbit/s
-Upload: 510.44 Mbit/s
+                        <td><pre>Ping: 8.53 ms
+Jitter: 0.09 ms
+Download: 881.6 Mbit/s
+Upload: 527.77 Mbit/s
 Server: Chisholm Broadband (Enid, OK)
 </pre></td>
                         <td>
@@ -945,140 +945,133 @@ Server: Chisholm Broadband (Enid, OK)
                         <td>Process List</td>
                         <td><pre>ps axfcu</pre></td>
                         <td><pre><details><summary>Show process list (ps axfcu)</summary><pre>USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-root           2  0.0  0.0      0     0 ?        S    09:02   0:00 kthreadd
-root           3  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ rcu_gp
-root           4  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ rcu_par_gp
-root           5  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ slub_flushwq
-root           6  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ netns
-root           8  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/0:0H-events_highpri
-root          10  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ mm_percpu_wq
-root          11  0.0  0.0      0     0 ?        S    09:02   0:00  \_ rcu_tasks_rude_
-root          12  0.0  0.0      0     0 ?        S    09:02   0:00  \_ rcu_tasks_trace
-root          13  0.0  0.0      0     0 ?        S    09:02   0:01  \_ ksoftirqd/0
-root          14  0.0  0.0      0     0 ?        I    09:02   0:01  \_ rcu_sched
-root          15  0.0  0.0      0     0 ?        S    09:02   0:00  \_ migration/0
-root          16  0.0  0.0      0     0 ?        S    09:02   0:00  \_ idle_inject/0
-root          18  0.0  0.0      0     0 ?        S    09:02   0:00  \_ cpuhp/0
-root          19  0.0  0.0      0     0 ?        S    09:02   0:00  \_ cpuhp/1
-root          20  0.0  0.0      0     0 ?        S    09:02   0:00  \_ idle_inject/1
-root          21  0.0  0.0      0     0 ?        S    09:02   0:00  \_ migration/1
-root          22  0.0  0.0      0     0 ?        S    09:02   0:03  \_ ksoftirqd/1
-root          24  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/1:0H-events_highpri
-root          25  0.0  0.0      0     0 ?        S    09:02   0:00  \_ cpuhp/2
-root          26  0.0  0.0      0     0 ?        S    09:02   0:00  \_ idle_inject/2
-root          27  0.0  0.0      0     0 ?        S    09:02   0:00  \_ migration/2
-root          28  0.0  0.0      0     0 ?        S    09:02   0:01  \_ ksoftirqd/2
-root          30  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/2:0H-kblockd
-root          31  0.0  0.0      0     0 ?        S    09:02   0:00  \_ kdevtmpfs
-root          32  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ inet_frag_wq
-root          33  0.0  0.0      0     0 ?        S    09:02   0:00  \_ kauditd
-root          34  0.0  0.0      0     0 ?        S    09:02   0:00  \_ khungtaskd
-root          35  0.0  0.0      0     0 ?        S    09:02   0:00  \_ oom_reaper
-root          36  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ writeback
-root          37  0.0  0.0      0     0 ?        S    09:02   0:01  \_ kcompactd0
-root          38  0.0  0.0      0     0 ?        SN   09:02   0:00  \_ ksmd
-root          39  0.0  0.0      0     0 ?        SN   09:02   0:00  \_ khugepaged
-root          86  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kintegrityd
-root          87  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kblockd
-root          88  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ blkcg_punt_bio
-root          90  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ tpm_dev_wq
-root          91  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ ata_sff
-root          92  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ md
-root          93  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ edac-poller
-root          94  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ devfreq_wq
-root          95  0.0  0.0      0     0 ?        S    09:02   0:00  \_ watchdogd
-root          97  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/0:1H-kblockd
-root          99  0.6  0.0      0     0 ?        S    09:02   1:13  \_ kswapd0
-root         100  0.0  0.0      0     0 ?        S    09:02   0:00  \_ ecryptfs-kthrea
-root         102  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kthrotld
-root         103  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ acpi_thermal_pm
-root         105  0.0  0.0      0     0 ?        S    09:02   0:00  \_ scsi_eh_0
-root         106  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ scsi_tmf_0
-root         107  0.0  0.0      0     0 ?        S    09:02   0:00  \_ scsi_eh_1
-root         108  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ scsi_tmf_1
-root         110  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ vfio-irqfd-clea
-root         111  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ mld
-root         112  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ ipv6_addrconf
-root         115  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/1:1H-kblockd
-root         117  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/2:1H-kblockd
-root         125  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kstrp
-root         128  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ zswap-shrink
-root         129  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kworker/u7:0
-root         134  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ charger_manager
-root         181  0.0  0.0      0     0 ?        S    09:02   0:00  \_ scsi_eh_2
-root         183  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ scsi_tmf_2
-root         184  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ cryptd
-root         248  0.0  0.0      0     0 ?        S    09:02   0:00  \_ nv_queue
-root         249  0.0  0.0      0     0 ?        S    09:02   0:00  \_ nv_queue
-root         250  0.0  0.0      0     0 ?        S    09:02   0:00  \_ nv_open_q
-root         251  0.0  0.0      0     0 ?        S    09:02   0:00  \_ nvidia-modeset/
-root         252  0.0  0.0      0     0 ?        S    09:02   0:00  \_ nvidia-modeset/
-root         253  0.0  0.0      0     0 ?        S    09:02   0:01  \_ irq/35-nvidia
-root         254  0.0  0.0      0     0 ?        S    09:02   0:00  \_ nvidia
-root         255  0.0  0.0      0     0 ?        S    09:02   0:05  \_ nv_queue
-root         279  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ raid5wq
-root         326  0.0  0.0      0     0 ?        S    09:02   0:00  \_ jbd2/sda3-8
-root         327  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ ext4-rsv-conver
-root         416  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kaluad
-root         418  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kmpath_rdacd
-root         419  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kmpathd
-root         420  0.0  0.0      0     0 ?        I<   09:02   0:00  \_ kmpath_handlerd
-root         467  0.0  0.0      0     0 ?        S    09:02   0:00  \_ UVM global queu
-root         468  0.0  0.0      0     0 ?        S    09:02   0:00  \_ UVM deferred re
-root         469  0.0  0.0      0     0 ?        S    09:02   0:00  \_ UVM Tools Event
-root        2976  0.0  0.0      0     0 ?        I<   09:07   0:00  \_ ib-comp-wq
-root        2977  0.0  0.0      0     0 ?        I<   09:07   0:00  \_ ib-comp-unb-wq
-root        2978  0.0  0.0      0     0 ?        I<   09:07   0:00  \_ ib_mcast
-root        2979  0.0  0.0      0     0 ?        I<   09:07   0:00  \_ ib_nl_sa_wq
-root       59520  0.0  0.0      0     0 ?        I    11:08   0:00  \_ kworker/1:3-rcu_gp
-root       70791  0.0  0.0      0     0 ?        I    11:19   0:00  \_ kworker/0:3-ipv6_addrconf
-root       70792  0.0  0.0      0     0 ?        I    11:19   0:00  \_ kworker/2:0-events
-root       90845  0.0  0.0      0     0 ?        I    11:25   0:00  \_ kworker/2:1-events
-root       91112  0.0  0.0      0     0 ?        I    11:27   0:00  \_ kworker/0:0-events
-root       91166  0.0  0.0      0     0 ?        I    11:53   0:00  \_ kworker/u6:3-flush-8:0
-root       91177  0.0  0.0      0     0 ?        I    11:59   0:00  \_ kworker/u6:2-ext4-rsv-conversion
-root       91210  0.0  0.0      0     0 ?        I    12:04   0:00  \_ kworker/u6:0-events_power_efficient
-root       91860  0.0  0.0      0     0 ?        I    12:07   0:00  \_ kworker/u6:1-events_power_efficient
-root       91916  0.0  0.0      0     0 ?        I    12:07   0:00  \_ kworker/2:2-cgroup_destroy
-root       93742  0.0  0.0      0     0 ?        I    12:07   0:00  \_ kworker/u6:4-flush-8:0
-root       93770  0.0  0.0      0     0 ?        I    12:07   0:00  \_ kworker/u6:5-writeback
-root       96942  0.0  0.0      0     0 ?        I    12:08   0:00  \_ kworker/1:0-events
-root      104181  0.0  0.0      0     0 ?        I    12:08   0:00  \_ kworker/2:3-events
-root           1  0.0  0.0 167528 10920 ?        Ss   09:02   0:06 systemd
-root         389  0.0  0.2  80624 31212 ?        S<s  09:02   0:09 systemd-journal
-root         421  0.0  0.2 289352 27100 ?        SLsl 09:02   0:01 multipathd
-root         427  0.0  0.0  23180  5228 ?        Ss   09:02   0:00 systemd-udevd
-systemd+     588  0.0  0.0  89364  4008 ?        Ssl  09:02   0:00 systemd-timesyn
-message+     662  0.0  0.0   8688  3892 ?        Ss   09:02   0:00 dbus-daemon
-root         670  0.0  0.0  82768  3280 ?        Ssl  09:02   0:00 irqbalance
-root         674  0.0  0.1  33304 13268 ?        Ss   09:02   0:00 networkd-dispat
-root         679  0.0  0.0  80052  3232 ?        Ssl  09:02   0:01 qemu-ga
-syslog       680  0.0  0.0 222404  2852 ?        Ssl  09:02   0:01 rsyslogd
-root         682  0.0  0.1 1399032 21316 ?       Ssl  09:02   0:02 snapd
-root         683  0.0  0.0  15508  4296 ?        Ss   09:02   0:00 systemd-logind
-nvidia-+     685  0.0  0.0   5468   768 ?        Ss   09:02   0:00 nvidia-persiste
-systemd+    1319  0.0  0.0  16252  4988 ?        Ss   09:02   0:00 systemd-network
-systemd+    1340  0.0  0.0  26332  9280 ?        Ss   09:02   0:00 systemd-resolve
-root        1468  0.0  0.0 110140 11416 ?        Ssl  09:02   0:00 unattended-upgr
-root        1474  0.1  0.1 1877220 24124 ?       Ssl  09:02   0:12 containerd
-root        1545  0.0  0.3 2121232 42256 ?       Ssl  09:02   0:09 dockerd
-root        1547  0.0  0.0   7288  2216 ?        Ss   09:02   0:00 cron
-root        1555  0.0  0.0   6176   820 tty1     Ss+  09:02   0:00 agetty
-root        1562  0.0  0.0  15440  5964 ?        Ss   09:02   0:01 sshd
-root        2002  0.0  0.0  17204  5400 ?        Ss   09:04   0:00  \_ sshd
-root        2090  0.0  0.0   9292  5052 pts/0    Ss   09:04   0:00      \_ bash
-root      112763 13.4  0.4 143816 57040 pts/0    Sl+  12:13   0:06          \_ ansible-playboo
-root      113275  0.0  0.4 145528 50660 pts/0    S+   12:13   0:00              \_ ansible-playboo
-root      113276  0.0  0.0   2892   940 pts/0    S+   12:13   0:00                  \_ sh
-root      113277  0.0  0.0   2892   992 pts/0    S+   12:13   0:00                      \_ sh
-root      113278  0.0  0.1  35316 24056 pts/0    S+   12:13   0:00                          \_ python3
-root      113279  0.0  0.0   2892   988 pts/0    S+   12:13   0:00                              \_ sh
-root      113280  0.0  0.0  10624  3076 pts/0    R+   12:13   0:00                                  \_ ps
-root        2007  0.0  0.0  17068  5360 ?        Ss   09:04   0:00 systemd
-root        2008  0.0  0.0 170440  4940 ?        S    09:04   0:00  \_ (sd-pam)
-uuidd       2128  0.0  0.0   9620  2896 ?        Ss   09:06   0:00 uuidd
-root        3576  0.0  0.0 296016  6208 ?        Ssl  09:07   0:00 packagekitd
-root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre></details></pre></td>
+root           2  0.0  0.0      0     0 ?        S    15:04   0:00 kthreadd
+root           3  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ rcu_gp
+root           4  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ rcu_par_gp
+root           5  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ slub_flushwq
+root           6  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ netns
+root           8  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kworker/0:0H-events_highpri
+root          10  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ mm_percpu_wq
+root          11  0.0  0.0      0     0 ?        S    15:04   0:00  \_ rcu_tasks_rude_
+root          12  0.0  0.0      0     0 ?        S    15:04   0:00  \_ rcu_tasks_trace
+root          13  0.0  0.0      0     0 ?        S    15:04   0:00  \_ ksoftirqd/0
+root          14  0.0  0.0      0     0 ?        I    15:04   0:00  \_ rcu_sched
+root          15  0.0  0.0      0     0 ?        S    15:04   0:00  \_ migration/0
+root          16  0.0  0.0      0     0 ?        S    15:04   0:00  \_ idle_inject/0
+root          17  0.0  0.0      0     0 ?        I    15:04   0:00  \_ kworker/0:1-events
+root          18  0.0  0.0      0     0 ?        S    15:04   0:00  \_ cpuhp/0
+root          19  0.0  0.0      0     0 ?        S    15:04   0:00  \_ cpuhp/1
+root          20  0.0  0.0      0     0 ?        S    15:04   0:00  \_ idle_inject/1
+root          21  0.0  0.0      0     0 ?        S    15:04   0:00  \_ migration/1
+root          22  0.0  0.0      0     0 ?        S    15:04   0:00  \_ ksoftirqd/1
+root          23  0.0  0.0      0     0 ?        I    15:04   0:00  \_ kworker/1:0-events
+root          24  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kworker/1:0H-events_highpri
+root          25  0.0  0.0      0     0 ?        S    15:04   0:00  \_ cpuhp/2
+root          26  0.0  0.0      0     0 ?        S    15:04   0:00  \_ idle_inject/2
+root          27  0.0  0.0      0     0 ?        S    15:04   0:00  \_ migration/2
+root          28  0.0  0.0      0     0 ?        S    15:04   0:00  \_ ksoftirqd/2
+root          30  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kworker/2:0H-kblockd
+root          31  0.0  0.0      0     0 ?        S    15:04   0:00  \_ kdevtmpfs
+root          32  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ inet_frag_wq
+root          33  0.0  0.0      0     0 ?        S    15:04   0:00  \_ kauditd
+root          34  0.0  0.0      0     0 ?        S    15:04   0:00  \_ khungtaskd
+root          35  0.0  0.0      0     0 ?        S    15:04   0:00  \_ oom_reaper
+root          36  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ writeback
+root          37  0.0  0.0      0     0 ?        S    15:04   0:00  \_ kcompactd0
+root          38  0.0  0.0      0     0 ?        SN   15:04   0:00  \_ ksmd
+root          39  0.0  0.0      0     0 ?        SN   15:04   0:00  \_ khugepaged
+root          43  0.0  0.0      0     0 ?        I    15:04   0:00  \_ kworker/2:1-events
+root          86  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kintegrityd
+root          87  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kblockd
+root          88  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ blkcg_punt_bio
+root          89  0.0  0.0      0     0 ?        I    15:04   0:00  \_ kworker/1:1-events
+root          90  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ tpm_dev_wq
+root          91  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ ata_sff
+root          92  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ md
+root          93  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ edac-poller
+root          94  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ devfreq_wq
+root          95  0.0  0.0      0     0 ?        S    15:04   0:00  \_ watchdogd
+root          96  0.0  0.0      0     0 ?        I    15:04   0:00  \_ kworker/u6:1-events_unbound
+root          97  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kworker/0:1H-kblockd
+root          99  0.0  0.0      0     0 ?        S    15:04   0:00  \_ kswapd0
+root         100  0.0  0.0      0     0 ?        S    15:04   0:00  \_ ecryptfs-kthrea
+root         102  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kthrotld
+root         103  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ acpi_thermal_pm
+root         105  0.0  0.0      0     0 ?        S    15:04   0:00  \_ scsi_eh_0
+root         106  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ scsi_tmf_0
+root         107  0.0  0.0      0     0 ?        S    15:04   0:00  \_ scsi_eh_1
+root         108  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ scsi_tmf_1
+root         109  0.0  0.0      0     0 ?        I    15:04   0:00  \_ kworker/u6:3-events_unbound
+root         110  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ vfio-irqfd-clea
+root         111  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ mld
+root         112  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ ipv6_addrconf
+root         113  0.0  0.0      0     0 ?        I    15:04   0:00  \_ kworker/u6:4-events_power_efficient
+root         116  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kworker/2:1H-kblockd
+root         124  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kstrp
+root         127  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ zswap-shrink
+root         128  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kworker/u7:0
+root         133  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ charger_manager
+root         171  0.0  0.0      0     0 ?        S    15:04   0:00  \_ scsi_eh_2
+root         176  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ scsi_tmf_2
+root         181  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ cryptd
+root         194  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kworker/1:1H-kblockd
+root         220  0.0  0.0      0     0 ?        I    15:04   0:00  \_ kworker/2:2-events
+root         249  0.0  0.0      0     0 ?        S    15:04   0:00  \_ nv_queue
+root         250  0.0  0.0      0     0 ?        S    15:04   0:00  \_ nv_queue
+root         251  0.0  0.0      0     0 ?        S    15:04   0:00  \_ nv_open_q
+root         252  0.0  0.0      0     0 ?        S    15:04   0:00  \_ nvidia-modeset/
+root         253  0.0  0.0      0     0 ?        S    15:04   0:00  \_ nvidia-modeset/
+root         254  0.0  0.0      0     0 ?        S    15:04   0:00  \_ irq/35-nvidia
+root         255  0.0  0.0      0     0 ?        S    15:04   0:00  \_ nvidia
+root         256  0.0  0.0      0     0 ?        S    15:04   0:00  \_ nv_queue
+root         280  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ raid5wq
+root         327  0.0  0.0      0     0 ?        S    15:04   0:00  \_ jbd2/sda3-8
+root         328  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ ext4-rsv-conver
+root         417  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kaluad
+root         418  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kmpath_rdacd
+root         419  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kmpathd
+root         420  0.0  0.0      0     0 ?        I<   15:04   0:00  \_ kmpath_handlerd
+root         469  0.0  0.0      0     0 ?        I    15:04   0:00  \_ kworker/0:3-events
+root        2090  0.0  0.0      0     0 ?        S    15:06   0:00  \_ UVM global queu
+root        2091  0.0  0.0      0     0 ?        S    15:06   0:00  \_ UVM deferred re
+root        2092  0.0  0.0      0     0 ?        S    15:06   0:00  \_ UVM Tools Event
+root        4870  0.0  0.0      0     0 ?        I    15:10   0:00  \_ kworker/u6:0-events_unbound
+root           1  0.4  0.1 167500 13096 ?        Ss   15:04   0:02 systemd
+root         390  0.0  0.3  78988 45424 ?        S<s  15:04   0:00 systemd-journal
+root         422  0.0  0.2 289352 27100 ?        SLsl 15:04   0:00 multipathd
+root         427  0.0  0.0  23196  6588 ?        Ss   15:04   0:00 systemd-udevd
+systemd+     572  0.0  0.0  89364  6620 ?        Ssl  15:04   0:00 systemd-timesyn
+message+     653  0.0  0.0   8620  4752 ?        Ss   15:04   0:00 dbus-daemon
+root         661  0.0  0.0  82768  3988 ?        Ssl  15:04   0:00 irqbalance
+root         665  0.0  0.1  33172 19652 ?        Ss   15:04   0:00 networkd-dispat
+root         670  0.0  0.0  80052  3840 ?        Ssl  15:04   0:00 qemu-ga
+syslog       671  0.0  0.0 222404  5608 ?        Ssl  15:04   0:00 rsyslogd
+root         673  0.0  0.2 1399032 33640 ?       Ssl  15:04   0:00 snapd
+root         675  0.0  0.0 234184  6112 ?        Ssl  15:04   0:00 switcheroo-cont
+root         676  0.0  0.0  15364  7472 ?        Ss   15:04   0:00 systemd-logind
+nvidia-+     679  0.0  0.0   4984  2484 ?        Ss   15:04   0:00 nvidia-persiste
+systemd+    1304  0.0  0.0  16128  8136 ?        Ss   15:04   0:00 systemd-network
+systemd+    1336  0.0  0.1  26332 13520 ?        Ss   15:04   0:00 systemd-resolve
+root        1464  0.0  0.1 110140 21448 ?        Ssl  15:04   0:00 unattended-upgr
+root        1471  0.0  0.3 1803488 46000 ?       Ssl  15:04   0:00 containerd
+root        1544  0.0  0.5 1899780 72704 ?       Ssl  15:04   0:00 dockerd
+root        1546  0.0  0.0   7288  2720 ?        Ss   15:04   0:00 cron
+root        1560  0.0  0.0   6176  1100 tty1     Ss+  15:04   0:00 agetty
+root        1561  0.0  0.0  15440  9444 ?        Ss   15:04   0:00 sshd
+root        1984  0.0  0.0  17204 11012 ?        Ss   15:05   0:00  \_ sshd
+root        2070  0.0  0.0   9292  5356 pts/0    Ss   15:05   0:00      \_ bash
+root        4900 11.8  0.4 143884 57096 pts/0    Sl+  15:11   0:04          \_ ansible-playboo
+root        5416  0.0  0.4 144476 50788 pts/0    S+   15:12   0:00              \_ ansible-playboo
+root        5417  0.0  0.0   2892   952 pts/0    S+   15:12   0:00                  \_ sh
+root        5418  0.0  0.0   2892   968 pts/0    S+   15:12   0:00                      \_ sh
+root        5419  0.0  0.1  35316 24124 pts/0    S+   15:12   0:00                          \_ python3
+root        5420  0.0  0.0   2892   956 pts/0    S+   15:12   0:00                              \_ sh
+root        5421  0.0  0.0  10624  3128 pts/0    R+   15:12   0:00                                  \_ ps
+root        1987  0.0  0.0  17068  9752 ?        Ss   15:05   0:00 systemd
+root        1988  0.0  0.0 170412  4980 ?        S    15:05   0:00  \_ (sd-pam)
+root        4797  0.0  0.1 296048 20516 ?        Ssl  15:08   0:00 packagekitd
+root        4801  0.0  0.0 234516  6732 ?        Ssl  15:08   0:00 polkitd
+uuidd       4901  0.1  0.0   9620  1512 ?        Ss   15:11   0:00 uuidd</pre></details></pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
                                                     </td>
@@ -1144,45 +1137,9 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>cryptsetup</td><td>2:2.4.3-1ubuntu1.3</td></tr>
 <tr><td>cryptsetup-bin</td><td>2:2.4.3-1ubuntu1.3</td></tr>
 <tr><td>cryptsetup-initramfs</td><td>2:2.4.3-1ubuntu1.3</td></tr>
-<tr><td>cuda-cccl-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-command-line-tools-13-0</td><td>13.0.2-1</td></tr>
-<tr><td>cuda-compiler-13-0</td><td>13.0.2-1</td></tr>
-<tr><td>cuda-crt-13-0</td><td>13.0.88-1</td></tr>
-<tr><td>cuda-cudart-13-0</td><td>13.0.96-1</td></tr>
-<tr><td>cuda-cudart-dev-13-0</td><td>13.0.96-1</td></tr>
-<tr><td>cuda-culibos-dev-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-cuobjdump-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-cupti-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-cupti-dev-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-cuxxfilt-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-documentation-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-driver-dev-13-0</td><td>13.0.96-1</td></tr>
-<tr><td>cuda-gdb-13-0</td><td>13.0.85-1</td></tr>
+<tr><td>cuda-drivers</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>cuda-drivers-580</td><td>580.95.05-0ubuntu1</td></tr>
 <tr><td>cuda-keyring</td><td>1.1-1</td></tr>
-<tr><td>cuda-libraries-13-0</td><td>13.0.2-1</td></tr>
-<tr><td>cuda-libraries-dev-13-0</td><td>13.0.2-1</td></tr>
-<tr><td>cuda-nsight-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-nsight-compute-13-0</td><td>13.0.2-1</td></tr>
-<tr><td>cuda-nsight-systems-13-0</td><td>13.0.2-1</td></tr>
-<tr><td>cuda-nvcc-13-0</td><td>13.0.88-1</td></tr>
-<tr><td>cuda-nvdisasm-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-nvml-dev-13-0</td><td>13.0.87-1</td></tr>
-<tr><td>cuda-nvprune-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-nvrtc-13-0</td><td>13.0.88-1</td></tr>
-<tr><td>cuda-nvrtc-dev-13-0</td><td>13.0.88-1</td></tr>
-<tr><td>cuda-nvtx-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-opencl-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-profiler-api-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-repo-ubuntu2204-12-5-local</td><td>12.5.1-555.42.06-1</td></tr>
-<tr><td>cuda-sandbox-dev-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-sanitizer-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>cuda-toolkit</td><td>13.0.2-1</td></tr>
-<tr><td>cuda-toolkit-13-0</td><td>13.0.2-1</td></tr>
-<tr><td>cuda-toolkit-13-0-config-common</td><td>13.0.96-1</td></tr>
-<tr><td>cuda-toolkit-13-config-common</td><td>13.0.96-1</td></tr>
-<tr><td>cuda-toolkit-config-common</td><td>13.0.96-1</td></tr>
-<tr><td>cuda-tools-13-0</td><td>13.0.2-1</td></tr>
-<tr><td>cuda-visual-tools-13-0</td><td>13.0.2-1</td></tr>
 <tr><td>curl</td><td>7.81.0-1ubuntu1.21</td></tr>
 <tr><td>dash</td><td>0.5.11+git20210903+057cd650a4ed-3build1</td></tr>
 <tr><td>dbus</td><td>1.12.20-2ubuntu4.1</td></tr>
@@ -1195,8 +1152,6 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>debhelper</td><td>13.6ubuntu1</td></tr>
 <tr><td>debianutils</td><td>5.5-1ubuntu2</td></tr>
 <tr><td>debugedit</td><td>1:5.0-4build1</td></tr>
-<tr><td>default-jre</td><td>2:1.11-72build2</td></tr>
-<tr><td>default-jre-headless</td><td>2:1.11-72build2</td></tr>
 <tr><td>devscripts</td><td>2.22.1ubuntu1</td></tr>
 <tr><td>dh-autoreconf</td><td>20</td></tr>
 <tr><td>dh-strip-nondeterminism</td><td>1.13.0-1</td></tr>
@@ -1205,7 +1160,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>dirmngr</td><td>2.2.27-3ubuntu2.4</td></tr>
 <tr><td>distro-info</td><td>1.1ubuntu0.2</td></tr>
 <tr><td>distro-info-data</td><td>0.52ubuntu0.9</td></tr>
-<tr><td>dkms</td><td>2.8.7-2ubuntu2.2</td></tr>
+<tr><td>dkms</td><td>1:3.2.1-1ubuntu2</td></tr>
 <tr><td>dmeventd</td><td>2:1.02.175-2.1ubuntu5</td></tr>
 <tr><td>dmidecode</td><td>3.3-3ubuntu0.2</td></tr>
 <tr><td>dmsetup</td><td>2:1.02.175-2.1ubuntu5</td></tr>
@@ -1248,7 +1203,6 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>gcc-12</td><td>12.3.0-1ubuntu1~22.04.2</td></tr>
 <tr><td>gcc-12-base:amd64</td><td>12.3.0-1ubuntu1~22.04.2</td></tr>
 <tr><td>gdisk</td><td>1.0.8-4build1</td></tr>
-<tr><td>gds-tools-13-0</td><td>1.15.1.6-1</td></tr>
 <tr><td>genisoimage</td><td>9:1.1.11-3.2ubuntu1</td></tr>
 <tr><td>gettext</td><td>0.21-4ubuntu4</td></tr>
 <tr><td>gettext-base</td><td>0.21-4ubuntu4</td></tr>
@@ -1303,6 +1257,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>isc-dhcp-common</td><td>4.4.1-2.3ubuntu2.4</td></tr>
 <tr><td>iso-codes</td><td>4.9.0-1</td></tr>
 <tr><td>java-common</td><td>0.72build2</td></tr>
+<tr><td>javascript-common</td><td>11+nmu1</td></tr>
 <tr><td>kbd</td><td>2.3.0-3ubuntu4.22.04</td></tr>
 <tr><td>keyboard-configuration</td><td>1.205ubuntu3</td></tr>
 <tr><td>klibc-utils</td><td>2.0.10-4ubuntu0.1</td></tr>
@@ -1310,6 +1265,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>kpartx</td><td>0.8.8-1ubuntu1.22.04.4</td></tr>
 <tr><td>landscape-common</td><td>23.02-0ubuntu1~22.04.6</td></tr>
 <tr><td>less</td><td>590-1ubuntu0.22.04.3</td></tr>
+<tr><td>libaccinj64-11.5:amd64</td><td>11.5.114~11.5.1-1ubuntu1</td></tr>
 <tr><td>libacl1:amd64</td><td>2.3.1-1</td></tr>
 <tr><td>libaio1:amd64</td><td>0.3.112-13build1</td></tr>
 <tr><td>libalgorithm-diff-perl</td><td>1.201-1</td></tr>
@@ -1330,6 +1286,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libasound2:amd64</td><td>1.2.6.1-1ubuntu1</td></tr>
 <tr><td>libasound2-data</td><td>1.2.6.1-1ubuntu1</td></tr>
 <tr><td>libassuan0:amd64</td><td>2.5.5-1build1</td></tr>
+<tr><td>libasyncns0:amd64</td><td>0.8-6build2</td></tr>
 <tr><td>libatasmart4:amd64</td><td>0.19-5build2</td></tr>
 <tr><td>libatk-bridge2.0-0:amd64</td><td>2.38.0-3</td></tr>
 <tr><td>libatk-wrapper-java</td><td>0.38.0-5build1</td></tr>
@@ -1348,6 +1305,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libavahi-common3:amd64</td><td>0.8-5ubuntu5.2</td></tr>
 <tr><td>libb-hooks-endofscope-perl</td><td>0.25-1</td></tr>
 <tr><td>libb-hooks-op-check-perl</td><td>0.22-1build5</td></tr>
+<tr><td>libbabeltrace1:amd64</td><td>1.5.8-2build1</td></tr>
 <tr><td>libbinutils:amd64</td><td>2.38-4ubuntu2.8</td></tr>
 <tr><td>libblkid1:amd64</td><td>2.37.2-4ubuntu3.4</td></tr>
 <tr><td>libblockdev-crypto2:amd64</td><td>2.26-1ubuntu0.1</td></tr>
@@ -1358,6 +1316,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libblockdev-swap2:amd64</td><td>2.26-1ubuntu0.1</td></tr>
 <tr><td>libblockdev-utils2:amd64</td><td>2.26-1ubuntu0.1</td></tr>
 <tr><td>libblockdev2:amd64</td><td>2.26-1ubuntu0.1</td></tr>
+<tr><td>libboost-regex1.74.0:amd64</td><td>1.74.0-14ubuntu3</td></tr>
 <tr><td>libbpf0:amd64</td><td>1:0.5.0-1ubuntu22.04.1</td></tr>
 <tr><td>libbrotli1:amd64</td><td>1.0.9-2build6</td></tr>
 <tr><td>libbsd0:amd64</td><td>0.11.5-1</td></tr>
@@ -1391,21 +1350,23 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libcryptsetup12:amd64</td><td>2:2.4.3-1ubuntu1.3</td></tr>
 <tr><td>libctf-nobfd0:amd64</td><td>2.38-4ubuntu2.8</td></tr>
 <tr><td>libctf0:amd64</td><td>2.38-4ubuntu2.8</td></tr>
-<tr><td>libcublas-13-0</td><td>13.1.0.3-1</td></tr>
-<tr><td>libcublas-dev-13-0</td><td>13.1.0.3-1</td></tr>
-<tr><td>libcufft-13-0</td><td>12.0.0.61-1</td></tr>
-<tr><td>libcufft-dev-13-0</td><td>12.0.0.61-1</td></tr>
-<tr><td>libcufile-13-0</td><td>1.15.1.6-1</td></tr>
-<tr><td>libcufile-dev-13-0</td><td>1.15.1.6-1</td></tr>
+<tr><td>libcub-dev</td><td>1.15.0-3</td></tr>
+<tr><td>libcublas11:amd64</td><td>11.7.4.6~11.5.1-1ubuntu1</td></tr>
+<tr><td>libcublaslt11:amd64</td><td>11.7.4.6~11.5.1-1ubuntu1</td></tr>
+<tr><td>libcudart11.0:amd64</td><td>11.5.117~11.5.1-1ubuntu1</td></tr>
+<tr><td>libcufft10:amd64</td><td>11.1.1+~10.6.0.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libcufftw10:amd64</td><td>11.1.1+~10.6.0.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libcuinj64-11.5:amd64</td><td>11.5.114~11.5.1-1ubuntu1</td></tr>
 <tr><td>libcups2:amd64</td><td>2.4.1op1-1ubuntu4.12</td></tr>
-<tr><td>libcurand-13-0</td><td>10.4.0.35-1</td></tr>
-<tr><td>libcurand-dev-13-0</td><td>10.4.0.35-1</td></tr>
+<tr><td>libcupti-dev:amd64</td><td>11.5.114~11.5.1-1ubuntu1</td></tr>
+<tr><td>libcupti-doc</td><td>11.5.114~11.5.1-1ubuntu1</td></tr>
+<tr><td>libcupti11.5:amd64</td><td>11.5.114~11.5.1-1ubuntu1</td></tr>
+<tr><td>libcurand10:amd64</td><td>11.1.1+~10.2.7.107~11.5.1-1ubuntu1</td></tr>
 <tr><td>libcurl3-gnutls:amd64</td><td>7.81.0-1ubuntu1.21</td></tr>
 <tr><td>libcurl4:amd64</td><td>7.81.0-1ubuntu1.21</td></tr>
-<tr><td>libcusolver-13-0</td><td>12.0.4.66-1</td></tr>
-<tr><td>libcusolver-dev-13-0</td><td>12.0.4.66-1</td></tr>
-<tr><td>libcusparse-13-0</td><td>12.6.3.3-1</td></tr>
-<tr><td>libcusparse-dev-13-0</td><td>12.6.3.3-1</td></tr>
+<tr><td>libcusolver11:amd64</td><td>11.3.2.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libcusolvermg11:amd64</td><td>11.3.2.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libcusparse11:amd64</td><td>11.7.0.107~11.5.1-1ubuntu1</td></tr>
 <tr><td>libdata-dpath-perl</td><td>0.58-1</td></tr>
 <tr><td>libdata-dump-perl</td><td>1.25-1</td></tr>
 <tr><td>libdata-messagepack-perl</td><td>1.01-2build1</td></tr>
@@ -1419,6 +1380,8 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libdconf1:amd64</td><td>0.40.0-3ubuntu0.1</td></tr>
 <tr><td>libdebconfclient0:amd64</td><td>0.261ubuntu1</td></tr>
 <tr><td>libdebhelper-perl</td><td>13.6ubuntu1</td></tr>
+<tr><td>libdebuginfod-common</td><td>0.186-1ubuntu0.1</td></tr>
+<tr><td>libdebuginfod1:amd64</td><td>0.186-1ubuntu0.1</td></tr>
 <tr><td>libdeflate0:amd64</td><td>1.10-2</td></tr>
 <tr><td>libdevel-callchecker-perl</td><td>0.008-1ubuntu4</td></tr>
 <tr><td>libdevel-size-perl</td><td>0.83-1build4</td></tr>
@@ -1440,6 +1403,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libedit2:amd64</td><td>3.1-20210910-1build1</td></tr>
 <tr><td>libefiboot1:amd64</td><td>37-6ubuntu2</td></tr>
 <tr><td>libefivar1:amd64</td><td>37-6ubuntu2</td></tr>
+<tr><td>libegl-dev:amd64</td><td>1.4.0-1</td></tr>
 <tr><td>libegl-mesa0:amd64</td><td>23.2.1-1ubuntu3.1~22.04.3</td></tr>
 <tr><td>libegl1:amd64</td><td>1.4.0-1</td></tr>
 <tr><td>libelf1:amd64</td><td>0.186-1ubuntu0.1</td></tr>
@@ -1477,6 +1441,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libfile-stripnondeterminism-perl</td><td>1.13.0-1</td></tr>
 <tr><td>libfile-touch-perl</td><td>0.12-1</td></tr>
 <tr><td>libfile-which-perl</td><td>1.23-1</td></tr>
+<tr><td>libflac8:amd64</td><td>1.3.3-2ubuntu0.2</td></tr>
 <tr><td>libflashrom1:amd64</td><td>1.2-5build1</td></tr>
 <tr><td>libfont-afm-perl</td><td>1.20-3</td></tr>
 <tr><td>libfont-ttf-perl</td><td>1.06-1.1</td></tr>
@@ -1488,6 +1453,8 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libfuse3-3:amd64</td><td>3.10.5-1build1</td></tr>
 <tr><td>libfwupd2:amd64</td><td>1.7.9-1~22.04.3</td></tr>
 <tr><td>libfwupdplugin5:amd64</td><td>1.7.9-1~22.04.3</td></tr>
+<tr><td>libgail-common:amd64</td><td>2.24.33-2ubuntu2.1</td></tr>
+<tr><td>libgail18:amd64</td><td>2.24.33-2ubuntu2.1</td></tr>
 <tr><td>libgbm1:amd64</td><td>23.2.1-1ubuntu3.1~22.04.3</td></tr>
 <tr><td>libgcab-1.0-0:amd64</td><td>1.4-3build2</td></tr>
 <tr><td>libgcc-11-dev:amd64</td><td>11.4.0-1ubuntu1~22.04.2</td></tr>
@@ -1504,14 +1471,22 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libgirepository-1.0-1:amd64</td><td>1.72.0-1</td></tr>
 <tr><td>libgit-wrapper-perl</td><td>0.048-1</td></tr>
 <tr><td>libgitlab-api-v4-perl</td><td>0.26-1</td></tr>
+<tr><td>libgl-dev:amd64</td><td>1.4.0-1</td></tr>
 <tr><td>libgl1:amd64</td><td>1.4.0-1</td></tr>
 <tr><td>libgl1-amber-dri:amd64</td><td>21.3.9-0ubuntu1~22.04.1</td></tr>
+<tr><td>libgl1-mesa-dev:amd64</td><td>23.2.1-1ubuntu3.1~22.04.3</td></tr>
 <tr><td>libgl1-mesa-dri:amd64</td><td>23.2.1-1ubuntu3.1~22.04.3</td></tr>
 <tr><td>libglapi-mesa:amd64</td><td>23.2.1-1ubuntu3.1~22.04.3</td></tr>
+<tr><td>libgles-dev:amd64</td><td>1.4.0-1</td></tr>
+<tr><td>libgles1:amd64</td><td>1.4.0-1</td></tr>
+<tr><td>libgles2:amd64</td><td>1.4.0-1</td></tr>
 <tr><td>libglib2.0-0:amd64</td><td>2.72.4-0ubuntu2.6</td></tr>
 <tr><td>libglib2.0-bin</td><td>2.72.4-0ubuntu2.6</td></tr>
 <tr><td>libglib2.0-data</td><td>2.72.4-0ubuntu2.6</td></tr>
+<tr><td>libglvnd-core-dev:amd64</td><td>1.4.0-1</td></tr>
+<tr><td>libglvnd-dev:amd64</td><td>1.4.0-1</td></tr>
 <tr><td>libglvnd0:amd64</td><td>1.4.0-1</td></tr>
+<tr><td>libglx-dev:amd64</td><td>1.4.0-1</td></tr>
 <tr><td>libglx-mesa0:amd64</td><td>23.2.1-1ubuntu3.1~22.04.3</td></tr>
 <tr><td>libglx0:amd64</td><td>1.4.0-1</td></tr>
 <tr><td>libgmp10:amd64</td><td>2:6.2.1+dfsg-3ubuntu1</td></tr>
@@ -1526,6 +1501,9 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libgtk-3-0:amd64</td><td>3.24.33-1ubuntu2.2</td></tr>
 <tr><td>libgtk-3-bin</td><td>3.24.33-1ubuntu2.2</td></tr>
 <tr><td>libgtk-3-common</td><td>3.24.33-1ubuntu2.2</td></tr>
+<tr><td>libgtk2.0-0:amd64</td><td>2.24.33-2ubuntu2.1</td></tr>
+<tr><td>libgtk2.0-bin</td><td>2.24.33-2ubuntu2.1</td></tr>
+<tr><td>libgtk2.0-common</td><td>2.24.33-2ubuntu2.1</td></tr>
 <tr><td>libgudev-1.0-0:amd64</td><td>1:237-2build1</td></tr>
 <tr><td>libgusb2:amd64</td><td>0.3.10-1</td></tr>
 <tr><td>libharfbuzz0b:amd64</td><td>2.7.4-1ubuntu3.2</td></tr>
@@ -1566,6 +1544,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libipc-run-perl</td><td>20200505.0-1</td></tr>
 <tr><td>libipc-run3-perl</td><td>0.048-2</td></tr>
 <tr><td>libipc-system-simple-perl</td><td>1.30-1</td></tr>
+<tr><td>libipt2</td><td>2.0.5-1</td></tr>
 <tr><td>libisc-export1105:amd64</td><td>1:9.11.19+dfsg-2.1ubuntu3</td></tr>
 <tr><td>libisl23:amd64</td><td>0.24-2build1</td></tr>
 <tr><td>libisns0:amd64</td><td>0.101-0ubuntu2</td></tr>
@@ -1577,6 +1556,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libjcat1:amd64</td><td>0.1.9-1</td></tr>
 <tr><td>libjpeg-turbo8:amd64</td><td>2.1.2-0ubuntu1</td></tr>
 <tr><td>libjpeg8:amd64</td><td>8c-2ubuntu10</td></tr>
+<tr><td>libjs-jquery</td><td>3.6.0+dfsg+~3.5.13-1</td></tr>
 <tr><td>libjson-c5:amd64</td><td>0.15-3~ubuntu1.22.04.2</td></tr>
 <tr><td>libjson-glib-1.0-0:amd64</td><td>1.6.6-1build1</td></tr>
 <tr><td>libjson-glib-1.0-common</td><td>1.6.6-1build1</td></tr>
@@ -1662,8 +1642,17 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libnl-3-200:amd64</td><td>3.5.0-0.1</td></tr>
 <tr><td>libnl-genl-3-200:amd64</td><td>3.5.0-0.1</td></tr>
 <tr><td>libnl-route-3-200:amd64</td><td>3.5.0-0.1</td></tr>
-<tr><td>libnpp-13-0</td><td>13.0.1.2-1</td></tr>
-<tr><td>libnpp-dev-13-0</td><td>13.0.1.2-1</td></tr>
+<tr><td>libnppc11:amd64</td><td>11.5.1.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnppial11:amd64</td><td>11.5.1.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnppicc11:amd64</td><td>11.5.1.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnppidei11:amd64</td><td>11.5.1.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnppif11:amd64</td><td>11.5.1.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnppig11:amd64</td><td>11.5.1.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnppim11:amd64</td><td>11.5.1.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnppist11:amd64</td><td>11.5.1.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnppisu11:amd64</td><td>11.5.1.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnppitc11:amd64</td><td>11.5.1.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnpps11:amd64</td><td>11.5.1.107~11.5.1-1ubuntu1</td></tr>
 <tr><td>libnpth0:amd64</td><td>1.6-3build2</td></tr>
 <tr><td>libnsl-dev:amd64</td><td>1.3.0-2build2</td></tr>
 <tr><td>libnsl2:amd64</td><td>1.3.0-2build2</td></tr>
@@ -1674,28 +1663,28 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libnuma-dev:amd64</td><td>2.0.14-3ubuntu2</td></tr>
 <tr><td>libnuma1:amd64</td><td>2.0.14-3ubuntu2</td></tr>
 <tr><td>libnumber-compare-perl</td><td>0.03-2</td></tr>
-<tr><td>libnvfatbin-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>libnvfatbin-dev-13-0</td><td>13.0.85-1</td></tr>
-<tr><td>libnvidia-cfg1-550:amd64</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>libnvidia-common-550</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>libnvidia-compute-550:amd64</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>libnvidia-container-tools</td><td>1.17.9-1</td></tr>
-<tr><td>libnvidia-container1:amd64</td><td>1.17.9-1</td></tr>
-<tr><td>libnvidia-decode-550:amd64</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>libnvidia-egl-wayland1:amd64</td><td>1:1.1.17-0ubuntu0~gpu22.04.1</td></tr>
-<tr><td>libnvidia-encode-550:amd64</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>libnvidia-extra-550:amd64</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>libnvidia-fbc1-550:amd64</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>libnvidia-gl-550:amd64</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>libnvjitlink-13-0</td><td>13.0.88-1</td></tr>
-<tr><td>libnvjitlink-dev-13-0</td><td>13.0.88-1</td></tr>
-<tr><td>libnvjpeg-13-0</td><td>13.0.1.86-1</td></tr>
-<tr><td>libnvjpeg-dev-13-0</td><td>13.0.1.86-1</td></tr>
-<tr><td>libnvptxcompiler-13-0</td><td>13.0.88-1</td></tr>
-<tr><td>libnvvm-13-0</td><td>13.0.88-1</td></tr>
+<tr><td>libnvblas11:amd64</td><td>11.7.4.6~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnvidia-cfg1-580:amd64</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>libnvidia-common-580</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>libnvidia-compute-580:amd64</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>libnvidia-decode-580:amd64</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>libnvidia-encode-580:amd64</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>libnvidia-extra-580:amd64</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>libnvidia-fbc1-580:amd64</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>libnvidia-gl-580:amd64</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>libnvidia-gpucomp-580:amd64</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>libnvidia-ml-dev:amd64</td><td>11.5.50~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnvjpeg11:amd64</td><td>11.5.4.107~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnvrtc-builtins11.5:amd64</td><td>11.5.119~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnvrtc11.2:amd64</td><td>11.5.119~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnvtoolsext1:amd64</td><td>11.5.114~11.5.1-1ubuntu1</td></tr>
+<tr><td>libnvvm4:amd64</td><td>11.5.119~11.5.1-1ubuntu1</td></tr>
 <tr><td>libobject-id-perl</td><td>0.1.2-2.1ubuntu1</td></tr>
+<tr><td>libogg0:amd64</td><td>1.3.5-0ubuntu3</td></tr>
+<tr><td>libopengl-dev:amd64</td><td>1.4.0-1</td></tr>
 <tr><td>libopengl0:amd64</td><td>1.4.0-1</td></tr>
 <tr><td>libopeniscsiusr</td><td>2.1.5-1ubuntu1.1</td></tr>
+<tr><td>libopus0:amd64</td><td>1.3.1-0.1build2</td></tr>
 <tr><td>libp11-kit0:amd64</td><td>0.24.0-6build1</td></tr>
 <tr><td>libpackage-stash-perl</td><td>0.39-1</td></tr>
 <tr><td>libpackage-stash-xs-perl</td><td>0.29-1build5</td></tr>
@@ -1740,6 +1729,8 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libpsl5:amd64</td><td>0.21.0-1.2build2</td></tr>
 <tr><td>libpsm-infinipath1</td><td>3.3+20.604758e7-6.1</td></tr>
 <tr><td>libpsm2-2</td><td>11.2.185-1</td></tr>
+<tr><td>libpthread-stubs0-dev:amd64</td><td>0.4-1build2</td></tr>
+<tr><td>libpulse0:amd64</td><td>1:15.99.1+dfsg1-1ubuntu2.2</td></tr>
 <tr><td>libpython3-stdlib:amd64</td><td>3.10.6-1~22.04.1</td></tr>
 <tr><td>libpython3.10:amd64</td><td>3.10.12-1~22.04.11</td></tr>
 <tr><td>libpython3.10-minimal:amd64</td><td>3.10.12-1~22.04.11</td></tr>
@@ -1781,10 +1772,13 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libsm6:amd64</td><td>2:1.2.3-1build2</td></tr>
 <tr><td>libsmartcols1:amd64</td><td>2.37.2-4ubuntu3.4</td></tr>
 <tr><td>libsmbios-c2</td><td>2.4.3-1build1</td></tr>
+<tr><td>libsndfile1:amd64</td><td>1.0.31-2ubuntu0.2</td></tr>
 <tr><td>libsocket6-perl</td><td>0.29-1build4</td></tr>
 <tr><td>libsodium23:amd64</td><td>1.0.18-1build2</td></tr>
 <tr><td>libsort-naturally-perl</td><td>1.03-2</td></tr>
 <tr><td>libsort-versions-perl</td><td>1.62-1</td></tr>
+<tr><td>libsource-highlight-common</td><td>3.1.9-4.1build2</td></tr>
+<tr><td>libsource-highlight4v5</td><td>3.1.9-4.1build2</td></tr>
 <tr><td>libsqlite3-0:amd64</td><td>3.37.2-2ubuntu0.5</td></tr>
 <tr><td>libss2:amd64</td><td>1.46.5-2ubuntu1.2</td></tr>
 <tr><td>libssh-4:amd64</td><td>0.9.6-2ubuntu0.22.04.4</td></tr>
@@ -1807,6 +1801,9 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libsys-hostname-long-perl</td><td>1.5-2</td></tr>
 <tr><td>libsystemd0:amd64</td><td>249.11-0ubuntu3.17</td></tr>
 <tr><td>libtasn1-6:amd64</td><td>4.18.0-4ubuntu0.1</td></tr>
+<tr><td>libtbb-dev:amd64</td><td>2021.5.0-7ubuntu2</td></tr>
+<tr><td>libtbb12:amd64</td><td>2021.5.0-7ubuntu2</td></tr>
+<tr><td>libtbbmalloc2:amd64</td><td>2021.5.0-7ubuntu2</td></tr>
 <tr><td>libtcl8.6:amd64</td><td>8.6.12+dfsg-1build1</td></tr>
 <tr><td>libterm-readkey-perl</td><td>2.38-1build4</td></tr>
 <tr><td>libtext-charwidth-perl</td><td>0.04-10build3</td></tr>
@@ -1818,6 +1815,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libtext-xslate-perl:amd64</td><td>3.5.9-1build1</td></tr>
 <tr><td>libthai-data</td><td>0.1.29-1build1</td></tr>
 <tr><td>libthai0:amd64</td><td>0.1.29-1build1</td></tr>
+<tr><td>libthrust-dev</td><td>1.15.0-1</td></tr>
 <tr><td>libtiff5:amd64</td><td>4.3.0-6ubuntu0.12</td></tr>
 <tr><td>libtime-duration-perl</td><td>1.21-1</td></tr>
 <tr><td>libtime-moment-perl</td><td>0.44-1build6</td></tr>
@@ -1855,8 +1853,11 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libuuid1:amd64</td><td>2.37.2-4ubuntu3.4</td></tr>
 <tr><td>libuv1:amd64</td><td>1.43.0-1ubuntu0.1</td></tr>
 <tr><td>libvariable-magic-perl</td><td>0.62-1build5</td></tr>
+<tr><td>libvdpau-dev:amd64</td><td>1.4-3build2</td></tr>
 <tr><td>libvdpau1:amd64</td><td>1.4-3build2</td></tr>
 <tr><td>libvolume-key1</td><td>0.3.12-3.1build3</td></tr>
+<tr><td>libvorbis0a:amd64</td><td>1.3.7-1build2</td></tr>
+<tr><td>libvorbisenc2:amd64</td><td>1.3.7-1build2</td></tr>
 <tr><td>libwant-perl</td><td>0.29-1build7</td></tr>
 <tr><td>libwayland-client0:amd64</td><td>1.20.0-1ubuntu0.1</td></tr>
 <tr><td>libwayland-cursor0:amd64</td><td>1.20.0-1ubuntu0.1</td></tr>
@@ -1868,33 +1869,28 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libwww-robotrules-perl</td><td>6.02-1</td></tr>
 <tr><td>libx11-6:amd64</td><td>2:1.7.5-1ubuntu0.3</td></tr>
 <tr><td>libx11-data</td><td>2:1.7.5-1ubuntu0.3</td></tr>
+<tr><td>libx11-dev:amd64</td><td>2:1.7.5-1ubuntu0.3</td></tr>
 <tr><td>libx11-xcb1:amd64</td><td>2:1.7.5-1ubuntu0.3</td></tr>
+<tr><td>libxau-dev:amd64</td><td>1:1.0.9-1build5</td></tr>
 <tr><td>libxau6:amd64</td><td>1:1.0.9-1build5</td></tr>
 <tr><td>libxaw7:amd64</td><td>2:1.0.14-1</td></tr>
-<tr><td>libxcb-cursor0:amd64</td><td>0.1.1-4ubuntu1</td></tr>
 <tr><td>libxcb-dri2-0:amd64</td><td>1.14-3ubuntu3</td></tr>
 <tr><td>libxcb-dri3-0:amd64</td><td>1.14-3ubuntu3</td></tr>
 <tr><td>libxcb-glx0:amd64</td><td>1.14-3ubuntu3</td></tr>
-<tr><td>libxcb-icccm4:amd64</td><td>0.4.1-1.1build2</td></tr>
-<tr><td>libxcb-image0:amd64</td><td>0.4.0-2</td></tr>
-<tr><td>libxcb-keysyms1:amd64</td><td>0.4.0-1build3</td></tr>
 <tr><td>libxcb-present0:amd64</td><td>1.14-3ubuntu3</td></tr>
 <tr><td>libxcb-randr0:amd64</td><td>1.14-3ubuntu3</td></tr>
-<tr><td>libxcb-render-util0:amd64</td><td>0.3.9-1build3</td></tr>
 <tr><td>libxcb-render0:amd64</td><td>1.14-3ubuntu3</td></tr>
 <tr><td>libxcb-shape0:amd64</td><td>1.14-3ubuntu3</td></tr>
 <tr><td>libxcb-shm0:amd64</td><td>1.14-3ubuntu3</td></tr>
 <tr><td>libxcb-sync1:amd64</td><td>1.14-3ubuntu3</td></tr>
-<tr><td>libxcb-util1:amd64</td><td>0.4.0-1build2</td></tr>
 <tr><td>libxcb-xfixes0:amd64</td><td>1.14-3ubuntu3</td></tr>
-<tr><td>libxcb-xinerama0:amd64</td><td>1.14-3ubuntu3</td></tr>
-<tr><td>libxcb-xinput0:amd64</td><td>1.14-3ubuntu3</td></tr>
-<tr><td>libxcb-xkb1:amd64</td><td>1.14-3ubuntu3</td></tr>
 <tr><td>libxcb1:amd64</td><td>1.14-3ubuntu3</td></tr>
+<tr><td>libxcb1-dev:amd64</td><td>1.14-3ubuntu3</td></tr>
 <tr><td>libxcomposite1:amd64</td><td>1:0.4.5-1build2</td></tr>
 <tr><td>libxcursor1:amd64</td><td>1:1.2.0-2build4</td></tr>
 <tr><td>libxcvt0:amd64</td><td>0.1.1-3</td></tr>
 <tr><td>libxdamage1:amd64</td><td>1:1.1.5-2build2</td></tr>
+<tr><td>libxdmcp-dev:amd64</td><td>1:1.1.3-0ubuntu5</td></tr>
 <tr><td>libxdmcp6:amd64</td><td>1:1.1.3-0ubuntu5</td></tr>
 <tr><td>libxext6:amd64</td><td>2:1.3.4-1build1</td></tr>
 <tr><td>libxfixes3:amd64</td><td>1:6.0.0-1</td></tr>
@@ -1902,7 +1898,6 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libxft2:amd64</td><td>2.3.4-1</td></tr>
 <tr><td>libxi6:amd64</td><td>2:1.8-1build1</td></tr>
 <tr><td>libxinerama1:amd64</td><td>2:1.1.4-3</td></tr>
-<tr><td>libxkbcommon-x11-0:amd64</td><td>1.4.0-1</td></tr>
 <tr><td>libxkbcommon0:amd64</td><td>1.4.0-1</td></tr>
 <tr><td>libxkbfile1:amd64</td><td>1:1.1.0-1build3</td></tr>
 <tr><td>libxml-libxml-perl</td><td>2.0207+dfsg+really+2.0134-1</td></tr>
@@ -1917,7 +1912,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>libxmlsec1-openssl:amd64</td><td>1.2.33-1build2</td></tr>
 <tr><td>libxmu6:amd64</td><td>2:1.1.3-3</td></tr>
 <tr><td>libxmuu1:amd64</td><td>2:1.1.3-3</td></tr>
-<tr><td>libxnvctrl0:amd64</td><td>510.47.03-0ubuntu1</td></tr>
+<tr><td>libxnvctrl0:amd64</td><td>580.95.05-0ubuntu1</td></tr>
 <tr><td>libxpm4:amd64</td><td>1:3.5.12-1ubuntu0.22.04.2</td></tr>
 <tr><td>libxrandr2:amd64</td><td>2:1.5.2-1build1</td></tr>
 <tr><td>libxrender1:amd64</td><td>1:0.9.10-1build4</td></tr>
@@ -1987,27 +1982,32 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>netplan.io</td><td>0.106.1-7ubuntu0.22.04.4</td></tr>
 <tr><td>networkd-dispatcher</td><td>2.1-2ubuntu0.22.04.2</td></tr>
 <tr><td>nftables</td><td>1.0.2-1ubuntu3</td></tr>
-<tr><td>nsight-compute-2025.3.1</td><td>2025.3.1.4-1</td></tr>
-<tr><td>nsight-systems-2025.3.2</td><td>2025.3.2.474-253236389321v0</td></tr>
+<tr><td>node-html5shiv</td><td>3.7.3+dfsg-4</td></tr>
 <tr><td>ntfs-3g</td><td>1:2021.8.22-3ubuntu1.2</td></tr>
-<tr><td>nvidia-compute-utils-550</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>nvidia-container-toolkit</td><td>1.17.9-1</td></tr>
-<tr><td>nvidia-container-toolkit-base</td><td>1.17.9-1</td></tr>
-<tr><td>nvidia-dkms-550</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>nvidia-driver-550</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>nvidia-firmware-550-550.144.03</td><td>550.144.03-0ubuntu0.22.04.1</td></tr>
-<tr><td>nvidia-firmware-550-550.163.01</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>nvidia-kernel-common-550</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>nvidia-kernel-source-550</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
-<tr><td>nvidia-prime</td><td>0.8.17.1</td></tr>
-<tr><td>nvidia-settings</td><td>510.47.03-0ubuntu1</td></tr>
-<tr><td>nvidia-utils-550</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
+<tr><td>nvidia-cuda-dev:amd64</td><td>11.5.1-1ubuntu1</td></tr>
+<tr><td>nvidia-cuda-gdb</td><td>11.5.114~11.5.1-1ubuntu1</td></tr>
+<tr><td>nvidia-cuda-toolkit</td><td>11.5.1-1ubuntu1</td></tr>
+<tr><td>nvidia-cuda-toolkit-doc</td><td>11.5.1-1ubuntu1</td></tr>
+<tr><td>nvidia-dkms-580</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>nvidia-driver-580</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>nvidia-firmware-580</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>nvidia-kernel-common-580</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>nvidia-kernel-source-580</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>nvidia-modprobe</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>nvidia-opencl-dev:amd64</td><td>11.5.1-1ubuntu1</td></tr>
+<tr><td>nvidia-persistenced</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>nvidia-profiler</td><td>11.5.114~11.5.1-1ubuntu1</td></tr>
+<tr><td>nvidia-settings</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>nvidia-visual-profiler</td><td>11.5.114~11.5.1-1ubuntu1</td></tr>
 <tr><td>ocl-icd-libopencl1:amd64</td><td>2.2.14-3</td></tr>
+<tr><td>ocl-icd-opencl-dev:amd64</td><td>2.2.14-3</td></tr>
 <tr><td>one-context</td><td>6.8.1-1</td></tr>
 <tr><td>open-iscsi</td><td>2.1.5-1ubuntu1.1</td></tr>
 <tr><td>open-vm-tools</td><td>2:12.3.5-3~ubuntu0.22.04.3</td></tr>
-<tr><td>openjdk-11-jre:amd64</td><td>11.0.28+6-1ubuntu1~22.04.1</td></tr>
-<tr><td>openjdk-11-jre-headless:amd64</td><td>11.0.28+6-1ubuntu1~22.04.1</td></tr>
+<tr><td>opencl-c-headers</td><td>3.0~2022.01.04-1</td></tr>
+<tr><td>opencl-clhpp-headers</td><td>3.0~2.0.15-1ubuntu1</td></tr>
+<tr><td>openjdk-8-jre:amd64</td><td>8u462-ga~us1-0ubuntu2~22.04.2</td></tr>
+<tr><td>openjdk-8-jre-headless:amd64</td><td>8u462-ga~us1-0ubuntu2~22.04.2</td></tr>
 <tr><td>openssh-client</td><td>1:8.9p1-3ubuntu0.13</td></tr>
 <tr><td>openssh-server</td><td>1:8.9p1-3ubuntu0.13</td></tr>
 <tr><td>openssh-sftp-server</td><td>1:8.9p1-3ubuntu0.13</td></tr>
@@ -2175,6 +2175,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>ssh-import-id</td><td>5.11-0ubuntu1</td></tr>
 <tr><td>strace</td><td>5.16-0ubuntu3</td></tr>
 <tr><td>sudo</td><td>1.9.9-1ubuntu2.5</td></tr>
+<tr><td>switcheroo-control</td><td>2.4-3build2</td></tr>
 <tr><td>systemd</td><td>249.11-0ubuntu3.17</td></tr>
 <tr><td>systemd-hwe-hwdb</td><td>249.11.6</td></tr>
 <tr><td>systemd-sysv</td><td>249.11-0ubuntu3.17</td></tr>
@@ -2227,6 +2228,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>x11-common</td><td>1:7.7+23ubuntu2</td></tr>
 <tr><td>x11-utils</td><td>7.7+5build2</td></tr>
 <tr><td>x11-xkb-utils</td><td>7.7+5build4</td></tr>
+<tr><td>x11proto-dev</td><td>2021.5-1</td></tr>
 <tr><td>xauth</td><td>1:1.1-1build2</td></tr>
 <tr><td>xcvt</td><td>0.1.1-3</td></tr>
 <tr><td>xdg-user-dirs</td><td>0.17-2ubuntu4</td></tr>
@@ -2235,9 +2237,11 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>xfonts-utils</td><td>1:7.7+6build2</td></tr>
 <tr><td>xfsprogs</td><td>5.13.0-1ubuntu2.1</td></tr>
 <tr><td>xkb-data</td><td>2.33-1</td></tr>
+<tr><td>xorg-sgml-doctools</td><td>1:1.11-1.1</td></tr>
 <tr><td>xserver-common</td><td>2:21.1.4-2ubuntu1.7~22.04.15</td></tr>
 <tr><td>xserver-xorg-core</td><td>2:21.1.4-2ubuntu1.7~22.04.15</td></tr>
-<tr><td>xserver-xorg-video-nvidia-550</td><td>550.163.01-0ubuntu0.22.04.1</td></tr>
+<tr><td>xserver-xorg-video-nvidia-580</td><td>580.95.05-0ubuntu1</td></tr>
+<tr><td>xtrans-dev</td><td>1.4.0-1</td></tr>
 <tr><td>xxd</td><td>2:8.2.3995-1ubuntu2.24</td></tr>
 <tr><td>xz-utils</td><td>5.2.5-2ubuntu1</td></tr>
 <tr><td>zerofree</td><td>1.1.1-1build3</td></tr>
@@ -2265,9 +2269,8 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>build-essential</td></tr>
 <tr><td>cloud-utils</td></tr>
 <tr><td>containerd.io</td></tr>
+<tr><td>cuda-drivers</td></tr>
 <tr><td>cuda-keyring</td></tr>
-<tr><td>cuda-repo-ubuntu2204-12-5-local</td></tr>
-<tr><td>cuda-toolkit</td></tr>
 <tr><td>curl</td></tr>
 <tr><td>dash</td></tr>
 <tr><td>debhelper</td></tr>
@@ -2342,8 +2345,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 <tr><td>ncurses-base</td></tr>
 <tr><td>ncurses-bin</td></tr>
 <tr><td>ncurses-term</td></tr>
-<tr><td>nvidia-container-toolkit</td></tr>
-<tr><td>nvidia-driver-550</td></tr>
+<tr><td>nvidia-cuda-toolkit</td></tr>
 <tr><td>one-context</td></tr>
 <tr><td>openssh-server</td></tr>
 <tr><td>openssh-sftp-server</td></tr>
@@ -2405,7 +2407,7 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
                                     <tr>
                         <td>SSH Access</td>
                         <td><pre>systemctl status sshd | grep 'Active:' | sed 's/^[ \t]*//'</pre></td>
-                        <td><pre>Active: active (running) since Thu 2025-10-16 09:02:51 UTC; 3h 11min ago</pre></td>
+                        <td><pre>Active: active (running) since Thu 2025-10-16 15:04:52 UTC; 7min ago</pre></td>
                         <td>
                             <span class="status-badge status-pass">PASS</span>
                                                     </td>
@@ -2453,22 +2455,9 @@ root        3580  0.0  0.0 234516  4264 ?        Ssl  09:07   0:00 polkitd</pre>
 Problem Size (Ns): N/A (All attempts failed)
 Processes: N/A (All attempts failed)
 </details>
-<details><summary>Show full Docker output</summary><pre>./hpl.sh: line 263:   851 Killed                  ${NUMCMD} ${CPUBIND} ${MEMBIND} ${XHPL} ${DAT}
---------------------------------------------------------------------------
-Primary job  terminated normally, but 1 process returned
-a non-zero exit code. Per user-direction, the job has been aborted.
---------------------------------------------------------------------------
-[81e7e415d921:00001] PMIX ERROR: UNREACHABLE in file ptl_tcp_component.c at line 1801
-[81e7e415d921:00001] PMIX ERROR: UNREACHABLE in file ptl_tcp_component.c at line 1849
-[81e7e415d921:00001] PMIX ERROR: UNREACHABLE in file ptl_tcp_component.c at line 1801
-[81e7e415d921:00001] PMIX ERROR: UNREACHABLE in file ptl_tcp_component.c at line 1849
---------------------------------------------------------------------------
-mpirun detected that one or more processes exited with non-zero status, thus causing
-the job to be terminated. The first process to do so was:
+<details><summary>Show full Docker output</summary><pre>docker: Error response from daemon: could not select device driver "" with capabilities: [[gpu]]
 
-  Process name: [[21100,1],10]
-  Exit code:    137
---------------------------------------------------------------------------</pre></details>
+Run 'docker run --help' for more information</pre></details>
 </span>
                                                     </td>
                     </tr>
@@ -2497,8 +2486,19 @@ the job to be terminated. The first process to do so was:
 # nThread 1 nGpus 1 minBytes 8 maxBytes 134217728 step: 2(factor) warmup iters: 1 iters: 20 agg iters: 1 validation: 1 graph: 0
 #
 # Using devices
-david-gpu: Test CUDA failure common.cu:1141 'CUDA driver version is insufficient for CUDA runtime version'
- .. david-gpu pid 134941: Test failure common.cu:1050</pre></details></span>
+#  Rank  0 Group  0 Pid   7182 on  david-gpu device  0 [0000:01:01] Tesla V100-SXM2-16GB
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)       
+           8             2     float     sum      -1david-gpu: Test CUDA failure common.cu:164 'no kernel image is available for execution on the device'
+ .. david-gpu pid 7182: Test failure all_reduce.cu:52
+ .. david-gpu pid 7182: Test failure common.cu:459
+ .. david-gpu pid 7182: Test failure common.cu:650
+ .. david-gpu pid 7182: Test failure all_reduce.cu:518
+ .. david-gpu pid 7182: Test failure common.cu:664
+ .. david-gpu pid 7182: Test failure common.cu:1398
+ .. david-gpu pid 7182: Test failure common.cu:1050</pre></details></span>
                                                     </td>
                     </tr>
                                 </tbody>

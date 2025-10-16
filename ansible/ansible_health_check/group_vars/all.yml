@@ -1,3 +1,9 @@
 ---
-# No specific configuration needed for the new speedtest role.
-# You can add other global variables here if needed.
+# ------------------------------------------------------------------
+#          USER-CONFIGURABLE BENCHMARK SETTINGS
+# ------------------------------------------------------------------
+
+# Define the target CUDA version the system's driver must support.
+# This should match the version of the CUDA toolkit you intend to use.
+# You can change this value to target a different CUDA version.
+target_cuda_version: "12.5"
