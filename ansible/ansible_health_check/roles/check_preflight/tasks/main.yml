@@ -1,0 +1,119 @@
+---
+# roles/check_preflight/tasks/main.yml
+# Installs/validates NVIDIA + CUDA + NCCL test binaries, writes status file, and reboots.
+
+- name: 01. Clean up conflicting NVIDIA/CUDA installations
+  ansible.builtin.apt:
+    name:
+      - "*nvidia*"
+      - "*cuda*"
+    state: absent
+    purge: true
+    update_cache: true
+  ignore_errors: true
+  become: true
+  tags: ["run_preflight_check"]
+
+- name: 02. Install core build dependencies
+  ansible.builtin.apt:
+    name:
+      - build-essential
+      - devscripts
+      - debhelper
+      - fakeroot
+      - git
+      - libnccl-dev
+      - libnccl2
+    state: present
+    update_cache: true
+  become: true
+  tags: ["run_preflight_check"]
+
+- name: 03. Download and install NVIDIA CUDA keyring
+  ansible.builtin.apt:
+    deb: "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb"
+    state: present
+    update_cache: false
+  become: true
+  tags: ["run_preflight_check"]
+
+- name: 04. Install CUDA 13.0 Toolkit (Includes Driver)
+  ansible.builtin.apt:
+    name: "cuda-toolkit-13-0"
+    state: present
+    update_cache: true
+  become: true
+  tags: ["run_preflight_check"]
+
+- name: 05. Create /usr/local/cuda symlink for compiler to point to CUDA 13.0
+  ansible.builtin.file:
+    src: "/usr/local/cuda-13.0"
+    dest: "/usr/local/cuda"
+    state: link
+    force: true
+  become: true
+  tags: ["run_preflight_check"]
+
+- name: 06. Create /usr/bin/nvcc symlink
+  ansible.builtin.file:
+    src: "/usr/local/cuda-13.0/bin/nvcc"
+    dest: "/usr/bin/nvcc"
+    state: link
+    force: true
+  become: true
+  tags: ["run_preflight_check"]
+
+- name: 07. Clone NCCL tests repository
+  ansible.builtin.git:
+    repo: 'https://github.com/NVIDIA/nccl-tests.git'
+    dest: /usr/local/nccl-tests
+    version: master
+    force: true
+  become: true
+  tags: ["run_preflight_check"]
+
+- name: 08. Compile NCCL tests
+  ansible.builtin.command: make all
+  args:
+    chdir: /usr/local/nccl-tests
+  environment:
+    PATH: "/usr/local/cuda/bin:{{ ansible_env.PATH }}"
+  become: true
+  tags: ["run_preflight_check"]
+
+- name: 09. Create symlink for all_reduce_perf in /usr/local/bin
+  ansible.builtin.file:
+    src: /usr/local/nccl-tests/build/all_reduce_perf
+    dest: /usr/local/bin/all_reduce_perf
+    state: link
+    force: true
+  become: true
+  tags: ["run_preflight_check"]
+
+- name: 10. BIG REBOOT WARNING MESSAGE
+  ansible.builtin.debug:
+    msg: |
+      ******************************************************************
+      *** REBOOT REQUIRED! REBOOT REQUIRED! REBOOT REQUIRED! REBOOT  ***
+      *** The NVIDIA driver requires a system reboot to fully load   ***
+      *** the kernel modules and make the GPUs available.            ***
+      ***                                                             ***
+      *** Ansible is now forcing a reboot. Wait for the host to come ***
+      *** back online, then run the playbook for the second time.    ***
+      ******************************************************************
+  changed_when: true
+  tags: ["run_preflight_check"]
+
+- name: 11. Create installation complete status file
+  ansible.builtin.copy:
+    content: "Install Complete. Last reboot time: {{ ansible_date_time.iso8601_micro }}\n"
+    dest: /etc/ansible_gpu_install_complete
+    mode: '0644'
+  become: true
+  tags: ["run_preflight_check"]
+
+- name: 12. Reboot the host to load new NVIDIA kernel module
+  ansible.builtin.reboot:
+    reboot_timeout: 1200
+  become: true
+  tags: ["run_preflight_check"]

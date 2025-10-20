@@ -1,113 +1,117 @@
 ---
-- name: Check for NVIDIA GPU presence before running NCCL tests
-  ansible.builtin.command: nvidia-smi
-  register: nvidia_check
+# ==============================================================================
+# GPU INSTALLATION CHECK (non-fatal; results go to HTML report)
+# ==============================================================================
+- name: 01. Check for installation status file
+  ansible.builtin.stat:
+    path: /etc/ansible_gpu_install_complete
+  register: install_file_stat
+
+- name: 02. Verify host has rebooted since installation
+  ansible.builtin.command: cat /proc/uptime
+  register: proc_uptime_output
   changed_when: false
   failed_when: false
 
-- name: Skip NCCL benchmark if no NVIDIA GPU is found
-  when: nvidia_check.rc != 0
-  block:
-    - name: Create NCCL skip result object
-      ansible.builtin.set_fact:
-        nccl_skip_result:
-          name: "NCCL Benchmark (all_reduce_perf)"
-          command: "N/A"
-          result: "Skipped: No NVIDIA GPU detected or nvidia-smi not found."
-          status: "PARTIAL"
-          notes: ""
-    - name: Append NCCL skip result
-      ansible.builtin.set_fact:
-        test_results: "{{ test_results | combine({'nccl_benchmark': test_results.nccl_benchmark + [nccl_skip_result]}, recursive=True) }}"
+- name: Compute pre-flight status
+  ansible.builtin.set_fact:
+    ncclnode_preflight_failed: "{{ (not install_file_stat.stat.exists) or ((proc_uptime_output.stdout_lines[0].split()[0] | float) < 120) }}"
 
-- name: Add NVIDIA CUDA network repository
-  block:
-    - name: Download the CUDA network repository keyring package
-      ansible.builtin.get_url:
-        url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
-        dest: /tmp/cuda-keyring.deb
-        mode: '0644'
-      become: true
+- name: Build pre-flight message
+  ansible.builtin.set_fact:
+    ncclnode_preflight_message: |
+      ******************************************************************
+      *** PRE-FLIGHT CHECK FAILED: GPU installation is incomplete.   ***
+      ******************************************************************
+      Reason: The required NVIDIA/CUDA components are not fully loaded.
+      
+      {% if not install_file_stat.stat.exists %}
+      * Status File Missing: The previous install role did not complete.
+      {% else %}
+      * Host Uptime: {{ proc_uptime_output.stdout_lines[0].split()[0] | float | round(0) }} seconds
+      * The host has not successfully loaded the new NVIDIA driver, 
+        or the driver failed to load during boot. Please reboot the host 
+        manually or wait for the previous reboot task to complete.
+      {% endif %}
+      
+      Action Required:
+      1. Ensure the host is online and responsive.
+      2. Re-run the full Ansible playbook (e.g., 'ansible-playbook site.yml')
+         to confirm the driver has loaded correctly.
+      ******************************************************************
 
-    - name: Install the CUDA network repository keyring
-      ansible.builtin.apt:
-        deb: /tmp/cuda-keyring.deb
-      become: true
+- name: Create PRE-FLIGHT result object
+  ansible.builtin.set_fact:
+    ncclnode_preflight_result:
+      name: "NCCL Pre-flight"
+      command: "installation status + uptime"
+      result: "{{ ncclnode_preflight_message if ncclnode_preflight_failed else 'Pre-flight OK: installation status file present and uptime sufficient' }}"
+      status: "{{ 'FAIL' if ncclnode_preflight_failed else 'PASS' }}"
+      notes: ""
 
-- name: Build and run NCCL tests from source
-  when: nvidia_check.rc == 0
-  become: true
-  block:
-    - name: Install required build dependencies
-      ansible.builtin.package:
-        name:
-          - build-essential
-          - git
-          - cuda-toolkit
-          - libnccl-dev
-        state: present
-        update_cache: yes
+- name: Append pre-flight result to report
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'nccl_benchmark': test_results.nccl_benchmark + [ncclnode_preflight_result]}, recursive=True) }}"
 
-    - name: PURGE conflicting old CUDA toolkit from Ubuntu repository
-      ansible.builtin.package:
-        name: nvidia-cuda-toolkit
-        state: absent
+# ==============================================================================
+# DYNAMIC BENCHMARK RUN
+# ==============================================================================
+- name: 04. Check for GPU count using nvidia-smi
+  ansible.builtin.shell: |
+    /usr/bin/nvidia-smi -L | grep "GPU" | wc -l
+  register: gpu_count_result
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/local/cuda/bin"
 
-    - name: Remove old nccl-tests directory to ensure a clean build
-      ansible.builtin.file:
-        path: /usr/local/nccl-tests
-        state: absent
+- name: Set GPU count fact
+  ansible.builtin.set_fact:
+    ngpus: "{{ (gpu_count_result.stdout | default('0')) | int }}"
 
-    - name: Clone the NCCL-Tests repository
-      ansible.builtin.git:
-        repo: 'https://github.com/NVIDIA/nccl-tests.git'
-        dest: /usr/local/nccl-tests
-        version: master
+- name: 05. Display detected GPU count
+  ansible.builtin.debug:
+    msg: "SUCCESS: GPU installation verified. Detected {{ ngpus }} GPU(s) on host {{ inventory_hostname }}."
+    verbosity: 1
 
-    - name: Get the GPU's Compute Capability
-      ansible.builtin.command: nvidia-smi --query-gpu=compute_cap --format=csv,noheader
-      register: compute_capability
-      changed_when: false
+- name: 06. Run NCCL all_reduce_perf benchmark
+  when: not ncclnode_preflight_failed
+  ansible.builtin.shell: |
+    ALL_REDUCE_BIN="/usr/local/bin/all_reduce_perf"
+    GPU_COUNT={{ ngpus }}
 
-    - name: Set compute capability fact
-      ansible.builtin.set_fact:
-        gpu_compute_code: "{{ compute_capability.stdout | replace('.', '') }}"
+    if [ "$GPU_COUNT" -ge 2 ]; then
+      echo "Running multi-GPU NCCL test on ${GPU_COUNT} GPUs (AllReduce)."
+      env NCCL_DEBUG=INFO $ALL_REDUCE_BIN -b 8 -e 128M -f 2 -g $GPU_COUNT
+    elif [ "$GPU_COUNT" -eq 1 ]; then
+      echo "WARNING: Only 1 GPU detected. Running single-GPU test for NCCL validation."
+      env NCCL_DEBUG=INFO NCCL_MIN_NRANKS=1 $ALL_REDUCE_BIN -b 8 -e 128M -f 2 -g 1 -n 1
+    else
+      echo "ERROR: Zero GPUs detected after reboot. Check hardware/driver log."
+      exit 1
+    fi
+  args:
+    executable: /bin/bash
+  register: ncclnode_bench
+  changed_when: false
+  failed_when: false
 
-    # --- START OF THE DIAGNOSTIC AND FIX ---
-    - name: "(DIAGNOSTIC) Show which 'nvcc' the system finds by default"
-      ansible.builtin.shell: "which nvcc"
-      args:
-        chdir: /usr/local/nccl-tests/
-      register: nvcc_path_check
-      changed_when: false
-      failed_when: false # Never fail on a diagnostic step
+- name: Create NCCL benchmark result object
+  when: not ncclnode_preflight_failed
+  ansible.builtin.set_fact:
+    nccl_benchmark_result:
+      name: "NCCL Benchmark (all_reduce_perf)"
+      command: "all_reduce_perf -b 8 -e 128M -f 2 -g {{ ngpus if ngpus|int >= 1 else 0 }}"
+      result: "{{ ncclnode_bench.stdout if ncclnode_bench.rc == 0 else (ncclnode_bench.stderr if ncclnode_bench.stderr else 'Command failed') }}"
+      status: "{{ (ncclnode_bench.rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Detected GPUs: {{ ngpus }}"
 
-    - name: "(DIAGNOSTIC) Display the found compiler path"
-      ansible.builtin.debug:
-        msg: "The 'make' command is finding the compiler at this path: {{ nvcc_path_check.stdout | default('nvcc not found in default PATH') }}"
+- name: Append NCCL benchmark result
+  when: not ncclnode_preflight_failed
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'nccl_benchmark': test_results.nccl_benchmark + [nccl_benchmark_result]}, recursive=True) }}"
 
-    - name: Compile the NCCL tests, explicitly setting the compiler
-      ansible.builtin.shell:
-        cmd: "make NVCC_GENCODE='-gencode arch=compute_{{ gpu_compute_code }},code=sm_{{ gpu_compute_code }}'"
-        chdir: /usr/local/nccl-tests/
-        creates: /usr/local/nccl-tests/build/all_reduce_perf
-    # --- END OF THE DIAGNOSTIC AND FIX ---
-
-    - name: Run a sample NCCL benchmark (all_reduce_perf)
-      ansible.builtin.command: /usr/local/nccl-tests/build/all_reduce_perf -b 8 -e 128M -f 2 -g 1
-      register: nccl_result
-      changed_when: false
-      failed_when: false
-
-    - name: Create NCCL result object
-      ansible.builtin.set_fact:
-        nccl_benchmark_result:
-          name: "NCCL Benchmark (all_reduce_perf)"
-          command: "all_reduce_perf -b 8 -e 128M -f 2 -g 1"
-          result: "{{ nccl_result.stdout if nccl_result.rc == 0 else nccl_result.stderr }}"
-          status: "{{ (nccl_result.rc == 0) | ternary('PASS', 'FAIL') }}"
-          notes: "<details><summary>Show full benchmark output</summary><pre>{{ nccl_result.stdout }}</pre></details>"
-
-    - name: Append NCCL Benchmark result
-      ansible.builtin.set_fact:
-        test_results: "{{ test_results | combine({'nccl_benchmark': test_results.nccl_benchmark + [nccl_benchmark_result]}, recursive=True) }}"
+- name: Append NCCL benchmark skipped result (pre-flight failed)
+  when: ncclnode_preflight_failed
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'nccl_benchmark': test_results.nccl_benchmark + [{ 'name': 'NCCL Benchmark (all_reduce_perf)', 'command': 'N/A', 'result': 'Skipped due to pre-flight failure', 'status': 'PARTIAL', 'notes': '' }]}, recursive=True) }}"

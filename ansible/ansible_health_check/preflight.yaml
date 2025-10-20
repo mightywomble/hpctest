@@ -1,0 +1,8 @@
+---
+- name: Preflight NVIDIA/CUDA setup for NCCL testing
+  hosts: all
+  gather_facts: true
+  become: true
+
+  roles:
+    - { role: check_preflight, tags: ["run_preflight_check"] }
