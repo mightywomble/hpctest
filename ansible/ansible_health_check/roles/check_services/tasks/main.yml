@@ -1,0 +1,33 @@
+---
+- name: Run service and mount commands
+  ansible.builtin.shell: "{{ item.cmd }}"
+  register: service_commands
+  loop:
+    - { name: "ssh", cmd: "systemctl status sshd | grep 'Active:' | sed 's/^[ \\t]*//'" }
+    - { name: "ipmi", cmd: "ipmitool lan print" }
+    - { name: "nfs", cmd: "mount | grep nfs" }
+  changed_when: false
+  failed_when: false
+- name: Create Services & Mounts result objects
+  ansible.builtin.set_fact:
+    ssh_result:
+      name: "SSH Access"
+      command: "systemctl status sshd | grep 'Active:' | sed 's/^[ \\t]*//'"
+      result: "{{ service_commands.results[0].stdout }}"
+      status: "{{ (service_commands.results[0].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: ""
+    ipmi_result:
+      name: "IPMI Access"
+      command: "ipmitool lan print"
+      result: "{{ service_commands.results[1].stdout if service_commands.results[1].rc == 0 else service_commands.results[1].stderr }}"
+      status: "{{ (service_commands.results[1].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ service_commands.results[1].rc }}"
+    nfs_result:
+      name: "NFS Mounts"
+      command: "mount | grep nfs"
+      result: "{{ service_commands.results[2].stdout | default('No NFS mounts found.', true) }}"
+      status: "{{ (service_commands.results[2].rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Exit code {{ service_commands.results[2].rc }}"
+- name: Append all Services results
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'services': test_results.services + [ssh_result, ipmi_result, nfs_result]}, recursive=True) }}"

@@ -1,0 +1,117 @@
+---
+# ==============================================================================
+# GPU INSTALLATION CHECK (non-fatal; results go to HTML report)
+# ==============================================================================
+- name: 01. Check for installation status file
+  ansible.builtin.stat:
+    path: /etc/ansible_gpu_install_complete
+  register: install_file_stat
+
+- name: 02. Verify host has rebooted since installation
+  ansible.builtin.command: cat /proc/uptime
+  register: proc_uptime_output
+  changed_when: false
+  failed_when: false
+
+- name: Compute pre-flight status
+  ansible.builtin.set_fact:
+    ncclnode_preflight_failed: "{{ (not install_file_stat.stat.exists) or ((proc_uptime_output.stdout_lines[0].split()[0] | float) < 120) }}"
+
+- name: Build pre-flight message
+  ansible.builtin.set_fact:
+    ncclnode_preflight_message: |
+      ******************************************************************
+      *** PRE-FLIGHT CHECK FAILED: GPU installation is incomplete.   ***
+      ******************************************************************
+      Reason: The required NVIDIA/CUDA components are not fully loaded.
+      
+      {% if not install_file_stat.stat.exists %}
+      * Status File Missing: The previous install role did not complete.
+      {% else %}
+      * Host Uptime: {{ proc_uptime_output.stdout_lines[0].split()[0] | float | round(0) }} seconds
+      * The host has not successfully loaded the new NVIDIA driver, 
+        or the driver failed to load during boot. Please reboot the host 
+        manually or wait for the previous reboot task to complete.
+      {% endif %}
+      
+      Action Required:
+      1. Ensure the host is online and responsive.
+      2. Re-run the full Ansible playbook (e.g., 'ansible-playbook site.yml')
+         to confirm the driver has loaded correctly.
+      ******************************************************************
+
+- name: Create PRE-FLIGHT result object
+  ansible.builtin.set_fact:
+    ncclnode_preflight_result:
+      name: "NCCL Pre-flight"
+      command: "installation status + uptime"
+      result: "{{ ncclnode_preflight_message if ncclnode_preflight_failed else 'Pre-flight OK: installation status file present and uptime sufficient' }}"
+      status: "{{ 'FAIL' if ncclnode_preflight_failed else 'PASS' }}"
+      notes: ""
+
+- name: Append pre-flight result to report
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'nccl_benchmark': test_results.nccl_benchmark + [ncclnode_preflight_result]}, recursive=True) }}"
+
+# ==============================================================================
+# DYNAMIC BENCHMARK RUN
+# ==============================================================================
+- name: 04. Check for GPU count using nvidia-smi
+  ansible.builtin.shell: |
+    /usr/bin/nvidia-smi -L | grep "GPU" | wc -l
+  register: gpu_count_result
+  changed_when: false
+  failed_when: false
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/local/cuda/bin"
+
+- name: Set GPU count fact
+  ansible.builtin.set_fact:
+    ngpus: "{{ (gpu_count_result.stdout | default('0')) | int }}"
+
+- name: 05. Display detected GPU count
+  ansible.builtin.debug:
+    msg: "SUCCESS: GPU installation verified. Detected {{ ngpus }} GPU(s) on host {{ inventory_hostname }}."
+    verbosity: 1
+
+- name: 06. Run NCCL all_reduce_perf benchmark
+  when: not ncclnode_preflight_failed
+  ansible.builtin.shell: |
+    ALL_REDUCE_BIN="/usr/local/bin/all_reduce_perf"
+    GPU_COUNT={{ ngpus }}
+
+    if [ "$GPU_COUNT" -ge 2 ]; then
+      echo "Running multi-GPU NCCL test on ${GPU_COUNT} GPUs (AllReduce)."
+      env NCCL_DEBUG=INFO $ALL_REDUCE_BIN -b 8 -e 128M -f 2 -g $GPU_COUNT
+    elif [ "$GPU_COUNT" -eq 1 ]; then
+      echo "WARNING: Only 1 GPU detected. Running single-GPU test for NCCL validation."
+      env NCCL_DEBUG=INFO NCCL_MIN_NRANKS=1 $ALL_REDUCE_BIN -b 8 -e 128M -f 2 -g 1 -n 1
+    else
+      echo "ERROR: Zero GPUs detected after reboot. Check hardware/driver log."
+      exit 1
+    fi
+  args:
+    executable: /bin/bash
+  register: ncclnode_bench
+  changed_when: false
+  failed_when: false
+
+- name: Create NCCL benchmark result object
+  when: not ncclnode_preflight_failed
+  ansible.builtin.set_fact:
+    nccl_benchmark_result:
+      name: "NCCL Benchmark (all_reduce_perf)"
+      command: "all_reduce_perf -b 8 -e 128M -f 2 -g {{ ngpus if ngpus|int >= 1 else 0 }}"
+      result: "{{ ncclnode_bench.stdout if ncclnode_bench.rc == 0 else (ncclnode_bench.stderr if ncclnode_bench.stderr else 'Command failed') }}"
+      status: "{{ (ncclnode_bench.rc == 0) | ternary('PASS', 'FAIL') }}"
+      notes: "Detected GPUs: {{ ngpus }}"
+
+- name: Append NCCL benchmark result
+  when: not ncclnode_preflight_failed
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'nccl_benchmark': test_results.nccl_benchmark + [nccl_benchmark_result]}, recursive=True) }}"
+
+- name: Append NCCL benchmark skipped result (pre-flight failed)
+  when: ncclnode_preflight_failed
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'nccl_benchmark': test_results.nccl_benchmark + [{ 'name': 'NCCL Benchmark (all_reduce_perf)', 'command': 'N/A', 'result': 'Skipped due to pre-flight failure', 'status': 'PARTIAL', 'notes': '' }]}, recursive=True) }}"

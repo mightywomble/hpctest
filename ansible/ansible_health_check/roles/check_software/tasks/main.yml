@@ -1,0 +1,45 @@
+---
+- name: Run software and package commands
+  ansible.builtin.shell: "{{ item.cmd }}"
+  register: software_commands
+  loop:
+    - { name: "ps", cmd: "ps axfcu" }
+    - { name: "dpkg", cmd: "dpkg-query -W" }
+    - { name: "manual", cmd: "apt-mark showmanual | sort" }
+  changed_when: false
+  failed_when: false
+- name: Create Software & Packages result objects
+  ansible.builtin.set_fact:
+    process_list_result:
+      name: "Process List"
+      command: "ps axfcu"
+      result: "<details><summary>Show process list (ps axfcu)</summary><pre>{{ software_commands.results[0].stdout }}</pre></details>"
+      status: "PASS"
+      notes: ""
+    installed_packages_result:
+      name: "Installed Packages"
+      command: "dpkg-query -W"
+      result: |
+        <details><summary>Installed Packages</summary><div><input class="search" id="pkgFilter" placeholder="Filter packages..." oninput="filterTable('pkgFilter','pkgTable')"></div>
+        <table id="pkgTable"><thead><tr><th>Package</th><th>Version</th></tr></thead><tbody>
+        {% for line in software_commands.results[1].stdout_lines %}
+        <tr><td>{{ line.split()[0] }}</td><td>{{ line.split()[1] }}</td></tr>
+        {% endfor %}
+        </tbody></table></details>
+      status: "PASS"
+      notes: "Package and version"
+    manual_packages_result:
+      name: "Manually installed software"
+      command: "apt-mark showmanual | sort"
+      result: |
+        <details><summary>Manually installed software</summary><div><input class="search" id="manFilter" placeholder="Filter manual packages..." oninput="filterTable('manFilter','manTable')"></div>
+        <table id="manTable"><thead><tr><th>Package</th></tr></thead><tbody>
+        {% for line in software_commands.results[2].stdout_lines %}
+        <tr><td>{{ line }}</td></tr>
+        {% endfor %}
+        </tbody></table></details>
+      status: "PASS"
+      notes: "From apt-mark showmanual"
+- name: Append all Software results
+  ansible.builtin.set_fact:
+    test_results: "{{ test_results | combine({'software': test_results.software + [process_list_result, installed_packages_result, manual_packages_result]}, recursive=True) }}"

@@ -1,0 +1,99 @@
+---
+# This is the first task that will run in this role.
+- name: "Display target CUDA version and configuration location"
+  ansible.builtin.debug:
+    msg:
+      - "--------------------------------------------------------------------"
+      - "Checking for NVIDIA driver compatibility..."
+      - "Target CUDA Version: {{ target_cuda_version }}"
+      - "To change this, edit the 'target_cuda_version' variable in the 'group_vars/all.yml' file."
+      - "--------------------------------------------------------------------"
+
+- name: Check for an installed NVIDIA driver with nvidia-smi
+  ansible.builtin.command: nvidia-smi --query-gpu=cuda_version --format=csv,noheader
+  register: nvidia_smi_check
+  changed_when: false
+  failed_when: false # Don't fail if nvidia-smi isn't found
+
+- name: Evaluate driver status and proceed if compatible
+  block:
+    - name: Set current CUDA version from driver
+      ansible.builtin.set_fact:
+        current_cuda_version: "{{ nvidia_smi_check.stdout | trim }}"
+
+    - name: ✅ Driver and CUDA are compatible, proceeding with playbook.
+      ansible.builtin.debug:
+        msg: "Current driver supports CUDA {{ current_cuda_version }}, which meets the target of {{ target_cuda_version }}. Continuing..."
+      when: current_cuda_version is version(target_cuda_version, '>=')
+
+    - name: ❌ Driver and CUDA mismatch found. Starting corrective action...
+      when: current_cuda_version is version(target_cuda_version, '<')
+      block:
+        - name: Display mismatch details
+          ansible.builtin.debug:
+            msg:
+              - "MISMATCH DETECTED:"
+              - "  Required CUDA Version >= {{ target_cuda_version }}"
+              - "  Driver Supports CUDA Version: {{ current_cuda_version }}"
+              - "Proceeding to purge and reinstall drivers."
+
+        - name: Purge all existing NVIDIA and CUDA packages for a clean slate
+          ansible.builtin.package:
+            name: ['*nvidia*', '*cuda*']
+            state: absent
+            autoremove: yes
+          become: true
+
+        - name: Set driver installation required flag
+          ansible.builtin.set_fact:
+            driver_installation_needed: true
+
+  when: nvidia_smi_check.rc == 0 # This block only runs if a driver is currently installed
+
+- name: Handle case where no NVIDIA driver is installed at all
+  when: nvidia_smi_check.rc != 0
+  block:
+    - name: Display that no driver was found
+      ansible.builtin.debug:
+        msg: "No NVIDIA driver found. Proceeding to install."
+
+    - name: Set driver installation required flag
+      ansible.builtin.set_fact:
+        driver_installation_needed: true
+
+- name: Install new NVIDIA drivers if required
+  when: driver_installation_needed | default(false)
+  become: true
+  block:
+    - name: Download the NVIDIA CUDA network repository keyring
+      ansible.builtin.get_url:
+        url: "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb"
+        dest: /tmp/cuda-keyring.deb
+        mode: '0644'
+
+    - name: Install the CUDA network repository keyring
+      ansible.builtin.apt:
+        deb: /tmp/cuda-keyring.deb
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install the latest compatible CUDA drivers
+      ansible.builtin.package:
+        name: cuda-drivers
+        state: present
+
+    - name: 🛑 Driver update complete. A reboot is required.
+      ansible.builtin.debug:
+        msg:
+          - "****************************************************************"
+          - "** **"
+          - "** DRIVER UPDATE COMPLETE. PLEASE REBOOT THE SERVER NOW.      **"
+          - "** **"
+          - "** After rebooting, re-run this Ansible playbook to continue. **"
+          - "** **"
+          - "****************************************************************"
+
+    - name: Stop the playbook to allow for a manual reboot
+      ansible.builtin.meta: end_play

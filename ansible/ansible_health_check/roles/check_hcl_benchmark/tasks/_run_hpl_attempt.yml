@@ -1,0 +1,95 @@
+# roles/check_hcl_benchmark/tasks/_run_hpl_attempt.yml
+---
+- name: "Attempting HPL benchmark with problem size (Ns) = {{ current_ns }}"
+  ansible.builtin.debug:
+    msg: "Configuring and running test with Ns={{ current_ns }}..."
+
+- name: Create HPL.dat file with current problem size
+  ansible.builtin.copy:
+    dest: "/tmp/HPL-modified.dat"
+    mode: '0644'
+    content: |
+      HPLinpack benchmark input file
+      Innovative Computing Laboratory, University of Tennessee
+      HPL.out      output file name (if any)
+      6            device out (6=stdout,7=stderr,file)
+      1            # of problems sizes (N)
+      {{ current_ns }}         Ns
+      1            # of NBs
+      256          NBs
+      0            PMAP process mapping (0=Row-,1=Column-major)
+      1            # of process grids (P x Q)
+      8 8              # P's and Q's
+      16.0         threshold
+      1            # of panel fact
+      2            PFACTs (0=left, 1=Crout, 2=Right)
+      1            # of recursive stopping criterium
+      4            NBMINs (>= 1)
+      1            # of panels in recursion
+      2            NDIVs
+      1            # of recursive panel fact.
+      1            RFACTs (0=left, 1=Crout, 2=Right)
+      1            # of broadcast
+      0            BCASTs (0=1rg,1=1rM,2=2rg,3=2rM,4=Lng,5=LnM)
+      1            # of lookahead depth
+      0            DEPTHs (>= 0)
+      2            SWAP (0=bin-exch,1=long,2=mix)
+      64           swapping threshold
+      0            L1 in (0=transposed,1=no-transposed) form
+      0            U  in (0=transposed,1=no-transposed) form
+      1            Equilibration (0=no,1=yes)
+      8            memory alignment in double (> 0)
+
+- name: "Initial attempt with 64 processes"
+  ansible.builtin.command: >
+    docker run --gpus all --rm --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864
+    -v /tmp/HPL-modified.dat:/workspace/HPL.dat
+    nvcr.io/nvidia/hpc-benchmarks:25.04
+    -- mpirun -np 64 --oversubscribe ./hpl.sh --dat /workspace/HPL.dat
+  register: hpl_attempt_1
+  changed_when: false
+  failed_when: false
+
+- name: Set final result for this iteration
+  ansible.builtin.set_fact:
+    hpl_iteration_result: "{{ hpl_attempt_1 }}"
+
+- name: Re-run if more processes are needed
+  when: "'Need at least' in hpl_attempt_1.stderr"
+  block:
+    - name: Extract required number of processes
+      ansible.builtin.set_fact:
+        required_processes: "{{ hpl_attempt_1.stderr | regex_search('Need at least (\\d+) processes', '\\1') | first }}"
+
+    - name: "Benchmark requires more processes. Re-attempting with {{ required_processes }}..."
+      ansible.builtin.debug:
+        msg: "Updating HPL.dat and re-running with {{ required_processes }} processes."
+
+    - name: Update HPL.dat with a valid process grid
+      ansible.builtin.lineinfile:
+        path: "/tmp/HPL-modified.dat"
+        regexp: ".*# P's and Q's"
+        line: "{{ (required_processes | int // 8) | int }} 8              # P's and Q's"
+
+    - name: Re-run HPL benchmark with required processes
+      ansible.builtin.command: >
+        docker run --gpus all --rm --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864
+        -v /tmp/HPL-modified.dat:/workspace/HPL.dat
+        nvcr.io/nvidia/hpc-benchmarks:25.04
+        -- mpirun -np {{ required_processes }} --oversubscribe ./hpl.sh --dat /workspace/HPL.dat
+      register: hpl_attempt_2
+      changed_when: false
+      failed_when: false
+
+    - name: Override final result for this iteration with the successful re-run
+      ansible.builtin.set_fact:
+        hpl_iteration_result: "{{ hpl_attempt_2 }}"
+
+# If the iteration was successful, set the flag and capture all final parameters.
+- name: Set success flag and capture final result on success
+  when: hpl_iteration_result.rc == 0
+  ansible.builtin.set_fact:
+    hpl_benchmark_succeeded: true
+    hpl_final_result_from_loop: "{{ hpl_iteration_result }}"
+    hpl_final_ns_from_loop: "{{ current_ns }}"
+    hpl_final_processes_from_loop: "{{ required_processes | default(64) }}"

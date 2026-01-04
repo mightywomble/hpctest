@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Test Report</title>
+    <style>
+        :root {
+            --bg-color: #1a1b26; --card-color: #24283b; --text-color: #c0caf5;
+            --header-color: #ffffff; --accent-color: #00bfff; --border-color: #414868;
+            --table-header-bg: #2e3452; --green: #34d399; --yellow: #facc15; --red: #f87171;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 2rem; font-size: 14px; }
+        .container { max-width: 1200px; margin: 0 auto; background-color: var(--card-color); border-radius: 12px; padding: 2rem; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        h1 { color: var(--header-color); text-align: center; border-bottom: 2px solid var(--accent-color); padding-bottom: 1rem; margin-bottom: 0.5rem; font-weight: 700; }
+        .report-meta, .report-host { text-align: center; margin-bottom: 1.5rem; font-size: 0.95rem; color: #7a82ac; }
+        details { background: var(--bg-color); border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--border-color); overflow: hidden; }
+        summary { font-weight: 600; font-size: 1.2rem; padding: 1rem; cursor: pointer; color: var(--accent-color); background-color: var(--table-header-bg); list-style: none; display: flex; justify-content: space-between; }
+        summary::after { content: '+'; font-size: 1.5rem; transition: transform 0.2s; }
+        details[open] summary::after { transform: rotate(45deg); }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { padding: 0.8rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: top; overflow-wrap: anywhere; word-break: break-word; }
+        pre { white-space: pre-wrap; word-break: break-word; margin: 0;}
+        thead { background-color: var(--table-header-bg); color: #a9b1d6; font-weight: 600; }
+        tbody tr:nth-child(even) { background-color: #2e345250; }
+        thead th:nth-child(1) { width: 20%; }
+        thead th:nth-child(2) { width: 30%; }
+        thead th:nth-child(3) { width: 40%; }
+        thead th:nth-child(4) { width: 10%; }
+        td:nth-child(1) { font-weight: 600; color: #a9b1d6;}
+        td:nth-child(2) { font-family: monospace; color: #e0af68; }
+        td:nth-child(3) { white-space: pre-wrap; word-break: break-word; font-family: monospace; font-size: 0.85rem;}
+        .status-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 9999px; font-weight: 600; font-size: 0.8rem; }
+        .status-pass { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.4); }
+        .status-partial { background: rgba(250,204,21,0.15); color: var(--yellow); border: 1px solid rgba(250,204,21,0.4); }
+        .status-fail { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.4); }
+        .status-notes { display:block; margin-top:0.25rem; font-size: 0.8rem; color: #a9b1d6; white-space: pre-wrap; }
+        .footer { text-align: center; margin-top: 2rem; font-size: 0.8rem; color: #7a82ac; }
+        .search { width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; margin: 0.5rem 0 0.75rem 0; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-color); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>System Hardware & Performance Report</h1>
+        <div class="report-meta">Generated on: 2025-10-21T13:31:05Z</div>
+        <div class="report-host">Hostname: david-systemtest-gpu-4 • Primary IP: 198.145.104.28</div>
+
+        
+                                                                                                                                                                                                                        <details open>
+            <summary>NCCL Benchmark</summary>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test</th>
+                        <th>Command</th>
+                        <th>Result</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                                    <tr>
+                        <td>NCCL Pre-flight</td>
+                        <td><pre>installation status + uptime</pre></td>
+                        <td><pre>Pre-flight OK: installation status file present and uptime sufficient</pre></td>
+                        <td>
+                            <span class="status-badge status-pass">PASS</span>
+                                                    </td>
+                    </tr>
+                                    <tr>
+                        <td>NCCL Benchmark (all_reduce_perf)</td>
+                        <td><pre>all_reduce_perf -b 8 -e 128M -f 2 -g 2</pre></td>
+                        <td><pre>Running multi-GPU NCCL test on 2 GPUs (AllReduce).
+# Collective test starting: all_reduce_perf
+# nThread 1 nGpus 2 minBytes 8 maxBytes 134217728 step: 2(factor) warmup iters: 1 iters: 20 agg iters: 1 validation: 1 graph: 0
+#
+# Using devices
+#  Rank  0 Group  0 Pid  10208 on david-systemtest-gpu-4 device  0 [0000:01:01] NVIDIA A40
+#  Rank  1 Group  0 Pid  10208 on david-systemtest-gpu-4 device  1 [0000:01:02] NVIDIA A40
+david-systemtest-gpu-4:10208:10208 [0] NCCL INFO Bootstrap: Using ens4:198.145.104.28<0>
+david-systemtest-gpu-4:10208:10208 [0] NCCL INFO cudaDriverVersion 13000
+david-systemtest-gpu-4:10208:10208 [0] NCCL INFO NCCL version 2.28.3+cuda13.0
+david-systemtest-gpu-4:10208:10208 [0] NCCL INFO Comm config nvlinkCentricSched set to 1
+david-systemtest-gpu-4:10208:10208 [1] NCCL INFO Comm config nvlinkCentricSched set to 1
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO NET/Plugin: Could not find: libnccl-net.so
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO Failed to open libibverbs.so[.1]
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO Failed to initialize NET plugin IB
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO NET/Socket : Using [0]ens4:198.145.104.28<0>
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO Initialized NET plugin Socket
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO Assigned NET plugin Socket to comm
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO Using network Socket
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO Initialized NET plugin Socket
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO Assigned NET plugin Socket to comm
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO Using network Socket
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO ncclCommInitRankConfig comm 0x561ce847e420 rank 1 nranks 2 cudaDev 1 nvmlDev 1 busId 1020 commId 0x75ae851c30906602 - Init START
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO ncclCommInitRankConfig comm 0x561ce8374290 rank 0 nranks 2 cudaDev 0 nvmlDev 0 busId 1010 commId 0x75ae851c30906602 - Init START
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO RAS client listening socket at 127.0.0.1<28028>
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO Bootstrap timings total 0.000675 (create 0.000023, send 0.000107, recv 0.000247, ring 0.000037, delay 0.000000)
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO Bootstrap timings total 0.000674 (create 0.000029, send 0.000109, recv 0.000260, ring 0.000025, delay 0.000000)
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 1 is empty, ignoring. (GPU affinity =  ; CPU affinity = 0-7).
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO ncclTopoGetCpuAffinity: Affinity for GPU 0 is empty, ignoring. (GPU affinity =  ; CPU affinity = 0-7).
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO comm 0x561ce8374290 rank 0 nRanks 2 nNodes 1 localRanks 2 localRank 0 MNNVL 0
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO comm 0x561ce847e420 rank 1 nRanks 2 nNodes 1 localRanks 2 localRank 1 MNNVL 0
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO Channel 00/02 : 0 1
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO Channel 01/02 : 0 1
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO Trees [0] 1/-1/-1->0->-1 [1] 1/-1/-1->0->-1
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO Trees [0] -1/-1/-1->1->0 [1] -1/-1/-1->1->0
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO P2P Chunksize set to 131072
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO P2P Chunksize set to 131072
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+david-systemtest-gpu-4:10208:10222 [0] NCCL INFO [Proxy Service] Device 1 CPU core 0
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO PROFILER/Plugin: Could not find: libnccl-profiler.so
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO Check P2P Type isAllDirectP2p 0 directMode 1
+david-systemtest-gpu-4:10208:10223 [0] NCCL INFO [Proxy Service UDS] Device 1 CPU core 1
+david-systemtest-gpu-4:10208:10224 [0] NCCL INFO [Proxy Service] Device 0 CPU core 5
+david-systemtest-gpu-4:10208:10225 [0] NCCL INFO [Proxy Service UDS] Device 0 CPU core 1
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO TUNER/Plugin: Could not find: libnccl-tuner.so. Using internal tuner plugin.
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO threadThresholds 8/8/64 | 16/8/64 | 512 | 512
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO 2 coll channels, 2 collnet channels, 0 nvls channels, 2 p2p channels, 2 p2p channels per peer
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO threadThresholds 8/8/64 | 16/8/64 | 512 | 512
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO 2 coll channels, 2 collnet channels, 0 nvls channels, 2 p2p channels, 2 p2p channels per peer
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO CC Off, workFifoBytes 1048576
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO ncclCommInitRankConfig comm 0x561ce847e420 rank 1 nranks 2 cudaDev 1 nvmlDev 1 busId 1020 commId 0x75ae851c30906602 - Init COMPLETE
+david-systemtest-gpu-4:10208:10220 [1] NCCL INFO Init timings - ncclCommInitRankConfig: rank 1 nranks 2 total 0.22 (kernels 0.17, alloc 0.04, bootstrap 0.00, allgathers 0.00, topo 0.01, graphs 0.00, connections 0.00, rest 0.00)
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO ncclCommInitRankConfig comm 0x561ce8374290 rank 0 nranks 2 cudaDev 0 nvmlDev 0 busId 1010 commId 0x75ae851c30906602 - Init COMPLETE
+david-systemtest-gpu-4:10208:10219 [0] NCCL INFO Init timings - ncclCommInitRankConfig: rank 0 nranks 2 total 0.22 (kernels 0.17, alloc 0.04, bootstrap 0.00, allgathers 0.00, topo 0.01, graphs 0.00, connections 0.00, rest 0.00)
+#
+#                                                              out-of-place                       in-place          
+#       size         count      type   redop    root     time   algbw   busbw #wrong     time   algbw   busbw #wrong
+#        (B)    (elements)                               (us)  (GB/s)  (GB/s)            (us)  (GB/s)  (GB/s)       
+david-systemtest-gpu-4:10208:10227 [0] NCCL INFO Channel 00 : 0[0] -> 1[1] via SHM/direct/direct
+david-systemtest-gpu-4:10208:10226 [1] NCCL INFO Channel 00 : 1[1] -> 0[0] via SHM/direct/direct
+david-systemtest-gpu-4:10208:10227 [0] NCCL INFO Channel 01 : 0[0] -> 1[1] via SHM/direct/direct
+david-systemtest-gpu-4:10208:10226 [1] NCCL INFO Channel 01 : 1[1] -> 0[0] via SHM/direct/direct
+david-systemtest-gpu-4:10208:10227 [0] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+david-systemtest-gpu-4:10208:10226 [1] NCCL INFO Connected all rings, use ring PXN 0 GDR 1
+           8             2     float     sum      -1    10.15    0.00    0.00      0     9.86    0.00    0.00      0
+          16             4     float     sum      -1     9.71    0.00    0.00      0     9.77    0.00    0.00      0
+          32             8     float     sum      -1     9.88    0.00    0.00      0     9.71    0.00    0.00      0
+          64            16     float     sum      -1     9.80    0.01    0.01      0     9.89    0.01    0.01      0
+         128            32     float     sum      -1    11.28    0.01    0.01      0     9.78    0.01    0.01      0
+         256            64     float     sum      -1     9.85    0.03    0.03      0    10.51    0.02    0.02      0
+         512           128     float     sum      -1     9.79    0.05    0.05      0     9.70    0.05    0.05      0
+        1024           256     float     sum      -1    12.83    0.08    0.08      0     9.98    0.10    0.10      0
+        2048           512     float     sum      -1    10.06    0.20    0.20      0    11.12    0.18    0.18      0
+        4096          1024     float     sum      -1    10.63    0.39    0.39      0    10.29    0.40    0.40      0
+        8192          2048     float     sum      -1    12.07    0.68    0.68      0    11.97    0.68    0.68      0
+       16384          4096     float     sum      -1    13.97    1.17    1.17      0    13.79    1.19    1.19      0
+       32768          8192     float     sum      -1    17.53    1.87    1.87      0    17.55    1.87    1.87      0
+       65536         16384     float     sum      -1    26.06    2.52    2.52      0    25.50    2.57    2.57      0
+      131072         32768     float     sum      -1    42.95    3.05    3.05      0    42.38    3.09    3.09      0
+      262144         65536     float     sum      -1    67.33    3.89    3.89      0    67.02    3.91    3.91      0
+      524288        131072     float     sum      -1    100.6    5.21    5.21      0    100.2    5.23    5.23      0
+     1048576        262144     float     sum      -1    166.5    6.30    6.30      0    169.0    6.20    6.20      0
+     2097152        524288     float     sum      -1    297.7    7.05    7.05      0    292.0    7.18    7.18      0
+     4194304       1048576     float     sum      -1    561.6    7.47    7.47      0    557.4    7.53    7.53      0
+     8388608       2097152     float     sum      -1   1083.4    7.74    7.74      0   1079.3    7.77    7.77      0
+    16777216       4194304     float     sum      -1   2149.2    7.81    7.81      0   2144.5    7.82    7.82      0
+    33554432       8388608     float     sum      -1   4272.9    7.85    7.85      0   4270.4    7.86    7.86      0
+    67108864      16777216     float     sum      -1   8521.4    7.88    7.88      0   8506.2    7.89    7.89      0
+   134217728      33554432     float     sum      -1    16980    7.90    7.90      0    16997    7.90    7.90      0
+david-systemtest-gpu-4:10208:10208 [0] NCCL INFO comm 0x561ce8374290 rank 0 nranks 2 cudaDev 0 busId 1010 - Destroy COMPLETE
+david-systemtest-gpu-4:10208:10208 [1] NCCL INFO comm 0x561ce847e420 rank 1 nranks 2 cudaDev 1 busId 1020 - Destroy COMPLETE
+# Out of bounds values : 0 OK
+# Avg bus bandwidth    : 3.17274 
+#
+# Collective test concluded: all_reduce_perf</pre></td>
+                        <td>
+                            <span class="status-badge status-pass">PASS</span>
+                                                        <span class="status-notes">Detected GPUs: 2</span>
+                                                    </td>
+                    </tr>
+                                </tbody>
+            </table>
+        </details>
+                    </div>
+    <div class="footer">Generated by Ansible</div>
+    <script>
+      function filterTable(inputId, tableId){
+        const input = document.getElementById(inputId);
+        const table = document.getElementById(tableId);
+        if(!input || !table) return;
+        const q = input.value.toLowerCase();
+        const rows = table.querySelectorAll('tbody tr');
+        rows.forEach(tr => {
+          const txt = tr.textContent.toLowerCase();
+          tr.style.display = txt.includes(q) ? '' : 'none';
+        });
+      }
+    </script>
+</body>
+</html>
