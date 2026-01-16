@@ -12,7 +12,11 @@ A comprehensive bash script designed to automate the auditing and performance te
     
 -   **Intelligent Dependency Handling**: Automatically detects and offers to install missing standard packages. For complex drivers (NVIDIA, Mellanox), it provides clear manual installation instructions.
     
--   **Optional Performance Benchmarks**: Includes long-running HPL and GPU-burn benchmarks via Docker, with interactive prompts to run or skip them.
+-   **NVIDIA Driver Support**: Automatic detection and installation of NVIDIA drivers with post-reboot recovery. Includes Fabric Manager integration and NVIDIA Container Toolkit setup for Docker GPU access.
+    
+-   **Optional Performance Benchmarks**: Includes long-running HPL and GPU-burn benchmarks via Docker with real-time console output, with interactive prompts to run or skip them.
+    
+-   **Collapsible Report Sections**: Detailed output sections (HPL, IB Fabric, lscpu, nvidia-smi) are displayed as expandable/collapsible elements in the HTML report for better readability.
     
 -   **Automated Mode**: A `--nocheck` flag allows the script to run non-interactively, skipping all prompts, making it ideal for automated CI/CD pipelines or batch testing.
 
@@ -59,7 +63,13 @@ If the following tools are missing, the script will prompt you to install them a
     
 -   `ipmitool`
     
--   `ibutils` (for InfiniBand tools like `ibstatus`)
+-   `ibutils` (for InfiniBand tools like `ibstatus`, `ibdev2netdev`, `iblinkinfo`)
+    
+-   `infiniband-diags` (InfiniBand diagnostic utilities)
+    
+-   `rdma-core` (RDMA core libraries)
+    
+-   `speedtest-cli` (network bandwidth testing)
     
 -   `docker-ce` (only if you choose to run the performance benchmarks)
     
@@ -70,19 +80,23 @@ For specialized HPC drivers, the script will detect if they are missing and prov
 
 -   **NVIDIA Drivers (`nvidia-smi`)**:
     
-    -   **Method**: Use Ubuntu's built-in tool or download from the official NVIDIA site.
+    -   **Automatic Detection**: The script automatically detects and reports NVIDIA driver, CUDA toolkit, and Fabric Manager versions if installed.
         
-    -   **Command**: `sudo ubuntu-drivers autoinstall`
+    -   **Automatic Installation**: If not found, the script offers to install NVIDIA drivers via `sudo ubuntu-drivers autoinstall` and will install `nvidia-driver-${NVIDIA_DRIVER_VERSION}-server` and `nvidia-fabricmanager-${NVIDIA_FABRICMANAGER_VERSION}` (default version: 580).
+        
+    -   **Post-Reboot Recovery**: If installation requires a reboot, the script creates a marker file and verifies Fabric Manager is running on next execution.
+        
+    -   **Configuration**: Supports environment variables `NVIDIA_DRIVER_VERSION` and `NVIDIA_FABRICMANAGER_VERSION` to override default versions.
+        
+-   **NVIDIA Container Toolkit**:
+    
+    -   **Automatic Setup**: After Docker installation/detection, the script automatically sets up NVIDIA Container Toolkit to enable GPU access in Docker containers.
+        
+    -   **Components**: Installs GPG keys, APT repository, nvidia-container-toolkit package, and configures Docker runtime.
         
 -   **Mellanox OFED Drivers (`ofed_info`)**:
     
     -   **Method**: These must be downloaded directly from the NVIDIA Networking website (formerly Mellanox). Follow the installation guide included with the driver package.
-        
--   **NVIDIA Fabric Manager (`nv-fabricmanager`)**:
-    
-    -   **Method**: This is typically installed via the NVIDIA CUDA repository.
-        
-    -   **Command**: `sudo apt install nvidia-fabricmanager-535` (version may vary)
         
 
 ## Usage
@@ -123,6 +137,35 @@ You can run the script with the following flags to control behavior.
 - --headless may be combined with --noburn to run tests non-interactively while skipping benchmarks.
 - --noinstall implies no Docker installation and benchmarks are skipped.
 
+### Environment Variables
+
+Configure script behavior using environment variables:
+
+- `NVIDIA_DRIVER_VERSION`: Version of nvidia-driver to install (default: `580`)
+  ```bash
+  NVIDIA_DRIVER_VERSION=545 sudo ./hpctests.sh
+  ```
+
+- `NVIDIA_FABRICMANAGER_VERSION`: Version of nvidia-fabricmanager to install (default: `580`)
+  ```bash
+  NVIDIA_FABRICMANAGER_VERSION=545 sudo ./hpctests.sh
+  ```
+
+- `MIN_LINK_SPEED_MBPS`: Minimum Ethernet link speed threshold (default: `0`, disabled)
+  ```bash
+  MIN_LINK_SPEED_MBPS=10000 sudo ./hpctests.sh
+  ```
+
+- `MIN_DOWNLOAD_MBPS` / `MIN_UPLOAD_MBPS`: Network bandwidth test thresholds (default: `0`, disabled)
+  ```bash
+  MIN_DOWNLOAD_MBPS=1000 MIN_UPLOAD_MBPS=1000 sudo ./hpctests.sh
+  ```
+
+- `SPEEDTEST_SERVER_NEARBY` / `SPEEDTEST_SERVER_EU`: Pin specific Speedtest servers by ID
+  ```bash
+  SPEEDTEST_SERVER_NEARBY=1234 SPEEDTEST_SERVER_EU=5678 sudo ./hpctests.sh
+  ```
+
 ## Tests Run and Expected Output (overview)
 
 - System
@@ -139,13 +182,13 @@ You can run the script with the following flags to control behavior.
   - Expect: Disks listed as chips; lsblk table; mounted filesystems in df
 - GPU
   - What: Names, VRAM, peermem module, Fabric Manager, NVLink status, driver version; full nvidia-smi (collapsible)
-  - Expect: PASS when nvidia-smi is available; otherwise partial with install guidance
+  - Expect: PASS when nvidia-smi is available; driver/CUDA/Fabric Manager versions shown; automatic installation offered if not present
 - Ethernet Network
   - What: NIC inventory, IPs, per-interface link speeds vs threshold, bond details if present
   - Expect: Link speeds visible; PASS/FAIL depends on MIN_LINK_SPEED_MBPS
 - InfiniBand Network
-  - What: Rate/status, OFED version, IBoIP mapping, fabric switches
-  - Expect: Outputs if IB stack present; otherwise partial/fail where missing
+  - What: Rate/status, link layer info, fabric switch topology (collapsible)
+  - Expect: Outputs if IB stack present; infiniband-diags and rdma-core automatically installed; fabric topology displayed in collapsible view
 - Security & Accounts
   - What: MOTD files, SSH key metadata (no secrets), /etc/passwd, shadow status summary, home directories
   - Expect: Collapsible sections with sanitized content; no secrets revealed
@@ -159,8 +202,8 @@ You can run the script with the following flags to control behavior.
   - What: sshd status, IPMI access, NFS mounts
   - Expect: PASS where services/mounts are present
 - High-Performance Benchmarks (Docker)
-  - What: HPL single-node; GPU-burn
-  - Expect: Run only if Docker present/installed and not skipped by --noburn/--noinstall; otherwise recorded as skipped
+  - What: HPL single-node; GPU-burn with full real-time console output
+  - Expect: Run only if Docker present/installed and not skipped by --noburn/--noinstall; NVIDIA Container Toolkit auto-configured; HPL output shown in collapsible view in report; both tests display output to console during execution
 
 ## Using the HTML report
 - Single, self-contained HTML file with collapsible sections per category
