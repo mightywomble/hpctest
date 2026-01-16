@@ -1264,6 +1264,9 @@ run_benchmark_tests() {
                 add_row_to_html_report "Benchmarks" "N/A" "Skipped - Docker not installed" "partial" "User skipped installation"; close_html_category_section; return;
             fi
         fi
+    else
+        log "Docker is installed. Setting up NVIDIA Container Toolkit..."
+        setup_nvidia_container_toolkit
     fi
     
     local choice
