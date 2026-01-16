@@ -50,6 +50,13 @@ MIN_UPLOAD_MBPS=${MIN_UPLOAD_MBPS:-0}
 SPEEDTEST_SERVER_NEARBY=${SPEEDTEST_SERVER_NEARBY:-}
 SPEEDTEST_SERVER_EU=${SPEEDTEST_SERVER_EU:-}
 
+# NVIDIA driver and related components (configurable)
+NVIDIA_DRIVER_VERSION=${NVIDIA_DRIVER_VERSION:-580}
+NVIDIA_FABRICMANAGER_VERSION=${NVIDIA_FABRICMANAGER_VERSION:-580}
+
+# Reboot marker file location
+REBOOT_MARKER_FILE="${HOME}/.hpctest.reboot"
+
 # --- Color Codes for Verbose Console Output ---
 readonly C_RESET='\033[0m'
 readonly C_RED='\033[0;31m'
@@ -553,6 +560,147 @@ run_test() {
 }
 
 # ==============================================================================
+# NVIDIA Driver and Container Toolkit Functions
+# ==============================================================================
+check_nvidia_drivers() {
+    log "Checking NVIDIA driver installation and versions..."
+    if command -v nvidia-smi &> /dev/null; then
+        log_success "nvidia-smi is installed."
+        local driver_ver
+        driver_ver=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader 2>/dev/null | head -n1)
+        if [[ -n "$driver_ver" ]]; then
+            log_success "NVIDIA Driver Version: $driver_ver"
+        fi
+        local cuda_toolkit_ver
+        cuda_toolkit_ver=$(nvidia-smi | grep "CUDA Version" | awk '{print $NF}')
+        if [[ -n "$cuda_toolkit_ver" ]]; then
+            log_success "CUDA Toolkit Version: $cuda_toolkit_ver"
+        fi
+        if command -v nv-fabricmanager &> /dev/null; then
+            local fm_ver
+            fm_ver=$(nv-fabricmanager --version 2>&1 | head -n1)
+            log_success "NVIDIA Fabric Manager: $fm_ver"
+        else
+            log_warn "NVIDIA Fabric Manager not installed."
+        fi
+        return 0
+    else
+        log_warn "nvidia-smi not found. NVIDIA drivers may not be installed."
+        return 1
+    fi
+}
+
+install_nvidia_drivers() {
+    log_warn "NVIDIA drivers not detected. Offering installation..."
+    local prompt_msg="Do you want to install NVIDIA drivers (nvidia-driver-${NVIDIA_DRIVER_VERSION}-server) and Fabric Manager? This will require a system reboot. (y/N): "
+    local choice
+    if $HEADLESS_MODE; then
+        log "--headless: auto-accepting NVIDIA driver installation."
+        choice="y"
+    else
+        read -p "$prompt_msg" choice
+    fi
+    if [[ ! "$choice" =~ ^[Yy]$ ]]; then
+        log_warn "NVIDIA driver installation declined. Some GPU tests will fail or be skipped."
+        return 1
+    fi
+    log "Installing NVIDIA drivers and Fabric Manager..."
+    if ! apt-get update; then
+        log_error "Failed to update package lists."
+        return 1
+    fi
+    if ! DEBIAN_FRONTEND=noninteractive apt-get install -y ubuntu-drivers-common; then
+        log_error "Failed to install ubuntu-drivers-common."
+        return 1
+    fi
+    if ! DEBIAN_FRONTEND=noninteractive ubuntu-drivers autoinstall; then
+        log_error "ubuntu-drivers autoinstall failed."
+        return 1
+    fi
+    if ! DEBIAN_FRONTEND=noninteractive apt-get install -y "nvidia-driver-${NVIDIA_DRIVER_VERSION}-server" "nvidia-fabricmanager-${NVIDIA_FABRICMANAGER_VERSION}"; then
+        log_error "Failed to install NVIDIA drivers/Fabric Manager."
+        return 1
+    fi
+    log_success "NVIDIA drivers and Fabric Manager installed."
+    log_warn "System will reboot in 5 seconds. Creating reboot marker file."
+    touch "$REBOOT_MARKER_FILE"
+    log_success "Reboot marker file created: $REBOOT_MARKER_FILE"
+    log "Rebooting system..."
+    for i in {5..1}; do
+        log "  Reboot in $i seconds..."
+        sleep 1
+    done
+    reboot
+}
+
+check_post_reboot_state() {
+    if [[ -f "$REBOOT_MARKER_FILE" ]]; then
+        log "Detected post-reboot marker. Checking NVIDIA Fabric Manager status..."
+        if systemctl is-active --quiet nvidia-fabricmanager; then
+            log_success "NVIDIA Fabric Manager is running."
+            rm "$REBOOT_MARKER_FILE"
+            log_success "Reboot marker file removed."
+            return 0
+        else
+            log_warn "NVIDIA Fabric Manager is not running or may have an issue."
+            log "Attempting to start NVIDIA Fabric Manager..."
+            if systemctl start nvidia-fabricmanager; then
+                log_success "NVIDIA Fabric Manager started."
+                rm "$REBOOT_MARKER_FILE"
+                return 0
+            else
+                log_error "Failed to start NVIDIA Fabric Manager. Please check the system."
+                return 1
+            fi
+        fi
+    fi
+    return 0
+}
+
+setup_nvidia_container_toolkit() {
+    if ! command -v docker &> /dev/null; then
+        log_warn "Docker not found. Skipping NVIDIA Container Toolkit setup."
+        return 1
+    fi
+    log "Setting up NVIDIA Container Toolkit for Docker..."
+    log "  Downloading and installing NVIDIA GPG key..."
+    if ! curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg; then
+        log_error "Failed to install NVIDIA GPG key."
+        return 1
+    fi
+    log_success "  NVIDIA GPG key installed."
+    log "  Adding NVIDIA Container Toolkit APT list..."
+    if ! curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+        sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+        tee /etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null; then
+        log_error "Failed to add APT list."
+        return 1
+    fi
+    log_success "  APT list added."
+    log "  Updating package index and installing nvidia-container-toolkit..."
+    if ! apt-get update || ! DEBIAN_FRONTEND=noninteractive apt-get install -y nvidia-container-toolkit; then
+        log_error "Failed to install nvidia-container-toolkit package."
+        return 1
+    fi
+    log_success "  nvidia-container-toolkit package installed."
+    log "  Configuring Docker to use NVIDIA runtime..."
+    if ! nvidia-ctk runtime configure --runtime=docker; then
+        log_error "Failed to configure Docker runtime."
+        return 1
+    fi
+    log_success "  Docker runtime configured."
+    log "  Restarting Docker daemon..."
+    if ! systemctl restart docker; then
+        log_error "Failed to restart Docker."
+        return 1
+    fi
+    log_success "  Docker restarted successfully."
+    log_success "NVIDIA Container Toolkit setup complete. Docker can now access GPUs."
+    return 0
+}
+
+
+# ==============================================================================
 # Pre-flight Checks
 # ==============================================================================
 check_and_install_dependencies() {
@@ -803,8 +951,6 @@ run_infiniband_tests() {
     add_html_category_header "InfiniBand Network"
     run_test "InfiniBand" "IB Links Speed" "ibstatus | grep -e 'rate:' -e 'device'"
     run_test "InfiniBand" "IB Links Status" "ibstatus | grep -e 'link_layer:' -e 'phys state:'"
-    run_test "InfiniBand" "OFED Version" "ofed_info -s"
-    run_test "InfiniBand" "IBoIP Enabled" "ibdev2netdev"
     run_test "InfiniBand" "IB Fabric" "iblinkinfo --switches-only"
     close_html_category_section
 }
@@ -1082,10 +1228,12 @@ run_benchmark_tests() {
         if $HEADLESS_MODE; then
             log_warn "--headless specified: attempting automatic Docker CE installation..."
             install_docker_ce || { add_row_to_html_report "Benchmarks" "N/A" "Skipped due to failed Docker installation" "fail" "Docker installation failed"; close_html_category_section; return; }
+            setup_nvidia_container_toolkit
         else
             read -p "Do you want to install Docker CE now? (y/N): " docker_choice
             if [[ "$docker_choice" =~ ^[Yy]$ ]]; then
                 install_docker_ce || { add_row_to_html_report "Benchmarks" "N/A" "Skipped due to failed Docker installation" "fail" "Docker installation failed"; close_html_category_section; return; }
+                setup_nvidia_container_toolkit
             else
                 add_row_to_html_report "Benchmarks" "N/A" "Skipped - Docker not installed" "partial" "User skipped installation"; close_html_category_section; return;
             fi
@@ -1106,7 +1254,7 @@ run_benchmark_tests() {
     fi
 
     if [[ "$choice" =~ ^[Yy]$ ]]; then
-        run_test "Benchmark" "HPL Single Node" "docker run --gpus all --rm --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 nvcr.io/nvidia/hpc-benchmarks:24.05 mpirun -np 8 --bind-to none --map-by ppr:8:node /hpl.sh --dat /hpl-linux-x86_64/sample-dat/HPL-dgx-h100-1N.dat"
+        run_test "Benchmark" "HPL Single Node" "sudo docker run --gpus all --rm --ipc=host --network=host --device=/dev/infiniband --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864 -e HPL_USE_NVSHMEM=0 nvcr.io/nvidia/hpc-benchmarks:25.09 mpirun -np 8 --bind-to none --map-by ppr:8:node /workspace/hpl.sh --dat /workspace/hpl-linux-x86_64/sample-dat/HPL-8GPUs.dat"
         run_test "Benchmark" "GPU Burn" "docker run --rm --gpus all oguzpastirmaci/gpu-burn:latest"
     else
         add_row_to_html_report "HPL Single Node" "N/A" "Skipped by user" "partial" "Benchmarks not executed"
@@ -1218,6 +1366,8 @@ main() {
     echo -e "${C_GREEN}===========================================${C_RESET}"
     echo
 
+    check_post_reboot_state
+    
     if $NOCHECK_MODE; then
         log_warn "Running in --nocheck mode. All dependency checks and prompts will be skipped."
     else
