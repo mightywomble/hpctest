@@ -951,7 +951,33 @@ run_infiniband_tests() {
     add_html_category_header "InfiniBand Network"
     run_test "InfiniBand" "IB Links Speed" "ibstatus | grep -e 'rate:' -e 'device'"
     run_test "InfiniBand" "IB Links Status" "ibstatus | grep -e 'link_layer:' -e 'phys state:'"
-    run_test "InfiniBand" "IB Fabric" "iblinkinfo --switches-only"
+    
+    # IB Fabric with collapsible output
+    log "Running Test: ${C_YELLOW}IB Fabric${C_RESET}..."
+    local ib_fabric_cmd="iblinkinfo --switches-only"
+    log "  -> Command: ${ib_fabric_cmd}"
+    local ib_fabric_result
+    local ib_fabric_exit
+    ib_fabric_result=$(eval "${ib_fabric_cmd}" 2>&1); ib_fabric_exit=$?
+    local ib_fabric_status="pass"
+    local ib_fabric_note=""
+    if [[ $ib_fabric_exit -ne 0 ]]; then
+        ib_fabric_status="fail"
+        ib_fabric_note="Exit code $ib_fabric_exit"
+        log_warn "  -> Command failed for 'IB Fabric' (exit $ib_fabric_exit)"
+    elif [[ -z "$ib_fabric_result" ]]; then
+        ib_fabric_status="partial"
+        ib_fabric_note="No output"
+        log_warn "  -> No output received for 'IB Fabric'"
+        ib_fabric_result="No output"
+    fi
+    local ib_fabric_sanitized
+    ib_fabric_sanitized=$(echo "$ib_fabric_result" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+    local ib_fabric_html="<details><summary>Show IB Fabric Output</summary><pre>${ib_fabric_sanitized}</pre></details>"
+    add_row_to_html_report_html "IB Fabric" "${ib_fabric_cmd}" "$ib_fabric_html" "$ib_fabric_status" "$ib_fabric_note"
+    log_success "  -> Test 'IB Fabric' complete."
+    echo
+    
     close_html_category_section
 }
 
@@ -1254,8 +1280,34 @@ run_benchmark_tests() {
     fi
 
     if [[ "$choice" =~ ^[Yy]$ ]]; then
-        run_test "Benchmark" "HPL Single Node" "sudo docker run --gpus all --rm --ipc=host --network=host --device=/dev/infiniband --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864 -e HPL_USE_NVSHMEM=0 nvcr.io/nvidia/hpc-benchmarks:25.09 mpirun -np 8 --bind-to none --map-by ppr:8:node /workspace/hpl.sh --dat /workspace/hpl-linux-x86_64/sample-dat/HPL-8GPUs.dat"
-        run_test "Benchmark" "GPU Burn" "docker run --rm --gpus all oguzpastirmaci/gpu-burn:latest"
+        log "Running HPL Single Node benchmark..."
+        local hpl_output
+        hpl_output=$(sudo docker run --gpus all --rm --ipc=host --network=host --device=/dev/infiniband --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864 -e HPL_USE_NVSHMEM=0 nvcr.io/nvidia/hpc-benchmarks:25.09 mpirun -np 8 --bind-to none --map-by ppr:8:node /workspace/hpl.sh --dat /workspace/hpl-linux-x86_64/sample-dat/HPL-8GPUs.dat 2>&1)
+        local hpl_exit=$?
+        echo "$hpl_output"
+        local hpl_status="pass"
+        local hpl_note=""
+        if [[ $hpl_exit -ne 0 ]]; then
+            hpl_status="fail"
+            hpl_note="Exit code $hpl_exit"
+        fi
+        local hpl_sanitized
+        hpl_sanitized=$(echo "$hpl_output" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+        local hpl_html="<details><summary>Show HPL Output</summary><pre>${hpl_sanitized}</pre></details>"
+        add_row_to_html_report_html "HPL Single Node" "sudo docker run ..." "$hpl_html" "$hpl_status" "$hpl_note"
+        
+        log "Running GPU Burn benchmark..."
+        local gpu_output
+        gpu_output=$(docker run --rm --gpus all oguzpastirmaci/gpu-burn:latest 2>&1)
+        local gpu_exit=$?
+        echo "$gpu_output"
+        local gpu_status="pass"
+        local gpu_note=""
+        if [[ $gpu_exit -ne 0 ]]; then
+            gpu_status="fail"
+            gpu_note="Exit code $gpu_exit"
+        fi
+        add_row_to_html_report "GPU Burn" "docker run --rm --gpus all oguzpastirmaci/gpu-burn:latest" "$gpu_output" "$gpu_status" "$gpu_note"
     else
         add_row_to_html_report "HPL Single Node" "N/A" "Skipped by user" "partial" "Benchmarks not executed"
         add_row_to_html_report "GPU Burn" "N/A" "Skipped by user" "partial" "Benchmarks not executed"
