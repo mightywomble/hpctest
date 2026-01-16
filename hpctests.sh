@@ -1385,6 +1385,22 @@ run_software_tests() {
 # Main Execution Logic
 # ==============================================================================
 
+check_and_handle_nvidia_drivers() {
+    log "Checking for NVIDIA drivers..."
+    if check_nvidia_drivers; then
+        log_success "NVIDIA drivers are installed and configured."
+    else
+        log_warn "NVIDIA drivers not detected on system."
+        if $NOINSTALL_MODE; then
+            log_warn "--noinstall specified: skipping NVIDIA driver installation."
+        elif $NOCHECK_MODE; then
+            log_warn "--nocheck specified: skipping NVIDIA driver checks."
+        else
+            install_nvidia_drivers
+        fi
+    fi
+}
+
 main() {
     if [[ $EUID -ne 0 ]]; then
        log_error "This script must be run as root or with sudo."; exit 1
@@ -1424,6 +1440,7 @@ main() {
         log_warn "Running in --nocheck mode. All dependency checks and prompts will be skipped."
     else
         check_and_install_dependencies
+        check_and_handle_nvidia_drivers
     fi
 
     log "Starting all tests. The results will be saved to: ${C_YELLOW}${OUTPUT_FILE}${C_RESET}"
