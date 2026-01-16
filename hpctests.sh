@@ -711,6 +711,8 @@ check_and_install_dependencies() {
         [ibstatus]="ibutils" [ibdev2netdev]="ibutils" [iblinkinfo]="ibutils"
         [speedtest-cli]="speedtest-cli" [lsb_release]="lsb-release" [ssh-keygen]="openssh-client"
     )
+    # Packages to always install (checked by dpkg, not by command availability)
+    local required_packages=("infiniband-diags" "rdma-core")
     declare -A complex_commands
     complex_commands=(
         [nvidia-smi]="NVIDIA drivers" [nv-fabricmanager]="NVIDIA Fabric Manager" [ofed_info]="Mellanox OFED drivers"
@@ -737,6 +739,14 @@ check_and_install_dependencies() {
             local package=${standard_packages[$cmd]}
             if [[ ! " ${packages_to_install[@]} " =~ " ${package} " ]]; then
                 packages_to_install+=("$package")
+            fi
+        fi
+    done
+    # Add required packages that should always be installed
+    for pkg in "${required_packages[@]}"; do
+        if ! dpkg -l | grep -q "^ii  $pkg "; then
+            if [[ ! " ${packages_to_install[@]} " =~ " ${pkg} " ]]; then
+                packages_to_install+=("$pkg")
             fi
         fi
     done
