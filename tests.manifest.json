@@ -1,0 +1,124 @@
+{
+  "tests": [
+    {
+      "id": "001-system",
+      "script": "tests.d/001-system.sh",
+      "category": "System",
+      "description": "System information tests",
+      "dependencies": [],
+      "depends_on_tests": [],
+      "skip_flags": [],
+      "timeout_seconds": 30
+    },
+    {
+      "id": "002-cpu",
+      "script": "tests.d/002-cpu.sh",
+      "category": "CPU",
+      "description": "CPU information and specifications",
+      "dependencies": ["lscpu"],
+      "depends_on_tests": [],
+      "skip_flags": [],
+      "timeout_seconds": 30
+    },
+    {
+      "id": "003-ram",
+      "script": "tests.d/003-ram.sh",
+      "category": "RAM",
+      "description": "RAM information and availability",
+      "dependencies": ["free"],
+      "depends_on_tests": [],
+      "skip_flags": [],
+      "timeout_seconds": 30
+    },
+    {
+      "id": "004-nvme",
+      "script": "tests.d/004-nvme.sh",
+      "category": "NVMe Storage",
+      "description": "NVMe and storage device tests",
+      "dependencies": ["lsblk", "df"],
+      "depends_on_tests": [],
+      "skip_flags": [],
+      "timeout_seconds": 30
+    },
+    {
+      "id": "005-gpu",
+      "script": "tests.d/005-gpu.sh",
+      "category": "GPU",
+      "description": "GPU and NVIDIA driver tests",
+      "dependencies": [],
+      "depends_on_tests": [],
+      "skip_flags": [],
+      "timeout_seconds": 30
+    },
+    {
+      "id": "006-ethernet",
+      "script": "tests.d/006-ethernet.sh",
+      "category": "Ethernet Network",
+      "description": "Ethernet network interface tests",
+      "dependencies": ["ip", "ethtool", "lshw"],
+      "depends_on_tests": [],
+      "skip_flags": [],
+      "timeout_seconds": 60
+    },
+    {
+      "id": "007-infiniband",
+      "script": "tests.d/007-infiniband.sh",
+      "category": "InfiniBand Network",
+      "description": "InfiniBand and OFED tests",
+      "dependencies": [],
+      "depends_on_tests": [],
+      "skip_flags": [],
+      "timeout_seconds": 30
+    },
+    {
+      "id": "008-security",
+      "script": "tests.d/008-security.sh",
+      "category": "Security & Accounts",
+      "description": "Security audit and account tests",
+      "dependencies": ["ssh-keygen"],
+      "depends_on_tests": [],
+      "skip_flags": [],
+      "timeout_seconds": 60
+    },
+    {
+      "id": "009-speedtest",
+      "script": "tests.d/009-speedtest.sh",
+      "category": "Network Speed Tests",
+      "description": "Internet bandwidth and speed tests",
+      "dependencies": [],
+      "depends_on_tests": [],
+      "skip_flags": [],
+      "timeout_seconds": 300
+    },
+    {
+      "id": "010-software",
+      "script": "tests.d/010-software.sh",
+      "category": "Software & Packages",
+      "description": "Installed packages and software inventory",
+      "dependencies": ["dpkg-query", "apt-mark"],
+      "depends_on_tests": [],
+      "skip_flags": [],
+      "timeout_seconds": 60
+    },
+    {
+      "id": "011-services",
+      "script": "tests.d/011-services.sh",
+      "category": "Services & Mounts",
+      "description": "System services and mount point tests",
+      "dependencies": ["systemctl"],
+      "depends_on_tests": [],
+      "skip_flags": [],
+      "timeout_seconds": 30
+    },
+    {
+      "id": "012-benchmarks",
+      "script": "tests.d/012-benchmarks.sh",
+      "category": "High-Performance Benchmarks",
+      "description": "Docker-based HPL and GPU-burn benchmarks",
+      "dependencies": [],
+      "depends_on_tests": [],
+      "skip_flags": ["--noburn", "--noinstall"],
+      "timeout_seconds": 1800
+    }
+  ]
+}
