@@ -58,7 +58,7 @@ log "Running Docker-based benchmarks..."
 
 # Test: HPL Single Node
 log "Running HPL benchmark..."
-hpl_result=$(docker run --gpus all --rm --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 nvcr.io/nvidia/hpc-benchmarks:24.05 mpirun -np 8 --bind-to none --map-by ppr:8:node /hpl.sh --dat /hpl-linux-x86_64/sample-dat/HPL-dgx-h100-1N.dat 2>&1)
+hpl_result=$(docker run --gpus all --rm --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 nvcr.io/nvidia/hpc-benchmarks:24.09 mpirun -np 8 --bind-to none --map-by ppr:8:node /hpl.sh --dat /hpl-linux-x86_64/sample-dat/HPL-dgx-h100-1N.dat 2>&1)
 hpl_status="pass"
 if [[ -z "$hpl_result" ]]; then
     hpl_status="partial"
