@@ -22,6 +22,17 @@ HEADLESS_MODE=${HEADLESS_MODE:-false}
 NOINSTALL_MODE=${NOINSTALL_MODE:-false}
 NOBURN_MODE=${NOBURN_MODE:-false}
 
+# Test data collection for JSON block
+declare -a TEST_DATA_IDS
+declare -a TEST_DATA_NAMES
+declare -a TEST_DATA_CATEGORIES
+declare -a TEST_DATA_COMMANDS
+declare -a TEST_DATA_RESULTS
+declare -a TEST_DATA_TYPES
+declare -a TEST_DATA_STATUSES
+TEST_RUN_ID=$(uuidgen 2>/dev/null || echo "$(date +%s)-$(shuf -i 1000-9999 -n 1)")
+TEST_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
 # Host identification (best-effort)
 HOSTNAME_FQDN=$(hostname -f 2>/dev/null || hostname)
 PRIMARY_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '/src/ {for(i=1;i<=NF;i++) if ($i=="src"){print $(i+1); exit}}')
@@ -85,66 +96,67 @@ safe_run() {
     eval "$cmd" 2>&1
 }
 
-# Output JSON for a single test result
-# Usage: output_test_result "Test Name" "command" "result output" "pass|fail|partial" "optional notes"
-output_test_result() {
+# Output HTML table row for a test result
+# Usage: output_html_result "Test Name" "command" "result output" "pass|fail|partial" "optional notes" "test_id" "category" "result_type"
+output_html_result() {
     local test_name="$1"
     local command="$2"
     local result="$3"
     local status="${4:-N/A}"
     local notes="${5:-}"
+    local test_id="${6:-}"
+    local category="${7:-}"
+    local result_type="${8:-text}"
     
-    # Escape special characters for JSON - must handle newlines, tabs, backslashes, and quotes
-    local escaped_name=$(printf '%s' "$test_name" | sed 's/\\/\\\\/g; s/	/\\t/g; s/"/\\"/g; s/$//' | awk '{printf "%s", $0}' RS=$'\n' ORS='\\n')
-    local escaped_cmd=$(printf '%s' "$command" | sed 's/\\/\\\\/g; s/	/\\t/g; s/"/\\"/g; s/$//' | awk '{printf "%s", $0}' RS=$'\n' ORS='\\n')
-    local escaped_result=$(printf '%s' "$result" | sed 's/\\/\\\\/g; s/	/\\t/g; s/"/\\"/g; s/$//' | awk '{printf "%s", $0}' RS=$'\n' ORS='\\n')
-    local escaped_notes=$(printf '%s' "$notes" | sed 's/\\/\\\\/g; s/	/\\t/g; s/"/\\"/g; s/$//' | awk '{printf "%s", $0}' RS=$'\n' ORS='\\n')
+    # Escape HTML special characters
+    local escaped_name=$(printf '%s' "$test_name" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
+    local escaped_cmd=$(printf '%s' "$command" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
+    local escaped_result=$(printf '%s' "$result" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
+    local escaped_notes=$(printf '%s' "$notes" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
+    local escaped_test_id=$(printf '%s' "$test_id" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
+    local escaped_category=$(printf '%s' "$category" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g')
     
-    cat <<EOF
-  {
-    "test_name": "$escaped_name",
-    "command": "$escaped_cmd",
-    "result": "$escaped_result",
-    "status": "$status",
-    "notes": "$escaped_notes"
-  }
-EOF
-}
-
-# Output JSON for a single test result with HTML content in result field
-# Usage: output_test_result_html "Test Name" "command" "<html content>" "pass|fail|partial" "optional notes"
-output_test_result_html() {
-    local test_name="$1"
-    local command="$2"
-    local result_html="$3"
-    local status="${4:-N/A}"
-    local notes="${5:-}"
+    # Determine status class and label
+    local status_lower=$(echo "$status" | tr '[:upper:]' '[:lower:]')
+    local status_class=""
+    local status_label=""
+    case "$status_lower" in
+        pass)
+            status_class="status-pass"; status_label="PASS";;
+        partial)
+            status_class="status-partial"; status_label="PARTIAL";;
+        fail)
+            status_class="status-fail"; status_label="FAIL";;
+        *)
+            status_class=""; status_label="";;
+    esac
     
-    # Escape special characters for JSON (for test name, command, notes only; HTML goes as-is)
-    local escaped_name=$(printf '%s\n' "$test_name" | sed 's/\\/\\\\/g; s/"/\\"/g')
-    local escaped_cmd=$(printf '%s\n' "$command" | sed 's/\\/\\\\/g; s/"/\\"/g')
-    local escaped_notes=$(printf '%s\n' "$notes" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    # Build status cell
+    local status_cell=""
+    if [[ -n "$status_label" ]]; then
+        if [[ -n "$escaped_notes" ]]; then
+            status_cell="<span class=\"status-badge ${status_class}\">${status_label}</span><span class=\"status-notes\">${escaped_notes}</span>"
+        else
+            status_cell="<span class=\"status-badge ${status_class}\">${status_label}</span>"
+        fi
+    fi
     
-    cat <<EOF
-  {
-    "test_name": "$escaped_name",
-    "command": "$escaped_cmd",
-    "result_html": true,
-    "result": $result_html,
-    "status": "$status",
-    "notes": "$escaped_notes"
-  }
-EOF
-}
-
-# Start JSON output array for a test script
-start_json_output() {
-    echo "["
-}
-
-# Finish JSON output array for a test script
-finish_json_output() {
-    echo "]"
+    # Build data attributes for rows
+    local data_attrs=""
+    if [[ -n "$escaped_test_id" ]]; then
+        data_attrs="data-test-id=\"${escaped_test_id}\" data-test-name=\"${escaped_name}\" data-category=\"${escaped_category}\" data-result=\"${escaped_result}\" data-result-type=\"${result_type}\" data-status=\"${status_lower}\""
+        # Collect data for JSON block
+        TEST_DATA_IDS+=("$test_id")
+        TEST_DATA_NAMES+=("$test_name")
+        TEST_DATA_CATEGORIES+=("$category")
+        TEST_DATA_COMMANDS+=("$command")
+        TEST_DATA_RESULTS+=("$result")
+        TEST_DATA_TYPES+=("$result_type")
+        TEST_DATA_STATUSES+=("$status_lower")
+    fi
+    
+    # Output HTML table row directly to report file
+    echo "<tr ${data_attrs}><td>${escaped_name}</td><td>${escaped_cmd}</td><td><pre>${escaped_result}</pre></td><td>${status_cell}</td></tr>" >> "${OUTPUT_FILE}"
 }
 
 # ==============================================================================
@@ -210,6 +222,7 @@ nic_info_per_ipv4() {
 }
 
 export -f log log_error log_success log_warn
-export -f check_command_exists safe_run output_test_result output_test_result_html
-export -f start_json_output finish_json_output should_skip_test run_single_test
+export -f check_command_exists safe_run output_html_result should_skip_test run_single_test
 export -f nic_info_per_ipv4
+export TEST_DATA_IDS TEST_DATA_NAMES TEST_DATA_CATEGORIES TEST_DATA_COMMANDS TEST_DATA_RESULTS TEST_DATA_TYPES TEST_DATA_STATUSES
+export TEST_RUN_ID TEST_DATE

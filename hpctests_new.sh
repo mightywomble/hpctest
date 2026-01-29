@@ -64,65 +64,23 @@ parse_manifest() {
     fi
 }
 
-# Execute a single test script and capture JSON output
+# Execute a single test script
+# Scripts now output HTML directly to OUTPUT_FILE
 execute_test_script() {
     local script_path="$1"
     local test_id="$2"
     
     if [[ ! -f "$script_path" ]]; then
         log_error "Test script not found: $script_path"
-        echo "[]"
         return 1
     fi
     
-    local output
-    local exit_code
-    
-    # Run the script and capture output
-    output=$(bash "$script_path" 2>&1)
-    exit_code=$?
-    
-    if [[ $exit_code -ne 0 ]]; then
-        log_error "Test $test_id failed with exit code $exit_code"
-        echo "$output"
-        return 1
-    fi
-    
-    # Return the JSON output
-    echo "$output"
+    # Run the script - it outputs directly to OUTPUT_FILE
+    bash "$script_path" 2>&1
+    return $?
 }
 
-# Parse JSON test result and render to HTML
-render_test_result_html() {
-    local test_json="$1"
-    
-    # Use jq if available for reliable parsing, otherwise use basic parsing
-    if command -v jq &>/dev/null; then
-        local test_name=$(echo "$test_json" | jq -r '.test_name // ""' 2>/dev/null)
-        local command=$(echo "$test_json" | jq -r '.command // ""' 2>/dev/null)
-        local result=$(echo "$test_json" | jq -r '.result // ""' 2>/dev/null)
-        local status=$(echo "$test_json" | jq -r '.status // ""' 2>/dev/null)
-        local notes=$(echo "$test_json" | jq -r '.notes // ""' 2>/dev/null)
-        local result_html=$(echo "$test_json" | jq -r '.result_html // false' 2>/dev/null)
-        
-        if [[ "$result_html" == "true" ]]; then
-            # Result field contains HTML/JSON object, display as-is
-            add_row_to_html_report "$test_name" "$command" "$result" "$status" "$notes"
-        else
-            # Regular text result
-            add_row_to_html_report "$test_name" "$command" "$result" "$status" "$notes"
-        fi
-    else
-        # Fallback: basic parsing without jq
-        local test_name=$(echo "$test_json" | grep -o '"test_name"\s*:\s*"[^"]*"' | head -1 | sed 's/.*:\s*"\(.*\)"/\1/')
-        local command=$(echo "$test_json" | grep -o '"command"\s*:\s*"[^"]*"' | head -1 | sed 's/.*:\s*"\(.*\)"/\1/')
-        local result=$(echo "$test_json" | grep -o '"result"\s*:\s*"[^"]*"' | head -1 | sed 's/.*:\s*"\(.*\)"/\1/')
-        local status=$(echo "$test_json" | grep -o '"status"\s*:\s*"[^"]*"' | head -1 | sed 's/.*:\s*"\(.*\)"/\1/')
-        local notes=$(echo "$test_json" | grep -o '"notes"\s*:\s*"[^"]*"' | head -1 | sed 's/.*:\s*"\(.*\)"/\1/')
-        
-        add_row_to_html_report "$test_name" "$command" "$result" "$status" "$notes"
-    fi
-}
+# No JSON parsing needed - scripts output HTML directly
 
 # HTML generation functions
 add_html_category_header() {
@@ -151,87 +109,7 @@ close_html_category_section() {
 EOF
 }
 
-add_row_to_html_report() {
-    local test_name="$1"
-    local command="$2"
-    local result="$3"
-    local status_raw="${4:-N/A}"
-    local notes_text="${5:-}"
-
-    local status_lower=$(echo "$status_raw" | tr '[:upper:]' '[:lower:]')
-    local status_class=""
-    local status_label=""
-    case "$status_lower" in
-        pass)
-            status_class="status-pass"; status_label="PASS";;
-        partial)
-            status_class="status-partial"; status_label="PARTIAL";;
-        fail)
-            status_class="status-fail"; status_label="FAIL";;
-        *)
-            status_class=""; status_label="";;
-    esac
-
-    local sanitized_cmd
-    sanitized_cmd=$(echo "$command" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
-    local sanitized_result
-    sanitized_result=$(echo "$result" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
-
-    local status_cell=""
-    if [[ -n "$status_label" ]]; then
-        if [[ -n "$notes_text" ]]; then
-            local sanitized_notes
-            sanitized_notes=$(echo "$notes_text" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
-            status_cell="<span class=\"status-badge ${status_class}\">${status_label}</span><span class=\"status-notes\">${sanitized_notes}</span>"
-        else
-            status_cell="<span class=\"status-badge ${status_class}\">${status_label}</span>"
-        fi
-    else
-        status_cell=""
-    fi
-
-    echo "<tr><td>${test_name}</td><td>${sanitized_cmd}</td><td><pre>${sanitized_result}</pre></td><td>${status_cell}</td></tr>" >> "${OUTPUT_FILE}"
-}
-
-add_row_to_html_report_html() {
-    local test_name="$1"
-    local command="$2"
-    local result_html="$3"
-    local status_raw="${4:-N/A}"
-    local notes_text="${5:-}"
-
-    local status_lower=$(echo "$status_raw" | tr '[:upper:]' '[:lower:]')
-    local status_class=""
-    local status_label=""
-    case "$status_lower" in
-        pass)
-            status_class="status-pass"; status_label="PASS";;
-        partial)
-            status_class="status-partial"; status_label="PARTIAL";;
-        fail)
-            status_class="status-fail"; status_label="FAIL";;
-        *)
-            status_class=""; status_label="";;
-    esac
-
-    local sanitized_cmd
-    sanitized_cmd=$(echo "$command" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
-
-    local status_cell=""
-    if [[ -n "$status_label" ]]; then
-        if [[ -n "$notes_text" ]]; then
-            local sanitized_notes
-            sanitized_notes=$(echo "$notes_text" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
-            status_cell="<span class=\"status-badge ${status_class}\">${status_label}</span><span class=\"status-notes\">${sanitized_notes}</span>"
-        else
-            status_cell="<span class=\"status-badge ${status_class}\">${status_label}</span>"
-        fi
-    else
-        status_cell=""
-    fi
-
-    echo "<tr><td>${test_name}</td><td>${sanitized_cmd}</td><td>${result_html}</td><td>${status_cell}</td></tr>" >> "${OUTPUT_FILE}"
-}
+# HTML row output is now handled by output_html_result() in config.sh
 
 # Initialize HTML report with header and styles
 initialize_html_report() {
@@ -242,6 +120,10 @@ initialize_html_report() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="test-run-id" content="${TEST_RUN_ID}" />
+    <meta name="test-date" content="${TEST_DATE}" />
+    <meta name="hostname" content="${HOSTNAME_FQDN}" />
+    <meta name="ip-address" content="${PRIMARY_IP}" />
     <title>System Test Report</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -306,6 +188,39 @@ EOF
 
 # Finalize HTML report
 finalize_html_report() {
+    # Generate JSON test data block
+    {
+        echo '    <script type="application/json" id="test-data">'
+        echo '    {'
+        printf '      "test_run_id": %s,\n' "$(printf '%s' "$TEST_RUN_ID" | jq -Rs .)"
+        printf '      "test_date": %s,\n' "$(printf '%s' "$TEST_DATE" | jq -Rs .)"
+        echo '      "server_info": {'
+        printf '        "hostname": %s,\n' "$(printf '%s' "$HOSTNAME_FQDN" | jq -Rs .)"
+        printf '        "ip_address": %s\n' "$(printf '%s' "$PRIMARY_IP" | jq -Rs .)"
+        echo '      },'
+        echo '      "tests": ['
+        
+        # Generate test entries
+        for i in "${!TEST_DATA_IDS[@]}"; do
+            [[ $i -gt 0 ]] && echo ','
+            echo '        {'
+            printf '          "test_id": %s,\n' "$(printf '%s' "${TEST_DATA_IDS[$i]}" | jq -Rs .)"
+            printf '          "test_name": %s,\n' "$(printf '%s' "${TEST_DATA_NAMES[$i]}" | jq -Rs .)"
+            printf '          "category": %s,\n' "$(printf '%s' "${TEST_DATA_CATEGORIES[$i]}" | jq -Rs .)"
+            printf '          "command": %s,\n' "$(printf '%s' "${TEST_DATA_COMMANDS[$i]}" | jq -Rs .)"
+            printf '          "result": %s,\n' "$(printf '%s' "${TEST_DATA_RESULTS[$i]}" | jq -Rs .)"
+            printf '          "result_type": %s,\n' "$(printf '%s' "${TEST_DATA_TYPES[$i]}" | jq -Rs .)"
+            printf '          "status": %s\n' "$(printf '%s' "${TEST_DATA_STATUSES[$i]}" | jq -Rs .)"
+            echo -n '        }'
+        done
+        
+        echo ''
+        echo '      ]'
+        echo '    }'
+        echo '    </script>'
+    } >> "${OUTPUT_FILE}"
+    
+    # Close body and HTML
     cat >> "${OUTPUT_FILE}" << 'EOF'
 </body>
 </html>
@@ -368,17 +283,47 @@ main() {
         exit 1
     fi
 
-    # Simple iteration through manifest using grep and sed (jq-free approach)
-    # Extract test scripts in order from manifest
-    local test_scripts=($(grep -o '"script"\s*:\s*"[^"]*"' "$MANIFEST_FILE" | sed 's/.*:\s*"\(.*\)"/\1/'))
-    local test_ids=($(grep -o '"id"\s*:\s*"[^"]*"' "$MANIFEST_FILE" | sed 's/.*:\s*"\(.*\)"/\1/'))
-    local test_categories=($(grep -o '"category"\s*:\s*"[^"]*"' "$MANIFEST_FILE" | sed 's/.*:\s*"\(.*\)"/\1/'))
-
+# Parse manifest using jq (robust JSON parsing)
+    if ! command -v jq &>/dev/null; then
+        log_error "jq is required for parsing manifest. Install it: sudo apt-get install jq"
+        exit 1
+    fi
+    
+    # Extract tests from manifest as JSON array
+    local tests_json
+    tests_json=$(jq -c '.tests[]' "$MANIFEST_FILE" 2>/dev/null)
+    if [[ -z "$tests_json" ]]; then
+        log_error "Failed to parse manifest file: $MANIFEST_FILE"
+        exit 1
+    fi
+    
     local current_category=""
-    for i in "${!test_scripts[@]}"; do
-        local script="${test_scripts[$i]}"
-        local test_id="${test_ids[$i]}"
-        local category="${test_categories[$i]}"
+    # Process each test from manifest
+    while IFS= read -r test_entry; do
+        local script=$(echo "$test_entry" | jq -r '.script')
+        local test_id=$(echo "$test_entry" | jq -r '.id')
+        local category=$(echo "$test_entry" | jq -r '.category')
+        local skip_flags=$(echo "$test_entry" | jq -r '.skip_flags | @csv' | tr -d '"')
+        
+        # Check if test should be skipped
+        local should_skip=false
+        if [[ "$skip_flags" != "null" ]] && [[ -n "$skip_flags" ]]; then
+            for flag in $skip_flags; do
+                if [[ "$flag" == "--noburn" ]] && $NOBURN_MODE; then
+                    should_skip=true
+                    break
+                fi
+                if [[ "$flag" == "--noinstall" ]] && $NOINSTALL_MODE; then
+                    should_skip=true
+                    break
+                fi
+            done
+        fi
+        
+        if $should_skip; then
+            log_warn "Skipping test: $test_id (flag conditions met)"
+            continue
+        fi
 
         # Open new category section if changed
         if [[ "$category" != "$current_category" ]]; then
@@ -389,63 +334,38 @@ main() {
             current_category="$category"
         fi
 
-        # Execute test script and capture JSON output
+        # Execute test script - it outputs HTML directly to OUTPUT_FILE
         local script_full_path="$SCRIPT_DIR/$script"
         echo
         echo -e "${C_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
         echo -e "${C_GREEN}▶${C_RESET} ${C_CYAN}$test_id${C_RESET}"
         echo -e "${C_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
         
-        # Separate the JSON from any intermediate output
-        local json_output
-        local full_output
-        full_output=$(execute_test_script "$script_full_path" "$test_id" 2>&1)
+        local script_output
+        script_output=$(execute_test_script "$script_full_path" "$test_id" 2>&1)
         local script_exit=$?
-
+        
         if [[ $script_exit -eq 0 ]]; then
-            json_output="$full_output"
-            
-            # Extract and display non-JSON output for visibility in a box
-            local output_text
-            output_text=$(echo "$json_output" | grep -v -E '^(\[|\]|  \{|^\}|^,$)' | sed '/^$/d' || true)
-            if [[ -n "$output_text" ]]; then
+            # Display test output in a box
+            if [[ -n "$script_output" ]]; then
                 echo -e "${C_CYAN}┌─ Output ─────────────────────────────────┐${C_RESET}"
-                echo "$output_text" | while IFS= read -r line; do
+                echo "$script_output" | while IFS= read -r line; do
                     printf "${C_CYAN}│${C_RESET} %s\n" "$line"
                 done
                 echo -e "${C_CYAN}└───────────────────────────────────────────┘${C_RESET}"
             fi
-            
-            # Parse JSON array and render each test result
-            if command -v jq &>/dev/null; then
-                echo "$json_output" | jq -c '.[]' 2>/dev/null | while read -r obj; do
-                    render_test_result_html "$obj"
-                done
-            else
-                # Fallback: simple line-by-line parsing for small JSON objects
-                local in_obj=false
-                local obj=""
-                while IFS= read -r line; do
-                    if [[ "$line" =~ ^[[:space:]]*\{ ]]; then
-                        in_obj=true
-                        obj="$line"
-                    elif [[ $in_obj == true ]]; then
-                        obj+=$'\n'"$line"
-                        if [[ "$line" =~ ^[[:space:]]*\}[[:space:]]*,?[[:space:]]*$ ]]; then
-                            in_obj=false
-                            render_test_result_html "$obj"
-                            obj=""
-                        fi
-                    fi
-                done <<< "$json_output"
-            fi
-            
             echo -e "${C_GREEN}✓ COMPLETE${C_RESET} - $test_id"
         else
             echo -e "${C_RED}✗ ERROR${C_RESET} - $test_id (exit code: $script_exit)"
-            echo "$full_output"
+            if [[ -n "$script_output" ]]; then
+                echo -e "${C_CYAN}┌─ Error Output ───────────────────────────┐${C_RESET}"
+                echo "$script_output" | while IFS= read -r line; do
+                    printf "${C_CYAN}│${C_RESET} %s\n" "$line"
+                done
+                echo -e "${C_CYAN}└───────────────────────────────────────────┘${C_RESET}"
+            fi
         fi
-    done
+    done <<< "$tests_json"
 
     # Close final category
     if [[ -n "$current_category" ]]; then

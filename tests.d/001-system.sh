@@ -8,8 +8,6 @@
 
 source "$(dirname "$0")/../config.sh"
 
-start_json_output
-
 # Test: System Name
 result=$(cat /sys/devices/virtual/dmi/id/product_name 2>&1)
 status="pass"
@@ -19,8 +17,7 @@ if [[ -z "$result" ]]; then
     notes="Unable to read product name"
     result="Unknown"
 fi
-output_test_result "System Name" "cat /sys/devices/virtual/dmi/id/product_name" "$result" "$status" "$notes"
-echo ","
+output_html_result "System Name" "cat /sys/devices/virtual/dmi/id/product_name" "$result" "$status" "$notes" "system-name" "System" "text"
 
 # Test: OS Version
 result=$(grep PRETTY_NAME /etc/os-release | cut -d '"' -f 2)
@@ -31,8 +28,7 @@ if [[ -z "$result" ]]; then
     notes="Unable to determine OS version"
     result="Unknown"
 fi
-output_test_result "OS Version" "grep PRETTY_NAME /etc/os-release | cut -d '\"' -f 2" "$result" "$status" "$notes"
-echo ","
+output_html_result "OS Version" "grep PRETTY_NAME /etc/os-release | cut -d '\\"' -f 2" "$result" "$status" "$notes" "os-version" "System" "text"
 
 # Test: OS Full Version (lsb_release -a)
 if command -v lsb_release &>/dev/null; then
@@ -49,6 +45,4 @@ else
     status="partial"
     notes="Install lsb-release package"
 fi
-output_test_result "OS Full Version (lsb_release -a)" "lsb_release -a" "$result" "$status" "$notes"
-
-finish_json_output
+output_html_result "OS Full Version (lsb_release -a)" "lsb_release -a" "$result" "$status" "$notes" "os-full-version" "System" "text"
