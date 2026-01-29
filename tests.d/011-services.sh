@@ -8,8 +8,6 @@
 
 source "$(dirname "$0")/../config.sh"
 
-start_json_output
-
 # Test: SSH Access
 if command -v systemctl &>/dev/null; then
     result=$(systemctl status sshd 2>&1 | grep 'Active:' | sed 's/^[ \t]*//')
@@ -19,8 +17,7 @@ else
     status="pass"
 fi
 notes=""
-output_test_result "SSH Access" "systemctl status sshd | grep 'Active:' | sed 's/^[ \\t]*//'" "$result" "$status" "$notes"
-echo ","
+output_html_result "SSH Access" "systemctl status sshd | grep 'Active:'" "$result" "$status" "$notes" "ssh-access" "Services & Mounts" "text"
 
 # Test: IPMI Access
 if command -v ipmitool &>/dev/null; then
@@ -32,8 +29,7 @@ else
     status="partial"
     notes="Install ipmitool to enable IPMI access checks"
 fi
-output_test_result "IPMI Access" "ipmitool lan print" "$result" "$status" "$notes"
-echo ","
+output_html_result "IPMI Access" "ipmitool lan print" "$result" "$status" "$notes" "ipmi-access" "Services & Mounts" "text"
 
 # Test: NFS Mounts
 result=$(mount 2>&1 | grep nfs)
@@ -45,6 +41,4 @@ else
     status="pass"
     notes="NFS mounts found"
 fi
-output_test_result "NFS Mounts" "mount | grep nfs" "$result" "$status" "$notes"
-
-finish_json_output
+output_html_result "NFS Mounts" "mount | grep nfs" "$result" "$status" "$notes" "nfs-mounts" "Services & Mounts" "text"

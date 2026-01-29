@@ -8,8 +8,6 @@
 
 source "$(dirname "$0")/../config.sh"
 
-start_json_output
-
 # Test: RAM Size
 result=$(free -h | grep Mem: | awk '{print $2}')
 status="pass"
@@ -19,6 +17,4 @@ if [[ -z "$result" ]]; then
     notes="Unable to determine RAM size"
     result="Unknown"
 fi
-output_test_result "RAM Size" "free -h | grep Mem: | awk '{print \$2}'" "$result" "$status" "$notes"
-
-finish_json_output
+output_html_result "RAM Size" "free -h | grep Mem: | awk '{print $2}'" "$result" "$status" "$notes" "ram-size" "RAM" "text"

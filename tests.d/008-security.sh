@@ -8,8 +8,6 @@
 
 source "$(dirname "$0")/../config.sh"
 
-start_json_output
-
 # Test: MOTD
 {
     local motd_files
@@ -24,15 +22,12 @@ start_json_output
             status="partial"
             note="Multiple files (${count})"
         fi
-        
-        # Summary output
         local file_list=$(echo "$motd_files" | tr '\n' '; ')
-        output_test_result "MOTD" "cat /etc/motd; ls /etc/update-motd.d" "$file_list" "$status" "$note"
+        output_html_result "MOTD" "cat /etc/motd; ls /etc/update-motd.d" "$file_list" "$status" "$note" "motd" "Security & Accounts" "text"
     else
-        output_test_result "MOTD" "cat /etc/motd" "No MOTD files found" "partial" ""
+        output_html_result "MOTD" "cat /etc/motd" "No MOTD files found" "partial" "" "motd" "Security & Accounts" "text"
     fi
 }
-echo ","
 
 # Test: SSH Keys Audit
 {
@@ -40,56 +35,45 @@ echo ","
     files=$(find /root/.ssh /home -maxdepth 3 \( -name 'id_*' -o -name '*.pub' -o -name 'authorized_keys' \) 2>/dev/null)
     
     if [[ -z "$files" ]]; then
-        output_test_result "SSH Keys Audit" "find ~/.ssh /home/*/.ssh" "No SSH key files found" "partial" "Metadata only; contents redacted"
+        output_html_result "SSH Keys Audit" "find ~/.ssh /home/*/.ssh" "No SSH key files found" "partial" "Metadata only; contents redacted" "ssh-keys" "Security & Accounts" "text"
     else
         local count=$(echo "$files" | wc -l)
         local result_summary="Found ${count} SSH key-related files"
-        output_test_result "SSH Keys Audit" "find ~/.ssh /home/*/.ssh" "$result_summary" "partial" "Metadata only; contents redacted"
+        output_html_result "SSH Keys Audit" "find ~/.ssh /home/*/.ssh" "$result_summary" "partial" "Metadata only; contents redacted" "ssh-keys" "Security & Accounts" "text"
     fi
 }
-echo ","
 
 # Test: /etc/passwd
 {
     local p
     p=$(cat /etc/passwd 2>&1)
     local line_count=$(echo "$p" | wc -l)
-    output_test_result "/etc/passwd" "cat /etc/passwd" "$p" "pass" "Total lines: $line_count"
+    output_html_result "/etc/passwd" "cat /etc/passwd" "$p" "pass" "Total lines: $line_count" "etc-passwd" "Security & Accounts" "text"
 }
-echo ","
 
 # Test: /etc/shadow (redacted)
 {
     if [[ -r /etc/shadow ]]; then
         local users_with_pw
         users_with_pw=$(awk -F: '($2!="!" && $2!="*" && $2!=""){print $1}' /etc/shadow 2>/dev/null)
-        
         local count=0
         if [[ -n "$users_with_pw" ]]; then
             count=$(echo "$users_with_pw" | wc -l)
         fi
-        
         local status="pass"
         local note="${count} account(s) with passwords set"
-        output_test_result "/etc/shadow (redacted)" "analyzed" "Shadow file analyzed and redacted" "$status" "$note"
+        output_html_result "/etc/shadow (redacted)" "analyzed" "Shadow file analyzed and redacted" "$status" "$note" "etc-shadow" "Security & Accounts" "text"
     else
-        output_test_result "/etc/shadow (redacted)" "N/A" "Not readable" "partial" "Requires root"
+        output_html_result "/etc/shadow (redacted)" "N/A" "Not readable" "partial" "Requires root" "etc-shadow" "Security & Accounts" "text"
     fi
 }
-echo ","
 
 # Test: Home Directories
 {
     local homelist
     homelist=$(ls -1 /home 2>/dev/null)
     local home_count=$(echo "$homelist" | wc -l)
-    
-    local passwd_homes
-    passwd_homes=$(awk -F: '{print $6}' /etc/passwd | sort -u | grep -v '^/root$' | head -c 200)
-    
     local status="pass"
     local note="Home count: $home_count"
-    output_test_result "Home Directories" "ls /home and /etc/passwd" "$homelist" "$status" "$note"
+    output_html_result "Home Directories" "ls /home and /etc/passwd" "$homelist" "$status" "$note" "home-dirs" "Security & Accounts" "text"
 }
-
-finish_json_output

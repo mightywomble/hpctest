@@ -8,15 +8,11 @@
 
 source "$(dirname "$0")/../config.sh"
 
-start_json_output
-
 log_warn "Network speed tests can take 1-3 minutes. We will discover servers and run two tests (Nearby, Europe). Please wait..."
 
 if ! command -v speedtest-cli &>/dev/null; then
-    output_test_result "Speedtest Nearby" "speedtest-cli --simple" "speedtest-cli not installed" "partial" "Install speedtest-cli to enable"
-    echo ","
-    output_test_result "Speedtest Europe" "speedtest-cli --simple" "speedtest-cli not installed" "partial" "Install speedtest-cli to enable"
-    finish_json_output
+    output_html_result "Speedtest Nearby" "speedtest-cli --simple" "speedtest-cli not installed" "partial" "Install speedtest-cli to enable" "speedtest-nearby" "Network Speed Tests" "numeric"
+    output_html_result "Speedtest Europe" "speedtest-cli --simple" "speedtest-cli not installed" "partial" "Install speedtest-cli to enable" "speedtest-europe" "Network Speed Tests" "numeric"
     exit 0
 fi
 
@@ -52,9 +48,10 @@ run_speedtest_server() {
     local sid="$1"
     local label="$2"
     local tag="$3"
+    local test_id="$4"
     
     if [[ -z "$sid" ]]; then
-        output_test_result "Speedtest ${tag}" "speedtest-cli --simple" "No matching server" "partial" "No server ID for ${tag}"
+        output_html_result "Speedtest ${tag}" "speedtest-cli --simple" "No matching server" "partial" "No server ID for ${tag}" "$test_id" "Network Speed Tests" "numeric"
         return
     fi
     
@@ -95,11 +92,8 @@ run_speedtest_server() {
         fi
     fi
     
-    output_test_result "Speedtest ${tag}" "speedtest-cli --server ${sid} --simple" "$out" "$status" "$note"
+    output_html_result "Speedtest ${tag}" "speedtest-cli --server ${sid} --simple" "$out" "$status" "$note" "$test_id" "Network Speed Tests" "numeric"
 }
 
-run_speedtest_server "$sid_near" "$label_near" "Nearby"
-echo ","
-run_speedtest_server "$sid_eu" "$label_eu" "Europe"
-
-finish_json_output
+run_speedtest_server "$sid_near" "$label_near" "Nearby" "speedtest-nearby"
+run_speedtest_server "$sid_eu" "$label_eu" "Europe" "speedtest-europe"

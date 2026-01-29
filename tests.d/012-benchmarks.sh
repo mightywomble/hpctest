@@ -8,21 +8,16 @@
 
 source "$(dirname "$0")/../config.sh"
 
-start_json_output
-
-# Redirect log messages to stderr so they don't interfere with JSON output
-exec 3>&1  # Save stdout
-exec 1>&2  # Redirect stdout to stderr for this script
-
 # Check if benchmarks should be skipped based on flags
 if should_skip_test "--noburn" "--noinstall"; then
-    exec 1>&3  # Restore stdout for JSON output
-    output_test_result "HPL Single Node" "N/A" "Skipped by flag" "partial" "--noburn/--noinstall"
-    echo ","
-    output_test_result "GPU Burn" "N/A" "Skipped by flag" "partial" "--noburn/--noinstall"
-    finish_json_output
+    output_html_result "HPL Single Node" "N/A" "Skipped by flag" "partial" "--noburn/--noinstall" "hpl-single" "High-Performance Benchmarks" "numeric"
+    output_html_result "GPU Burn" "N/A" "Skipped by flag" "partial" "--noburn/--noinstall" "gpu-burn" "High-Performance Benchmarks" "numeric"
     exit 0
 fi
+
+# Redirect log messages to stderr so they don't interfere with test output
+exec 3>&1  # Save stdout
+exec 1>&2  # Redirect stdout to stderr for this script
 
 # Check if Docker is installed
 if ! command -v docker &>/dev/null; then
@@ -45,17 +40,15 @@ if ! command -v docker &>/dev/null; then
         if install_docker_ce; then
             log_success "Docker installed"
         else
-            exec 1>&3  # Restore stdout for JSON output
-            output_test_result "Benchmarks" "N/A" "Skipped due to failed Docker installation" "fail" "Docker installation failed"
-            finish_json_output
+            exec 1>&3  # Restore stdout
+            output_html_result "HPL Single Node" "N/A" "Skipped due to failed Docker installation" "fail" "Docker installation failed" "hpl-single" "High-Performance Benchmarks" "numeric"
+            output_html_result "GPU Burn" "N/A" "Skipped due to failed Docker installation" "fail" "Docker installation failed" "gpu-burn" "High-Performance Benchmarks" "numeric"
             exit 0
         fi
     else
-        exec 1>&3  # Restore stdout for JSON output
-        output_test_result "HPL Single Node" "N/A" "Skipped - Docker not installed" "partial" "User did not install Docker"
-        echo ","
-        output_test_result "GPU Burn" "N/A" "Skipped - Docker not installed" "partial" "User did not install Docker"
-        finish_json_output
+        exec 1>&3  # Restore stdout
+        output_html_result "HPL Single Node" "N/A" "Skipped - Docker not installed" "partial" "User did not install Docker" "hpl-single" "High-Performance Benchmarks" "numeric"
+        output_html_result "GPU Burn" "N/A" "Skipped - Docker not installed" "partial" "User did not install Docker" "gpu-burn" "High-Performance Benchmarks" "numeric"
         exit 0
     fi
 fi
@@ -72,9 +65,8 @@ if [[ -z "$hpl_result" ]]; then
     hpl_result="No output received"
 fi
 
-exec 1>&3  # Restore stdout for JSON output
-output_test_result "HPL Single Node" "docker run ... hpl.sh" "$hpl_result" "$hpl_status" ""
-echo ","
+exec 1>&3  # Restore stdout
+output_html_result "HPL Single Node" "docker run ... hpl.sh" "$hpl_result" "$hpl_status" "" "hpl-single" "High-Performance Benchmarks" "numeric"
 exec 1>&2  # Redirect back to stderr
 
 # Test: GPU Burn
@@ -86,6 +78,5 @@ if [[ -z "$gpuburn_result" ]]; then
     gpuburn_result="No output received"
 fi
 
-exec 1>&3  # Restore stdout for JSON output
-output_test_result "GPU Burn" "docker run ... gpu-burn" "$gpuburn_result" "$gpuburn_status" ""
-finish_json_output
+exec 1>&3  # Restore stdout
+output_html_result "GPU Burn" "docker run ... gpu-burn" "$gpuburn_result" "$gpuburn_status" "" "gpu-burn" "High-Performance Benchmarks" "numeric"

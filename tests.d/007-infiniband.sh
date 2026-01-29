@@ -8,8 +8,6 @@
 
 source "$(dirname "$0")/../config.sh"
 
-start_json_output
-
 # Test: IB Links Speed
 if command -v ibstatus &>/dev/null; then
     result=$(ibstatus 2>&1 | grep -e 'rate:' -e 'device')
@@ -19,8 +17,7 @@ else
     status="partial"
 fi
 notes=""
-output_test_result "IB Links Speed" "ibstatus | grep -e 'rate:' -e 'device'" "$result" "$status" "$notes"
-echo ","
+output_html_result "IB Links Speed" "ibstatus | grep -e 'rate:' -e 'device'" "$result" "$status" "$notes" "ib-links-speed" "InfiniBand Network" "text"
 
 # Test: IB Links Status
 if command -v ibstatus &>/dev/null; then
@@ -31,8 +28,7 @@ else
     status="partial"
 fi
 notes=""
-output_test_result "IB Links Status" "ibstatus | grep -e 'link_layer:' -e 'phys state:'" "$result" "$status" "$notes"
-echo ","
+output_html_result "IB Links Status" "ibstatus | grep -e 'link_layer:' -e 'phys state:'" "$result" "$status" "$notes" "ib-links-status" "InfiniBand Network" "text"
 
 # Test: OFED Version
 if command -v ofed_info &>/dev/null; then
@@ -43,8 +39,7 @@ else
     status="partial"
 fi
 notes=""
-output_test_result "OFED Version" "ofed_info -s" "$result" "$status" "$notes"
-echo ","
+output_html_result "OFED Version" "ofed_info -s" "$result" "$status" "$notes" "ofed-version" "InfiniBand Network" "text"
 
 # Test: IBoIP Enabled
 if command -v ibdev2netdev &>/dev/null; then
@@ -55,8 +50,7 @@ else
     status="partial"
 fi
 notes=""
-output_test_result "IBoIP Enabled" "ibdev2netdev" "$result" "$status" "$notes"
-echo ","
+output_html_result "IBoIP Enabled" "ibdev2netdev" "$result" "$status" "$notes" "iboip-enabled" "InfiniBand Network" "text"
 
 # Test: IB Fabric
 if command -v iblinkinfo &>/dev/null; then
@@ -67,6 +61,4 @@ else
     status="partial"
 fi
 notes=""
-output_test_result "IB Fabric" "iblinkinfo --switches-only" "$result" "$status" "$notes"
-
-finish_json_output
+output_html_result "IB Fabric" "iblinkinfo --switches-only" "$result" "$status" "$notes" "ib-fabric" "InfiniBand Network" "text"
