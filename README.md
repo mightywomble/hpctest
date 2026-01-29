@@ -139,28 +139,38 @@ You can run the script with the following flags to control behavior.
   - Expect: Disks listed as chips; lsblk table; mounted filesystems in df
 - GPU
   - What: Names, VRAM, peermem module, Fabric Manager, NVLink status, driver version; full nvidia-smi (collapsible)
-  - Expect: PASS when nvidia-smi is available; otherwise partial with install guidance
+  - Expect: PASS when nvidia-smi is available; PASS (Not present) when not installed (optional feature)
 - Ethernet Network
   - What: NIC inventory, IPs, per-interface link speeds vs threshold, bond details if present
-  - Expect: Link speeds visible; PASS/FAIL depends on MIN_LINK_SPEED_MBPS
+  - Expect: Link speeds visible; PASS/FAIL depends on MIN_LINK_SPEED_MBPS; absence of config is PASS
 - InfiniBand Network
   - What: Rate/status, OFED version, IBoIP mapping, fabric switches
-  - Expect: Outputs if IB stack present; otherwise partial/fail where missing
+  - Expect: PASS when present; PASS (Not present) when not installed (optional feature)
 - Security & Accounts
   - What: MOTD files, SSH key metadata (no secrets), /etc/passwd, shadow status summary, home directories
-  - Expect: Collapsible sections with sanitized content; no secrets revealed
+  - Expect: Collapsible sections with sanitized content; no secrets revealed; FAIL only on actual errors
 - Network Speed Tests
   - What: Two runs via speedtest-cli (Nearby, Europe)
-  - Expect: Download/Upload values; PASS/FAIL/Partial depends on thresholds and availability
+  - Expect: Download/Upload values; PASS/FAIL depends on thresholds; PASS (Not installed) if tool missing
 - Software & Packages
   - What: Process list; Installed packages; Manually installed packages
-  - Expect: Searchable tables; may be partial on minimal systems
+  - Expect: Searchable tables; PASS whether packages found or not
 - Services & Mounts
   - What: sshd status, IPMI access, NFS mounts
-  - Expect: PASS where services/mounts are present
+  - Expect: PASS where services/mounts are present; FAIL on actual errors only
 - High-Performance Benchmarks (Docker)
   - What: HPL single-node; GPU-burn
   - Expect: Run only if Docker present/installed and not skipped by --noburn/--noinstall; otherwise recorded as skipped
+
+## Understanding Test Status
+
+Tests use exit codes and output presence to determine status:
+
+- **PASS**: Command exits 0 (success), or absence of optional features (GPU, InfiniBand, speedtest-cli)
+- **FAIL**: Command exits non-zero (error), or thresholds violated (link speed requirements, network speed minimums)
+- **No more PARTIAL**: The confusing "partial" status has been eliminated. Tests are either passing or failing.
+
+For details on how status is evaluated, see [STATUS_EVALUATION.md](STATUS_EVALUATION.md).
 
 ## Using the HTML report
 - Single, self-contained HTML file with collapsible sections per category
@@ -168,10 +178,9 @@ You can run the script with the following flags to control behavior.
   - Export Checklist CSV: condensed checklist with statuses
   - Export Full Results CSV: full table content
 - Status badges:
-  - PASS: Green
-  - PARTIAL: Yellow
-  - FAIL: Red
-- Notes field explains why a test is partial/fail and any thresholds used
+  - PASS: Green (everything working as expected)
+  - FAIL: Red (actual error condition detected)
+- Notes field explains why a test failed and any thresholds used
 
 ## Running remotely over SSH and saving the HTML locally
 
