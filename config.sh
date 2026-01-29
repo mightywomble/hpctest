@@ -94,11 +94,11 @@ output_test_result() {
     local status="${4:-N/A}"
     local notes="${5:-}"
     
-    # Escape special characters for JSON
-    local escaped_name=$(printf '%s\n' "$test_name" | sed 's/\\/\\\\/g; s/"/\\"/g')
-    local escaped_cmd=$(printf '%s\n' "$command" | sed 's/\\/\\\\/g; s/"/\\"/g')
-    local escaped_result=$(printf '%s\n' "$result" | sed 's/\\/\\\\/g; s/"/\\"/g')
-    local escaped_notes=$(printf '%s\n' "$notes" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    # Escape special characters for JSON - must handle newlines, tabs, backslashes, and quotes
+    local escaped_name=$(printf '%s' "$test_name" | sed 's/\\/\\\\/g; s/	/\\t/g; s/"/\\"/g; s/$//' | awk '{printf "%s", $0}' RS=$'\n' ORS='\\n')
+    local escaped_cmd=$(printf '%s' "$command" | sed 's/\\/\\\\/g; s/	/\\t/g; s/"/\\"/g; s/$//' | awk '{printf "%s", $0}' RS=$'\n' ORS='\\n')
+    local escaped_result=$(printf '%s' "$result" | sed 's/\\/\\\\/g; s/	/\\t/g; s/"/\\"/g; s/$//' | awk '{printf "%s", $0}' RS=$'\n' ORS='\\n')
+    local escaped_notes=$(printf '%s' "$notes" | sed 's/\\/\\\\/g; s/	/\\t/g; s/"/\\"/g; s/$//' | awk '{printf "%s", $0}' RS=$'\n' ORS='\\n')
     
     cat <<EOF
   {
