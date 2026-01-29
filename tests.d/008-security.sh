@@ -15,32 +15,26 @@ test_motd() {
     motd_files=$( ( [ -f /etc/motd ] && echo /etc/motd; ls -1 /etc/update-motd.d/* 2>/dev/null ) | sed '/^$/d' )
     
     if [[ -n "$motd_files" ]]; then
-        local count
-        count=$(echo "$motd_files" | wc -l | awk '{print $1}')
         local status="pass"
-        local note="Found MOTD files"
-        if (( count > 1 )); then
-            status="partial"
-            note="Multiple files (${count})"
-        fi
+        local note=""
         local file_list=$(echo "$motd_files" | tr '\n' '; ')
         output_html_result "MOTD" "cat /etc/motd; ls /etc/update-motd.d" "$file_list" "$status" "$note" "motd" "Security & Accounts" "text"
     else
-        output_html_result "MOTD" "cat /etc/motd" "No MOTD files found" "partial" "" "motd" "Security & Accounts" "text"
+        output_html_result "MOTD" "cat /etc/motd" "No MOTD files found" "pass" "(Not configured)" "motd" "Security & Accounts" "text"
     fi
 }
 
 # Test: SSH Keys Audit
 test_ssh_keys() {
     local files
-    files=$(find /root/.ssh /home -maxdepth 3 \( -name 'id_*' -o -name '*.pub' -o -name 'authorized_keys' \) 2>/dev/null)
+    files=$(find /root/.ssh /home -maxdepth 3 \( -name 'id_*' -o -name '*.pub' -o -name 'authorized_keys' \) 2>/dev/null || true)
     
-    if [[ -z "$files" ]]; then
-        output_html_result "SSH Keys Audit" "find ~/.ssh /home/*/.ssh" "No SSH key files found" "partial" "Metadata only; contents redacted" "ssh-keys" "Security & Accounts" "text"
-    else
+    if [[ -n "$files" ]]; then
         local count=$(echo "$files" | wc -l)
         local result_summary="Found ${count} SSH key-related files"
-        output_html_result "SSH Keys Audit" "find ~/.ssh /home/*/.ssh" "$result_summary" "partial" "Metadata only; contents redacted" "ssh-keys" "Security & Accounts" "text"
+        output_html_result "SSH Keys Audit" "find ~/.ssh /home/*/.ssh" "$result_summary" "pass" "Metadata only; contents redacted" "ssh-keys" "Security & Accounts" "text"
+    else
+        output_html_result "SSH Keys Audit" "find ~/.ssh /home/*/.ssh" "No SSH key files found" "pass" "(Not configured)" "ssh-keys" "Security & Accounts" "text"
     fi
 }
 
@@ -65,18 +59,23 @@ test_shadow() {
         local note="${count} account(s) with passwords set"
         output_html_result "/etc/shadow (redacted)" "analyzed" "Shadow file analyzed and redacted" "$status" "$note" "etc-shadow" "Security & Accounts" "text"
     else
-        output_html_result "/etc/shadow (redacted)" "N/A" "Not readable" "partial" "Requires root" "etc-shadow" "Security & Accounts" "text"
+        output_html_result "/etc/shadow (redacted)" "N/A" "Not readable" "fail" "Requires root privileges" "etc-shadow" "Security & Accounts" "text"
     fi
 }
 
 # Test: Home Directories
 test_home_dirs() {
     local homelist
-    homelist=$(ls -1 /home 2>/dev/null)
-    local home_count=$(echo "$homelist" | wc -l)
-    local status="pass"
-    local note="Home count: $home_count"
-    output_html_result "Home Directories" "ls /home and /etc/passwd" "$homelist" "$status" "$note" "home-dirs" "Security & Accounts" "text"
+    homelist=$(ls -1 /home 2>/dev/null || true)
+    
+    if [[ -n "$homelist" ]]; then
+        local home_count=$(echo "$homelist" | wc -l)
+        local status="pass"
+        local note="Home count: $home_count"
+        output_html_result "Home Directories" "ls /home and /etc/passwd" "$homelist" "$status" "$note" "home-dirs" "Security & Accounts" "text"
+    else
+        output_html_result "Home Directories" "ls /home and /etc/passwd" "No home directories found" "pass" "(Empty /home)" "home-dirs" "Security & Accounts" "text"
+    fi
 }
 
 # Run all tests

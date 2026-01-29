@@ -10,80 +10,62 @@ source "$(dirname "$0")/../config.sh"
 echo "[RUNNING] GPU tests"
 
 # Test: GPU Type
-if command -v nvidia-smi &>/dev/null; then
-    result=$(nvidia-smi --query-gpu=gpu_name --format=csv,noheader 2>&1)
-    status="pass"
+result=$(nvidia-smi --query-gpu=gpu_name --format=csv,noheader 2>&1)
+exit_code=$?
+if [[ $exit_code -eq 0 && -n "$result" ]]; then
+    output_html_result "GPU Type" "nvidia-smi --query-gpu=gpu_name --format=csv,noheader" "$result" "pass" "" "gpu-type" "GPU" "text"
 else
-    result="nvidia-smi not installed"
-    status="partial"
+    output_html_result "GPU Type" "nvidia-smi --query-gpu=gpu_name --format=csv,noheader" "No NVIDIA GPU detected" "pass" "(Not present)" "gpu-type" "GPU" "text"
 fi
-notes="NVIDIA GPU detection"
-output_html_result "GPU Type" "nvidia-smi --query-gpu=gpu_name --format=csv,noheader" "$result" "$status" "$notes" "gpu-type" "GPU" "text"
 
 # Test: VRAM per GPU
-if command -v nvidia-smi &>/dev/null; then
-    result=$(nvidia-smi --query-gpu=memory.total --format=csv 2>&1)
-    status="pass"
+result=$(nvidia-smi --query-gpu=memory.total --format=csv 2>&1)
+exit_code=$?
+if [[ $exit_code -eq 0 && -n "$result" ]]; then
+    output_html_result "VRAM per GPU" "nvidia-smi --query-gpu=memory.total --format=csv" "$result" "pass" "" "gpu-vram" "GPU" "numeric"
 else
-    result="nvidia-smi not installed"
-    status="partial"
+    output_html_result "VRAM per GPU" "nvidia-smi --query-gpu=memory.total --format=csv" "No NVIDIA GPU detected" "pass" "(Not present)" "gpu-vram" "GPU" "numeric"
 fi
-notes=""
-output_html_result "VRAM per GPU" "nvidia-smi --query-gpu=memory.total --format=csv" "$result" "$status" "$notes" "gpu-vram" "GPU" "numeric"
 
 # Test: NVIDIA Peermem
-if command -v lsmod &>/dev/null; then
-    result=$(lsmod | grep -i nvidia_peermem 2>&1)
-    if [[ -z "$result" ]]; then
-        result="nvidia_peermem module not loaded"
-        status="partial"
-    else
-        status="pass"
-    fi
+result=$(lsmod 2>&1 | grep -i nvidia_peermem || true)
+if [[ -n "$result" ]]; then
+    output_html_result "NVIDIA Peermem" "lsmod | grep -i nvidia_peermem" "$result" "pass" "" "nvidia-peermem" "GPU" "text"
 else
-    result="lsmod command not available"
-    status="partial"
+    output_html_result "NVIDIA Peermem" "lsmod | grep -i nvidia_peermem" "nvidia_peermem module not loaded" "pass" "(Not present)" "nvidia-peermem" "GPU" "text"
 fi
-notes=""
-output_html_result "NVIDIA Peermem" "lsmod | grep -i nvidia_peermem" "$result" "$status" "$notes" "nvidia-peermem" "GPU" "text"
 
 # Test: NVLink Fabric Manager
-if command -v nv-fabricmanager &>/dev/null; then
-    result=$(nv-fabricmanager --version 2>&1)
-    status="pass"
+result=$(nv-fabricmanager --version 2>&1)
+exit_code=$?
+if [[ $exit_code -eq 0 && -n "$result" ]]; then
+    output_html_result "NVLink Fabric Manager" "nv-fabricmanager --version" "$result" "pass" "" "nvlink-fm" "GPU" "text"
 else
-    result="nv-fabricmanager command not found"
-    status="partial"
+    output_html_result "NVLink Fabric Manager" "nv-fabricmanager --version" "Not installed" "pass" "(Not present)" "nvlink-fm" "GPU" "text"
 fi
-notes="NVIDIA Fabric Manager for NVLink"
-output_html_result "NVLink Fabric Manager" "nv-fabricmanager --version" "$result" "$status" "$notes" "nvlink-fm" "GPU" "text"
 
 # Test: NVLink Status
-if command -v nvidia-smi &>/dev/null; then
-    result=$(nvidia-smi nvlink -s 2>&1)
-    status="pass"
+result=$(nvidia-smi nvlink -s 2>&1)
+exit_code=$?
+if [[ $exit_code -eq 0 && -n "$result" ]]; then
+    output_html_result "NVLink Status" "nvidia-smi nvlink -s" "$result" "pass" "" "nvlink-status" "GPU" "text"
 else
-    result="nvidia-smi not installed"
-    status="partial"
+    output_html_result "NVLink Status" "nvidia-smi nvlink -s" "No NVLink detected" "pass" "(Not present)" "nvlink-status" "GPU" "text"
 fi
-notes=""
-output_html_result "NVLink Status" "nvidia-smi nvlink -s" "$result" "$status" "$notes" "nvlink-status" "GPU" "text"
 
 # Test: Driver Version
-if command -v nvidia-smi &>/dev/null; then
-    result=$(nvidia-smi | grep -i 'Driver Version' 2>&1)
-    status="pass"
+result=$(nvidia-smi 2>&1 | grep -i 'Driver Version' || true)
+if [[ -n "$result" ]]; then
+    output_html_result "Driver Version" "nvidia-smi | grep -i 'Driver Version'" "$result" "pass" "" "driver-version" "GPU" "text"
 else
-    result="nvidia-smi not installed"
-    status="partial"
+    output_html_result "Driver Version" "nvidia-smi | grep -i 'Driver Version'" "No driver installed" "pass" "(Not present)" "driver-version" "GPU" "text"
 fi
-notes=""
-output_html_result "Driver Version" "nvidia-smi | grep -i 'Driver Version'" "$result" "$status" "$notes" "driver-version" "GPU" "text"
 
 # Test: nvidia-smi Full Output
-if command -v nvidia-smi &>/dev/null; then
-    nsmi=$(nvidia-smi 2>&1)
+nsmi=$(nvidia-smi 2>&1)
+exit_code=$?
+if [[ $exit_code -eq 0 && -n "$nsmi" ]]; then
     output_html_result "nvidia-smi Full Output" "nvidia-smi" "$nsmi" "pass" "" "nvidia-smi-output" "GPU" "text"
 else
-    output_html_result "nvidia-smi Full Output" "nvidia-smi" "nvidia-smi not installed" "partial" "Install NVIDIA drivers" "nvidia-smi-output" "GPU" "text"
+    output_html_result "nvidia-smi Full Output" "nvidia-smi" "NVIDIA tools not installed" "pass" "(Not present)" "nvidia-smi-output" "GPU" "text"
 fi

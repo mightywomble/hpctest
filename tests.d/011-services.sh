@@ -23,23 +23,29 @@ output_html_result "SSH Access" "systemctl status sshd | grep 'Active:'" "$resul
 # Test: IPMI Access
 if command -v ipmitool &>/dev/null; then
     result=$(ipmitool lan print 2>&1)
-    status="pass"
-    notes=""
+    exit_code=$?
+    if [[ $exit_code -eq 0 && -n "$result" ]]; then
+        status="pass"
+        notes=""
+    else
+        status="fail"
+        notes="ipmitool command failed (device may not exist)"
+    fi
 else
     result="ipmitool command not found"
-    status="partial"
+    status="fail"
     notes="Install ipmitool to enable IPMI access checks"
 fi
 output_html_result "IPMI Access" "ipmitool lan print" "$result" "$status" "$notes" "ipmi-access" "Services & Mounts" "text"
 
 # Test: NFS Mounts
-result=$(mount 2>&1 | grep nfs)
-if [[ -z "$result" ]]; then
-    result="No NFS mounts detected"
-    status="pass"
-    notes="System has no NFS mounts"
-else
+result=$(mount 2>&1 | grep nfs) || true
+if [[ -n "$result" ]]; then
     status="pass"
     notes="NFS mounts found"
+else
+    result="No NFS mounts detected"
+    status="pass"
+    notes="System has no NFS mounts (normal if not configured)"
 fi
 output_html_result "NFS Mounts" "mount | grep nfs" "$result" "$status" "$notes" "nfs-mounts" "Services & Mounts" "text"

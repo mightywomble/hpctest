@@ -11,8 +11,8 @@ source "$(dirname "$0")/../config.sh"
 log_warn "Network speed tests can take 1-3 minutes. We will discover servers and run two tests (Nearby, Europe). Please wait..."
 
 if ! command -v speedtest-cli &>/dev/null; then
-    output_html_result "Speedtest Nearby" "speedtest-cli --simple" "speedtest-cli not installed" "partial" "Install speedtest-cli to enable" "speedtest-nearby" "Network Speed Tests" "numeric"
-    output_html_result "Speedtest Europe" "speedtest-cli --simple" "speedtest-cli not installed" "partial" "Install speedtest-cli to enable" "speedtest-europe" "Network Speed Tests" "numeric"
+    output_html_result "Speedtest Nearby" "speedtest-cli --simple" "speedtest-cli not installed" "pass" "(Not installed)" "speedtest-nearby" "Network Speed Tests" "numeric"
+    output_html_result "Speedtest Europe" "speedtest-cli --simple" "speedtest-cli not installed" "pass" "(Not installed)" "speedtest-europe" "Network Speed Tests" "numeric"
     exit 0
 fi
 
@@ -51,7 +51,7 @@ run_speedtest_server() {
     local test_id="$4"
     
     if [[ -z "$sid" ]]; then
-        output_html_result "Speedtest ${tag}" "speedtest-cli --simple" "No matching server" "partial" "No server ID for ${tag}" "$test_id" "Network Speed Tests" "numeric"
+        output_html_result "Speedtest ${tag}" "speedtest-cli --simple" "No matching server" "pass" "(No ${tag} server available)" "$test_id" "Network Speed Tests" "numeric"
         return
     fi
     
