@@ -70,14 +70,16 @@ if command -v curl &>/dev/null; then
         # Get the latest tag from the list
         HPL_TAG=$(echo $TAGS | awk '{print $NF}')
         log "Found available tags: $TAGS"
-        log "Using tag: $HPL_TAG"
+        echo -e "${C_GREEN}[TEST VERSION]${C_RESET} $HPL_TAG"
     else
         log_warn "Could not fetch tags from registry, falling back to 24.09"
         HPL_TAG="24.09"
+        echo -e "${C_YELLOW}[TEST VERSION]${C_RESET} $HPL_TAG (fallback)"
     fi
 else
     log_warn "curl not available, using fallback tag 24.09"
     HPL_TAG="24.09"
+    echo -e "${C_YELLOW}[TEST VERSION]${C_RESET} $HPL_TAG (fallback)"
 fi
 
 # Test: HPL Single Node
