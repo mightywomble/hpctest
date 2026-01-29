@@ -56,9 +56,33 @@ fi
 # Docker is available, proceed with benchmarks
 log "Running Docker-based benchmarks..."
 
+# Detect latest HPL benchmark image tag
+log "Detecting latest NVIDIA HPC-Benchmarks image tag..."
+HPL_IMAGE="nvcr.io/nvidia/hpc-benchmarks"
+HPL_TAG="latest"  # Fallback to latest
+
+# Try to get tags from Docker registry (requires internet/access)
+if command -v curl &>/dev/null; then
+    # Attempt to fetch available tags from NVIDIA NGC
+    TAGS=$(curl -s "https://registry.ngc.nvidia.com/v2/nvidia/hpc-benchmarks/tags/list" 2>/dev/null | grep -o '"tags":\[.*\]' | grep -o '"[0-9][0-9]*\.[0-9][0-9]*"' | sort -V | tail -5 | tr -d '"' | tr '\n' ' ')
+    
+    if [[ -n "$TAGS" ]]; then
+        # Get the latest tag from the list
+        HPL_TAG=$(echo $TAGS | awk '{print $NF}')
+        log "Found available tags: $TAGS"
+        log "Using tag: $HPL_TAG"
+    else
+        log_warn "Could not fetch tags from registry, falling back to 24.09"
+        HPL_TAG="24.09"
+    fi
+else
+    log_warn "curl not available, using fallback tag 24.09"
+    HPL_TAG="24.09"
+fi
+
 # Test: HPL Single Node
-log "Running HPL benchmark..."
-hpl_result=$(docker run --gpus all --rm --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 nvcr.io/nvidia/hpc-benchmarks:24.09 mpirun -np 8 --bind-to none --map-by ppr:8:node /hpl.sh --dat /hpl-linux-x86_64/sample-dat/HPL-dgx-h100-1N.dat 2>&1)
+log "Running HPL benchmark with image $HPL_IMAGE:$HPL_TAG..."
+hpl_result=$(docker run --gpus all --rm --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 $HPL_IMAGE:$HPL_TAG mpirun -np 8 --bind-to none --map-by ppr:8:node /hpl.sh --dat /hpl-linux-x86_64/sample-dat/HPL-dgx-h100-1N.dat 2>&1)
 hpl_status="pass"
 if [[ -z "$hpl_result" ]]; then
     hpl_status="partial"
