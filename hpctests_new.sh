@@ -83,7 +83,7 @@ execute_test_script() {
     exit_code=$?
     
     if [[ $exit_code -ne 0 ]]; then
-        log_error "[FAIL] Test $test_id failed with exit code $exit_code"
+        log_error "Test $test_id failed with exit code $exit_code"
         echo "$output"
         return 1
     fi
@@ -365,13 +365,22 @@ main() {
 
         # Execute test script and capture JSON output
         local script_full_path="$SCRIPT_DIR/$script"
-        echo -e "${C_CYAN}[START]${C_RESET} Running test: $test_id"
-        local json_output=$(execute_test_script "$script_full_path" "$test_id")
+        echo -e "${C_CYAN}[START]${C_RESET} $test_id"
+        
+        # Separate the JSON from any intermediate output
+        local json_output
+        local full_output
+        full_output=$(execute_test_script "$script_full_path" "$test_id" 2>&1)
         local script_exit=$?
 
-        # Parse JSON array and render each test result
         if [[ $script_exit -eq 0 ]]; then
-            # Use jq for reliable JSON parsing if available
+            json_output="$full_output"
+            
+            # Extract and display non-JSON output for visibility
+            echo -e "${C_CYAN}[OUTPUT]${C_RESET}"
+            echo "$json_output" | grep -v -E '^(\[|\]|  \{|^\}|^,$)' | sed '/^$/d' || true
+            
+            # Parse JSON array and render each test result
             if command -v jq &>/dev/null; then
                 echo "$json_output" | jq -c '.[]' 2>/dev/null | while read -r obj; do
                     render_test_result_html "$obj"
@@ -394,9 +403,11 @@ main() {
                     fi
                 done <<< "$json_output"
             fi
-            log_success "[SUCCESS] Completed: $test_id"
+            
+            echo -e "${C_GREEN}[COMPLETE]${C_RESET} $test_id"
         else
-            log_error "[FAIL] Test $test_id failed with exit code $script_exit"
+            echo -e "${C_RED}[ERROR]${C_RESET} $test_id failed with exit code $script_exit"
+            echo "$full_output"
         fi
     done
 
