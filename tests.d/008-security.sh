@@ -9,7 +9,7 @@
 source "$(dirname "$0")/../config.sh"
 
 # Test: MOTD
-{
+test_motd() {
     local motd_files
     motd_files=$( ( [ -f /etc/motd ] && echo /etc/motd; ls -1 /etc/update-motd.d/* 2>/dev/null ) | sed '/^$/d' )
     
@@ -30,7 +30,7 @@ source "$(dirname "$0")/../config.sh"
 }
 
 # Test: SSH Keys Audit
-{
+test_ssh_keys() {
     local files
     files=$(find /root/.ssh /home -maxdepth 3 \( -name 'id_*' -o -name '*.pub' -o -name 'authorized_keys' \) 2>/dev/null)
     
@@ -44,7 +44,7 @@ source "$(dirname "$0")/../config.sh"
 }
 
 # Test: /etc/passwd
-{
+test_passwd() {
     local p
     p=$(cat /etc/passwd 2>&1)
     local line_count=$(echo "$p" | wc -l)
@@ -52,7 +52,7 @@ source "$(dirname "$0")/../config.sh"
 }
 
 # Test: /etc/shadow (redacted)
-{
+test_shadow() {
     if [[ -r /etc/shadow ]]; then
         local users_with_pw
         users_with_pw=$(awk -F: '($2!="!" && $2!="*" && $2!=""){print $1}' /etc/shadow 2>/dev/null)
@@ -69,7 +69,7 @@ source "$(dirname "$0")/../config.sh"
 }
 
 # Test: Home Directories
-{
+test_home_dirs() {
     local homelist
     homelist=$(ls -1 /home 2>/dev/null)
     local home_count=$(echo "$homelist" | wc -l)
@@ -77,3 +77,10 @@ source "$(dirname "$0")/../config.sh"
     local note="Home count: $home_count"
     output_html_result "Home Directories" "ls /home and /etc/passwd" "$homelist" "$status" "$note" "home-dirs" "Security & Accounts" "text"
 }
+
+# Run all tests
+test_motd
+test_ssh_keys
+test_passwd
+test_shadow
+test_home_dirs

@@ -38,7 +38,7 @@ if [[ -n "$SPEEDTEST_SERVER_EU" ]]; then
     sid_eu="$SPEEDTEST_SERVER_EU"
     label_eu=$(echo "$list_all" | grep -E "^\\s*${sid_eu}\\)" | sed 's/^ *[0-9]\\+) //')
 else
-    local EU_PATTERN="Germany|France|Netherlands|United Kingdom|UK|Sweden|Spain|Italy|Switzerland|Norway|Denmark|Finland|Poland|Ireland|Belgium|Austria|Czech|Portugal|Hungary|Romania|Greece|Iceland|Luxembourg|Slovakia|Slovenia|Lithuania|Latvia|Estonia|Bulgaria|Croatia|Serbia"
+    EU_PATTERN="Germany|France|Netherlands|United Kingdom|UK|Sweden|Spain|Italy|Switzerland|Norway|Denmark|Finland|Poland|Ireland|Belgium|Austria|Czech|Portugal|Hungary|Romania|Greece|Iceland|Luxembourg|Slovakia|Slovenia|Lithuania|Latvia|Estonia|Bulgaria|Croatia|Serbia"
     sid_eu=$(echo "$list_all" | grep -E "$EU_PATTERN" | head -n 1 | grep -Eo '^[[:space:]]*[0-9]+' | tr -d ' ')
     label_eu=$(echo "$list_all" | grep -E "^\\s*${sid_eu}\\)" | sed 's/^ *[0-9]\\+) //')
 fi

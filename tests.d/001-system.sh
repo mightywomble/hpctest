@@ -28,7 +28,7 @@ if [[ -z "$result" ]]; then
     notes="Unable to determine OS version"
     result="Unknown"
 fi
-output_html_result "OS Version" "grep PRETTY_NAME /etc/os-release | cut -d '\\"' -f 2" "$result" "$status" "$notes" "os-version" "System" "text"
+output_html_result "OS Version" "grep PRETTY_NAME /etc/os-release | cut -d '\"' -f 2" "$result" "$status" "$notes" "os-version" "System" "text"
 
 # Test: OS Full Version (lsb_release -a)
 if command -v lsb_release &>/dev/null; then

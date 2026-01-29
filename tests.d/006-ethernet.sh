@@ -41,7 +41,7 @@ fi
 output_html_result "NIC Type per IPv4" "nic_info_per_ipv4" "$result" "$status" "$notes" "nic-type" "Ethernet Network" "text"
 
 # Test: Link Speed Check
-{
+check_link_speed() {
     local min=${MIN_LINK_SPEED_MBPS:-0}
     local overall_status="pass"
     local notes=""
@@ -79,6 +79,7 @@ output_html_result "NIC Type per IPv4" "nic_info_per_ipv4" "$result" "$status" "
     fi
     output_html_result "Link Speed Check (>= ${MIN_LINK_SPEED_MBPS} Mb/s)" "ethtool <each iface>" "$lines" "$overall_status" "$notes" "link-speed" "Ethernet Network" "text"
 }
+check_link_speed
 
 # Test: Bond Speed (if bond0 exists)
 if ip link show bond0 > /dev/null 2>&1; then

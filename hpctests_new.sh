@@ -236,6 +236,13 @@ main() {
        log_error "This script must be run as root or with sudo."
        exit 1
     fi
+    
+    # Check for required dependencies
+    if ! command -v jq &>/dev/null; then
+        log_error "jq is required but not installed."
+        log_warn "Install it with: sudo apt-get install -y jq"
+        exit 1
+    fi
 
     # Parse command-line arguments
     for arg in "$@"; do
@@ -339,6 +346,7 @@ main() {
         echo
         echo -e "${C_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
         echo -e "${C_GREEN}▶${C_RESET} ${C_CYAN}$test_id${C_RESET}"
+        echo -e "${C_YELLOW}[RUNNING]${C_RESET} $script"
         echo -e "${C_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
         
         local script_output
