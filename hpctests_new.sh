@@ -124,8 +124,7 @@ render_test_result_html() {
     fi
 }
 
-# Source HTML generation functions from backup (or include them)
-# These are extracted from the original hpctests.sh.backup
+# HTML generation functions
 add_html_category_header() {
     local category="$1"
     cat >> "${OUTPUT_FILE}" << EOF
@@ -236,45 +235,72 @@ add_row_to_html_report_html() {
 
 # Initialize HTML report with header and styles
 initialize_html_report() {
-    cat > "${OUTPUT_FILE}" << 'EOF'
+    log "Initializing HTML report file: ${OUTPUT_FILE}"
+    cat > "${OUTPUT_FILE}" << EOF
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Test Report</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        h1 { color: #333; }
-        .info { background: #e3f2fd; padding: 10px; border-radius: 5px; margin-bottom: 20px; }
-        details { margin: 20px 0; }
-        summary { cursor: pointer; font-weight: bold; padding: 10px; background: #2196F3; color: white; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th { background: #1976D2; color: white; padding: 12px; text-align: left; }
-        td { padding: 10px; border-bottom: 1px solid #ddd; }
-        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; overflow-x: auto; }
-        .status-badge { padding: 4px 8px; border-radius: 3px; font-weight: bold; }
-        .status-pass { background: #4CAF50; color: white; }
-        .status-fail { background: #f44336; color: white; }
-        .status-partial { background: #FF9800; color: white; }
-        .status-notes { margin-left: 10px; font-style: italic; color: #666; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        :root {
+            --bg-color: #1a1b26;
+            --card-color: #24283b;
+            --text-color: #c0caf5;
+            --header-color: #ffffff;
+            --accent-color: #00bfff;
+            --border-color: #414868;
+            --table-header-bg: #2e3452;
+            --green: #34d399;
+            --yellow: #facc15;
+            --red: #f87171;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 2rem; font-size: 14px; }
+        .container { max-width: 1200px; margin: 0 auto; background-color: var(--card-color); border-radius: 12px; padding: 2rem; border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        h1 { color: var(--header-color); text-align: center; border-bottom: 2px solid var(--accent-color); padding-bottom: 1rem; margin-bottom: 0.5rem; font-weight: 700; }
+        .report-meta { text-align: center; margin-bottom: 1.5rem; font-size: 0.95rem; color: #7a82ac; }
+        .report-host { text-align: center; margin-bottom: 2rem; font-size: 0.95rem; color: #a9b1d6; }
+        details { background: var(--bg-color); border-radius: 8px; margin-bottom: 1rem; border: 1px solid var(--border-color); overflow: hidden; }
+        summary { font-weight: 600; font-size: 1.2rem; padding: 1rem; cursor: pointer; color: var(--accent-color); background-color: var(--table-header-bg); list-style: none; display: flex; justify-content: space-between; }
+        summary::-webkit-details-marker { display: none; }
+        summary::after { content: '+'; font-size: 1.5rem; transition: transform 0.2s; }
+        details[open] summary::after { transform: rotate(45deg); }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        th, td { padding: 0.8rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: top; overflow-wrap: anywhere; word-break: break-word; }
+        pre { white-space: pre-wrap; word-break: break-word; }
+        thead { background-color: var(--table-header-bg); color: #a9b1d6; font-weight: 600; }
+        tbody tr:nth-child(even) { background-color: #2e345250; }
+        thead th:nth-child(1) { width: 10%; }
+        thead th:nth-child(2) { width: 30%; }
+        thead th:nth-child(3) { width: 50%; }
+        thead th:nth-child(4) { width: 10%; }
+        td:nth-child(1) { width: 10%; font-weight: 600; color: #a9b1d6; }
+        td:nth-child(2) { width: 30%; font-family: monospace; color: #e0af68; }
+        td:nth-child(3) { width: 50%; white-space: pre-wrap; word-break: break-word; font-family: monospace; font-size: 0.85rem; }
+        td:nth-child(4) { width: 10%; }
+        .status-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 9999px; font-weight: 600; font-size: 0.8rem; }
+        .status-pass { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.4); }
+        .status-fail { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.4); }
+        .status-partial { background: rgba(250,204,21,0.15); color: var(--yellow); border: 1px solid rgba(250,204,21,0.4); }
+        .status-notes { display: block; margin-top: 0.25rem; font-size: 0.8rem; color: #a9b1d6; white-space: pre-wrap; }
+        .footer { text-align: center; margin-top: 2rem; font-size: 0.8rem; color: #7a82ac; }
     </style>
 </head>
 <body>
-    <h1>System Test Report</h1>
-    <div class="info">
-        <strong>Hostname:</strong> ${HOSTNAME_FQDN}<br>
-        <strong>Primary IP:</strong> ${PRIMARY_IP}<br>
-        <strong>Generated:</strong> $(date +"%Y-%m-%d %H:%M:%S")
-    </div>
+    <div class="container">
+        <h1>System Hardware & Performance Report</h1>
+        <div class="report-meta">Generated on: $(date +"%Y-%m-%d %H:%M:%S")</div>
+        <div class="report-host">Hostname: ${HOSTNAME_FQDN} • Primary IP: ${PRIMARY_IP}</div>
 EOF
 }
 
 # Write follow-up section
 write_followup_section() {
-    cat >> "${OUTPUT_FILE}" << 'EOF'
-    <details>
-        <summary>Follow-up Actions</summary>
-        <p>Review any failed tests and take appropriate action. Check system logs for additional details.</p>
-    </details>
+    cat >> "${OUTPUT_FILE}" << EOF
+    </div>
+    <div class="footer">Script by System Test Automation</div>
 EOF
 }
 
