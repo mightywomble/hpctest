@@ -7,6 +7,7 @@
 # ==============================================================================
 
 source "$(dirname "$0")/../config.sh"
+echo "[RUNNING] Ethernet Network tests"
 
 # Test: Ethernet NICs
 result=$(lshw -C network -short 2>&1)

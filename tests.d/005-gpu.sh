@@ -7,6 +7,7 @@
 # ==============================================================================
 
 source "$(dirname "$0")/../config.sh"
+echo "[RUNNING] GPU tests"
 
 # Test: GPU Type
 if command -v nvidia-smi &>/dev/null; then

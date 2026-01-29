@@ -7,8 +7,7 @@
 # ==============================================================================
 
 source "$(dirname "$0")/../config.sh"
-
-# Test: CPU Model
+echo "[RUNNING] CPU tests"
 result=$(lscpu | grep 'Model name:' | sed 's/Model name:[[:space:]]*//')
 status="pass"
 notes=""

@@ -7,6 +7,7 @@
 # ==============================================================================
 
 source "$(dirname "$0")/../config.sh"
+echo "[RUNNING] RAM tests"
 
 # Test: RAM Size
 result=$(free -h | grep Mem: | awk '{print $2}')

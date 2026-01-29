@@ -163,6 +163,12 @@ output_html_result() {
 # Utility functions for test scripts
 # ==============================================================================
 
+# Log test progress to console
+log_test_progress() {
+    local test_name="$1"
+    echo -e "  ${C_CYAN}•${C_RESET} $test_name..."
+}
+
 # Check if script should be skipped based on flags
 # Usage: should_skip_test "--noburn" "--noinstall"
 should_skip_test() {
@@ -223,6 +229,6 @@ nic_info_per_ipv4() {
 
 export -f log log_error log_success log_warn
 export -f check_command_exists safe_run output_html_result should_skip_test run_single_test
-export -f nic_info_per_ipv4
+export -f log_test_progress nic_info_per_ipv4
 export TEST_DATA_IDS TEST_DATA_NAMES TEST_DATA_CATEGORIES TEST_DATA_COMMANDS TEST_DATA_RESULTS TEST_DATA_TYPES TEST_DATA_STATUSES
 export TEST_RUN_ID TEST_DATE

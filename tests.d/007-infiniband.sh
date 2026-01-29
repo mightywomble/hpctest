@@ -7,6 +7,7 @@
 # ==============================================================================
 
 source "$(dirname "$0")/../config.sh"
+echo "[RUNNING] InfiniBand Network tests"
 
 # Test: IB Links Speed
 if command -v ibstatus &>/dev/null; then

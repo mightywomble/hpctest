@@ -7,6 +7,7 @@
 # ==============================================================================
 
 source "$(dirname "$0")/../config.sh"
+echo "[RUNNING] Software & Packages tests"
 
 # Test: Process List
 psout=$(ps axfcu 2>&1)
