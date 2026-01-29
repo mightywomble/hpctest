@@ -391,7 +391,10 @@ main() {
 
         # Execute test script and capture JSON output
         local script_full_path="$SCRIPT_DIR/$script"
-        echo -e "${C_CYAN}[START]${C_RESET} $test_id"
+        echo
+        echo -e "${C_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
+        echo -e "${C_GREEN}▶${C_RESET} ${C_CYAN}$test_id${C_RESET}"
+        echo -e "${C_CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_RESET}"
         
         # Separate the JSON from any intermediate output
         local json_output
@@ -402,9 +405,16 @@ main() {
         if [[ $script_exit -eq 0 ]]; then
             json_output="$full_output"
             
-            # Extract and display non-JSON output for visibility
-            echo -e "${C_CYAN}[OUTPUT]${C_RESET}"
-            echo "$json_output" | grep -v -E '^(\[|\]|  \{|^\}|^,$)' | sed '/^$/d' || true
+            # Extract and display non-JSON output for visibility in a box
+            local output_text
+            output_text=$(echo "$json_output" | grep -v -E '^(\[|\]|  \{|^\}|^,$)' | sed '/^$/d' || true)
+            if [[ -n "$output_text" ]]; then
+                echo -e "${C_CYAN}┌─ Output ─────────────────────────────────┐${C_RESET}"
+                echo "$output_text" | while IFS= read -r line; do
+                    printf "${C_CYAN}│${C_RESET} %s\n" "$line"
+                done
+                echo -e "${C_CYAN}└───────────────────────────────────────────┘${C_RESET}"
+            fi
             
             # Parse JSON array and render each test result
             if command -v jq &>/dev/null; then
@@ -430,9 +440,9 @@ main() {
                 done <<< "$json_output"
             fi
             
-            echo -e "${C_GREEN}[COMPLETE]${C_RESET} $test_id"
+            echo -e "${C_GREEN}✓ COMPLETE${C_RESET} - $test_id"
         else
-            echo -e "${C_RED}[ERROR]${C_RESET} $test_id failed with exit code $script_exit"
+            echo -e "${C_RED}✗ ERROR${C_RESET} - $test_id (exit code: $script_exit)"
             echo "$full_output"
         fi
     done
