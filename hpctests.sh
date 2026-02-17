@@ -711,7 +711,20 @@ run_gpu_tests() {
     run_test "GPU" "VRAM per GPU" "nvidia-smi --query-gpu=memory.total --format=csv"
     run_test "GPU" "NVIDIA Peermem" "lsmod | grep -i nvidia_peermem"
     run_test "GPU" "NVLink Fabric Manager" "nv-fabricmanager --version"
-    run_test "GPU" "NVLink Status" "nvidia-smi nvlink -s"
+    
+    # NVLink Status (collapsible)
+    {
+        local nvlink_out
+        nvlink_out=$(nvidia-smi nvlink -s 2>&1)
+        local exit_code=$?
+        local nvlink_status="pass"
+        if [[ $exit_code -ne 0 ]]; then nvlink_status="fail"; fi
+        local nvlink_sanitized
+        nvlink_sanitized=$(echo "$nvlink_out" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+        local nvlink_html="<details><summary>Show NVLink Status</summary><pre>${nvlink_sanitized}</pre></details>"
+        add_row_to_html_report_html "NVLink Status" "nvidia-smi nvlink -s" "$nvlink_html" "$nvlink_status" ""
+    }
+    
     run_test "GPU" "Driver Version" "nvidia-smi | grep -i 'Driver Version'"
 
     if command -v nvidia-smi &> /dev/null; then
@@ -805,7 +818,20 @@ run_infiniband_tests() {
     run_test "InfiniBand" "IB Links Status" "ibstatus | grep -e 'link_layer:' -e 'phys state:'"
     run_test "InfiniBand" "OFED Version" "ofed_info -s"
     run_test "InfiniBand" "IBoIP Enabled" "ibdev2netdev"
-    run_test "InfiniBand" "IB Fabric" "iblinkinfo --switches-only"
+    
+    # IB Fabric (collapsible)
+    {
+        local ib_fabric
+        ib_fabric=$(iblinkinfo --switches-only 2>&1)
+        local exit_code=$?
+        local ib_status="pass"
+        if [[ $exit_code -ne 0 ]]; then ib_status="fail"; fi
+        local ib_sanitized
+        ib_sanitized=$(echo "$ib_fabric" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+        local ib_html="<details><summary>Show IB Fabric</summary><pre>${ib_sanitized}</pre></details>"
+        add_row_to_html_report_html "IB Fabric" "iblinkinfo --switches-only" "$ib_html" "$ib_status" ""
+    }
+    
     close_html_category_section
 }
 
@@ -1183,7 +1209,18 @@ run_benchmark_tests() {
         mpirun -np $gpu_count --bind-to none --map-by ppr:$gpu_count:node \
         /workspace/hpl-linux-x86_64/hpl.sh --dat /workspace/hpl-linux-x86_64/sample-dat/$dat_file"
 
-        run_test "Benchmark" "GPU Burn" "docker run --rm --gpus all oguzpastirmaci/gpu-burn:latest"
+        # GPU Burn (collapsible)
+        {
+            local gpu_burn_out
+            gpu_burn_out=$(docker run --rm --gpus all oguzpastirmaci/gpu-burn:latest 2>&1)
+            local exit_code=$?
+            local gpu_burn_status="pass"
+            if [[ $exit_code -ne 0 ]]; then gpu_burn_status="fail"; fi
+            local gpu_burn_sanitized
+            gpu_burn_sanitized=$(echo "$gpu_burn_out" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g;')
+            local gpu_burn_html="<details><summary>Show GPU Burn Output</summary><pre>${gpu_burn_sanitized}</pre></details>"
+            add_row_to_html_report_html "GPU Burn" "docker run --rm --gpus all oguzpastirmaci/gpu-burn:latest" "$gpu_burn_html" "$gpu_burn_status" ""
+        }
     else
         add_row_to_html_report "HPL Single Node" "N/A" "Skipped by user" "partial" "Benchmarks not executed"
         add_row_to_html_report "GPU Burn" "N/A" "Skipped by user" "partial" "Benchmarks not executed"
