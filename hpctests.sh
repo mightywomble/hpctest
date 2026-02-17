@@ -1167,7 +1167,7 @@ run_benchmark_tests() {
     gpu_count=$(nvidia-smi --query-gpu=name --format=csv,noheader | wc -l)
     gpu_model=$(nvidia-smi --query-gpu=name --format=csv,noheader | head -n 1)
 
-    # Logic to select the best .dat file from the nvcr.io/nvidia/hpc-benchmarks:24.09 list
+    # Logic to select the best .dat file from the nvcr.io/nvidia/hpc-benchmarks:25.09 list
     if [[ "$gpu_count" -eq 8 ]]; then
         # Default for 8-GPU nodes like DGX/HGX
         dat_file="HPL-dgx-1N.dat"
@@ -1200,12 +1200,53 @@ run_benchmark_tests() {
         read -p "Run long-running Docker benchmarks (HPL/GPU-burn)? (y/N): " choice
     fi
 
-    # 5. Execute with dynamic parameters
+    # 5. Fetch latest tag and prompt for version selection
+    local chosen_tag="25.09"
     if [[ "$choice" =~ ^[Yy]$ ]]; then
-        # Note: We inject $gpu_count into -np and ppr, and $dat_file into the path
+        log "Fetching latest HPC-Benchmarks tag..."
+        local latest_tag
+        latest_tag=$(curl -sS 'https://catalog.ngc.nvidia.com/orgs/nvidia/containers/hpc-benchmarks/tags' \
+          | tr -d '\n' \
+          | grep -oP 'latestTag[^0-9]*\K[0-9][0-9.]+' \
+          | head -n1)
+        
+        if [[ -z "$latest_tag" ]]; then
+            log_warn "Could not fetch latest tag; defaulting to 25.09"
+            latest_tag="25.09"
+        fi
+        
+        log "Latest available tag: $latest_tag"
+        
+        # Prompt user for tag selection
+        if $HEADLESS_MODE; then
+            # Auto-select latest in headless mode
+            log_warn "--headless: using latest tag $latest_tag"
+            chosen_tag="$latest_tag"
+        else
+            echo "--------------------------------------------------------"
+            echo "Docker Image Tag Selection:"
+            echo "  1) $latest_tag - Latest"
+            echo "  2) 25.09 - Fallback"
+            echo "--------------------------------------------------------"
+            read -p "Select tag (1 or 2, default=2): " tag_choice
+            tag_choice=${tag_choice:-2}
+            
+            case "$tag_choice" in
+                1) chosen_tag="$latest_tag" ;;
+                2) chosen_tag="25.09" ;;
+                *) log_warn "Invalid choice; using 25.09"; chosen_tag="25.09" ;;
+            esac
+        fi
+        
+        log "Using Docker image tag: $chosen_tag"
+    fi
+
+    # 6. Execute with dynamic parameters
+    if [[ "$choice" =~ ^[Yy]$ ]]; then
+        # Note: We inject $gpu_count into -np and ppr, $dat_file into the path, and $chosen_tag into the image
         run_test "Benchmark" "HPL Single Node ($gpu_model)" \
         "docker run --gpus all --rm --shm-size=1g --ipc=host --ulimit memlock=-1 --ulimit stack=67108864 \
-        nvcr.io/nvidia/hpc-benchmarks:24.09 \
+        nvcr.io/nvidia/hpc-benchmarks:$chosen_tag \
         mpirun -np $gpu_count --bind-to none --map-by ppr:$gpu_count:node \
         /workspace/hpl-linux-x86_64/hpl.sh --dat /workspace/hpl-linux-x86_64/sample-dat/$dat_file"
 
