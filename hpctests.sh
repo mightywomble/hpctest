@@ -1052,23 +1052,63 @@ run_speedtest_tests() {
     close_html_category_section
 }
 
+#install_docker_ce() {
+#    log "Starting Docker CE installation..."
+#    apt-get update
+#    apt-get install -y ca-certificates curl gnupg
+#    install -m 0755 -d /etc/apt/keyrings
+#    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+#    chmod a+r /etc/apt/keyrings/docker.gpg
+#    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+#    apt-get update
+#    if ! apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; then
+#        log_error "Docker CE installation failed."; return 1
+#    fi
+#    log_success "Docker CE installed successfully."
+#    log "Verifying Docker installation with 'docker ps'..."
+#    docker ps
+#    return 0
+#}
+
 install_docker_ce() {
-    log "Starting Docker CE installation..."
+    log "Starting Docker CE and NVIDIA Container Toolkit installation..."
     apt-get update
     apt-get install -y ca-certificates curl gnupg
+
+    # 1. Setup Docker Repository
     install -m 0755 -d /etc/apt/keyrings
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
     chmod a+r /etc/apt/keyrings/docker.gpg
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    # 2. Setup NVIDIA Container Toolkit Repository
+    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | gpg --dearmor -o /etc/apt/keyrings/nvidia-container-toolkit-keyring.gpg
+    curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+        sed 's#deb https://#deb [signed-by=/etc/apt/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+        tee /etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null
+
+    # 3. Install everything in one go
     apt-get update
-    if ! apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; then
-        log_error "Docker CE installation failed."; return 1
+    if ! apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin nvidia-container-toolkit; then
+        log_error "Installation of Docker or NVIDIA Toolkit failed."; return 1
     fi
-    log_success "Docker CE installed successfully."
-    log "Verifying Docker installation with 'docker ps'..."
+
+    # 4. Configure NVIDIA Runtime for Docker
+    log "Configuring NVIDIA Container Runtime..."
+    if ! nvidia-ctk runtime configure --runtime=docker; then
+        log_error "Failed to configure NVIDIA runtime."; return 1
+    fi
+
+    # 5. Restart Docker to apply changes
+    systemctl restart docker
+
+    log_success "Docker and NVIDIA Container Toolkit installed successfully."
+    log "Verifying installation..."
     docker ps
     return 0
 }
+
+
 
 run_benchmark_tests() {
     add_html_category_header "High-Performance Benchmarks"
@@ -1106,7 +1146,7 @@ run_benchmark_tests() {
     fi
 
     if [[ "$choice" =~ ^[Yy]$ ]]; then
-        run_test "Benchmark" "HPL Single Node" "docker run --gpus all --rm --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 nvcr.io/nvidia/hpc-benchmarks:24.05 mpirun -np 8 --bind-to none --map-by ppr:8:node /hpl.sh --dat /hpl-linux-x86_64/sample-dat/HPL-dgx-h100-1N.dat"
+        run_test "Benchmark" "HPL Single Node" "docker run --gpus all --rm --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 nvcr.io/nvidia/hpc-benchmarks:24.09 mpirun -np 8 --bind-to none --map-by ppr:8:node /hpl.sh --dat /hpl-linux-x86_64/sample-dat/HPL-dgx-h100-1N.dat"
         run_test "Benchmark" "GPU Burn" "docker run --rm --gpus all oguzpastirmaci/gpu-burn:latest"
     else
         add_row_to_html_report "HPL Single Node" "N/A" "Skipped by user" "partial" "Benchmarks not executed"
