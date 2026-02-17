@@ -366,7 +366,7 @@ EOF
 add_html_category_header() {
     local category="$1"
     cat >> "${OUTPUT_FILE}" << EOF
-<details open>
+<details>
     <summary>${category}</summary>
     <table>
         <thead>
@@ -1272,7 +1272,7 @@ run_software_tests() {
             add_row_to_html_report "Installed Packages" "dpkg-query -W" "No package data" "partial" "dpkg-query returned no results"
         fi
 
-        # Manually installed software (package + version)
+        # Manually installed software (package + version) - collapsed by default
         if [[ -n "$manual" ]]; then
             local manhtml="<details><summary>Manually installed software</summary><div><input class=\"search\" id=\"manFilter\" placeholder=\"Filter manual packages...\" oninput=\"filterTable('manFilter','manTable')\"></div><table id=\"manTable\"><thead><tr><th>Package</th><th>Version</th></tr></thead><tbody>"
             while IFS= read -r pkg; do
