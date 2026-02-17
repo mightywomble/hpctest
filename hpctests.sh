@@ -1146,7 +1146,7 @@ run_benchmark_tests() {
     fi
 
     if [[ "$choice" =~ ^[Yy]$ ]]; then
-        run_test "Benchmark" "HPL Single Node" "docker run --gpus all --rm --shm-size=1g --ulimit memlock=-1 --ulimit stack=67108864 nvcr.io/nvidia/hpc-benchmarks:24.09 mpirun -np 8 --bind-to none --map-by ppr:8:node /hpl.sh --dat /hpl-linux-x86_64/sample-dat/HPL-dgx-h100-1N.dat"
+        run_test "Benchmark" "HPL Single Node" "docker run --gpus all --rm --shm-size=1g --ipc=host  --ulimit memlock=-1 --ulimit stack=67108864   nvcr.io/nvidia/hpc-benchmarks:24.09   mpirun -np 8 --bind-to none --map-by ppr:8:node   /workspace/hpl-linux-x86_64/hpl.sh --dat /workspace/hpl-linux-x86_64/sample-dat/HPL-dgx-1N.dat"
         run_test "Benchmark" "GPU Burn" "docker run --rm --gpus all oguzpastirmaci/gpu-burn:latest"
     else
         add_row_to_html_report "HPL Single Node" "N/A" "Skipped by user" "partial" "Benchmarks not executed"
