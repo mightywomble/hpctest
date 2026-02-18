@@ -161,6 +161,11 @@ You can run the script with the following flags to control behavior.
 - High-Performance Benchmarks (Docker)
   - What: HPL single-node; GPU-burn
   - Expect: Run only if Docker present/installed and not skipped by --noburn/--noinstall; otherwise recorded as skipped
+  - Docker Tag Selection: When benchmarks are enabled, the script automatically fetches the latest available HPC-Benchmarks tag from NGC and prompts you to select:
+    - Option 1: Latest tag (dynamically fetched from NGC catalog)
+    - Option 2: 25.09 (fallback/stable version)
+    - Default: 2 (25.09 fallback)
+  - In `--headless` mode, automatically uses the latest available tag
 
 ## Using the HTML report
 - Single, self-contained HTML file with collapsible sections per category

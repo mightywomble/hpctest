@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Wrapper script for hpctests.sh with optional TUI and --verbose support
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_PATH="${SCRIPT_DIR}/hpctests.sh"
+TUI_PATH="${SCRIPT_DIR}/hpctests_tui.py"
+VERBOSE=false
+
+# Parse arguments
+for arg in "$@"; do
+    if [[ "$arg" == "--verbose" ]]; then
+        VERBOSE=true
+    fi
+done
+
+# Check if TUI should be used (unless --verbose is set)
+if [[ "$VERBOSE" == false ]] && command -v python3 &> /dev/null; then
+    # Try to run with TUI
+    if [[ -f "$TUI_PATH" ]]; then
+        python3 "$TUI_PATH" "$SCRIPT_PATH" "$@"
+        exit $?
+    fi
+fi
+
+# Fallback: run script directly
+bash "$SCRIPT_PATH" "$@"
